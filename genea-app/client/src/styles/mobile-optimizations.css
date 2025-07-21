@@ -1,0 +1,111 @@
+/* Estilos para optimización móvil */
+
+/* Estilos base para la aplicación */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Estilos para el componente de carga */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Media queries para dispositivos móviles */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 10px;
+  }
+  
+  /* Ajustes para mejorar la experiencia táctil */
+  button, 
+  .btn,
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px; /* Tamaño mínimo para elementos táctiles */
+    padding: 10px 15px;
+  }
+  
+  /* Aumentar el tamaño de fuente para mejor legibilidad */
+  body {
+    font-size: 16px;
+  }
+  
+  /* Ajustar espaciado para formularios */
+  form input,
+  form select,
+  form textarea {
+    margin-bottom: 15px;
+    font-size: 16px; /* Evitar zoom automático en iOS */
+  }
+}
+
+/* Optimizaciones para conexiones lentas */
+.offline-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #f44336;
+  color: white;
+  text-align: center;
+  padding: 5px;
+  z-index: 1000;
+}
+
+.slow-connection-mode {
+  /* Estilos para modo de conexión lenta */
+  filter: grayscale(0.5);
+}
+
+/* Optimizaciones para pantallas pequeñas */
+@media (max-width: 480px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Ajustar tamaño de fuente para títulos */
+  h1 {
+    font-size: 1.8rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+}

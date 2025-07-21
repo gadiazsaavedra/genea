@@ -1,0 +1,95 @@
+.family-tree-container {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  position: relative;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.node--internal circle {
+  fill: #1976d2;
+}
+
+.node--leaf circle {
+  fill: #4caf50;
+}
+
+.node text {
+  font: 12px sans-serif;
+  fill: #333;
+  pointer-events: none;
+  user-select: none;
+}
+
+.node:hover circle {
+  stroke: #ff5722;
+  stroke-width: 4px;
+}
+
+.node:hover text {
+  font-weight: bold;
+}
+
+.node circle.selected {
+  stroke: #ff5722;
+  stroke-width: 4px;
+  fill: #fff9c4;
+}
+
+.tree-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 10;
+}
+
+.tree-control-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: white;
+  border: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 18px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.tree-control-btn:hover {
+  background-color: #f5f5f5;
+  transform: scale(1.1);
+}
+
+/* Estilos para dispositivos táctiles */
+@media (hover: none) {
+  .node circle {
+    r: 15; /* Círculos más grandes para facilitar el toque */
+  }
+  
+  .tree-control-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
+  }
+}

@@ -1,0 +1,121 @@
+.person-detail {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  max-width: 600px;
+  width: 100%;
+}
+
+.person-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.person-detail-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.close-button:hover {
+  color: #000;
+}
+
+.person-detail-content {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.person-photo {
+  width: 150px;
+  height: 150px;
+  margin-right: 20px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.person-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.person-info {
+  flex-grow: 1;
+}
+
+.info-row {
+  margin-bottom: 8px;
+  display: flex;
+}
+
+.info-label {
+  font-weight: bold;
+  width: 150px;
+  color: #555;
+}
+
+.info-value {
+  color: #333;
+}
+
+.person-bio {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.person-bio h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.person-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.action-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.action-button.edit {
+  background-color: #2196f3;
+  color: white;
+}
+
+.action-button.photos {
+  background-color: #4caf50;
+  color: white;
+}
+
+.action-button.documents {
+  background-color: #ff9800;
+  color: white;
+}
+
+.action-button:hover {
+  opacity: 0.9;
+}

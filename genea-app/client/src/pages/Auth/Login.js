@@ -1,0 +1,105 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import './Auth.css';
+
+const Login = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      // Aquí se realizaría la autenticación con Firebase o tu backend
+      // Por ahora simulamos un inicio de sesión exitoso
+      setTimeout(() => {
+        // Simular almacenamiento del token y redirección
+        localStorage.setItem('authToken', 'sample-token');
+        navigate('/');
+      }, 1000);
+    } catch (err) {
+      setError('Error al iniciar sesión. Por favor, verifica tus credenciales.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <h1>Iniciar Sesión</h1>
+          <p>Accede a tu cuenta para gestionar tus árboles genealógicos</p>
+        </div>
+
+        {error && <div className="auth-error">{error}</div>}
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="email">Correo electrónico</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Contraseña</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="forgot-password">
+            <Link to="/auth/reset-password">¿Olvidaste tu contraseña?</Link>
+          </div>
+
+          <button 
+            type="submit" 
+            className="auth-button" 
+            disabled={loading}
+          >
+            {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+          </button>
+        </form>
+
+        <div className="auth-separator">
+          <span>O</span>
+        </div>
+
+        <button className="social-button google">
+          Continuar con Google
+        </button>
+
+        <div className="auth-footer">
+          ¿No tienes una cuenta? <Link to="/auth/register">Regístrate</Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
