@@ -1,4 +1,4 @@
-const User = require('../models/user.model');
+const { supabaseAdmin } = require('../config/supabase.config');
 const authService = require('../services/auth.service');
 
 // Middleware para verificar la autenticación del usuario
@@ -26,26 +26,24 @@ exports.verifyToken = async (req, res, next) => {
       });
     }
 
-    // Buscar al usuario en la base de datos
-    let user = await User.findOne({ uid: decodedToken.uid });
-
-    // Si el usuario no existe, crearlo
-    if (!user) {
-      user = new User({
-        uid: decodedToken.uid,
-        email: decodedToken.email,
-        displayName: decodedToken.name || decodedToken.email.split('@')[0],
-        photoURL: decodedToken.picture || ''
+    // Verificar que el usuario existe en Supabase
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(decodedToken.uid);
+    
+    if (userError || !userData) {
+      return res.status(401).json({
+        success: false,
+        message: 'No autorizado, usuario no encontrado'
       });
-      await user.save();
     }
 
-    // Actualizar la última vez que inició sesión
-    user.lastLogin = Date.now();
-    await user.save();
-
     // Agregar el usuario al objeto de solicitud
-    req.user = user;
+    req.user = {
+      uid: userData.user.id,
+      email: userData.user.email,
+      displayName: userData.user.user_metadata?.displayName || userData.user.email.split('@')[0],
+      photoURL: userData.user.user_metadata?.photoURL || null,
+      emailVerified: userData.user.email_confirmed_at ? true : false
+    };
     
     next();
   } catch (error) {

@@ -1,41 +1,32 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const User = require('../models/user.model');
+const { supabaseAdmin } = require('../config/supabase.config');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'genea-secret-key';
-const JWT_EXPIRES_IN = '7d';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('ERROR: JWT_SECRET no está definido en las variables de entorno');
+  process.exit(1);
+}
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 const authService = {
   // Registrar un nuevo usuario
   async register(email, password, displayName) {
     try {
-      // Verificar si el usuario ya existe
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        throw new Error('El usuario ya existe');
-      }
-
-      // Encriptar la contraseña
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      // Crear el usuario
-      const user = new User({
+      // Registrar usuario en Supabase Auth
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
-        password: hashedPassword,
-        displayName,
-        photoURL: null,
-        emailVerified: false
+        password,
+        user_metadata: { displayName }
       });
 
-      await user.save();
+      if (authError) throw new Error(authError.message);
 
-      // Generar token
+      // Generar token JWT personalizado
       const token = jwt.sign(
         { 
-          uid: user._id,
-          email: user.email,
-          displayName: user.displayName
+          uid: authData.user.id,
+          email: authData.user.email,
+          displayName: authData.user.user_metadata.displayName
         },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
@@ -44,11 +35,11 @@ const authService = {
       return {
         token,
         user: {
-          uid: user._id,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          emailVerified: user.emailVerified
+          uid: authData.user.id,
+          email: authData.user.email,
+          displayName: authData.user.user_metadata.displayName,
+          photoURL: authData.user.user_metadata.photoURL || null,
+          emailVerified: authData.user.email_confirmed_at ? true : false
         }
       };
     } catch (error) {
@@ -59,24 +50,20 @@ const authService = {
   // Iniciar sesión
   async login(email, password) {
     try {
-      // Buscar el usuario
-      const user = await User.findOne({ email });
-      if (!user) {
-        throw new Error('Credenciales inválidas');
-      }
+      // Iniciar sesión con Supabase Auth
+      const { data: authData, error: authError } = await supabaseAdmin.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      // Verificar la contraseña
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        throw new Error('Credenciales inválidas');
-      }
+      if (authError) throw new Error(authError.message);
 
-      // Generar token
+      // Generar token JWT personalizado
       const token = jwt.sign(
         { 
-          uid: user._id,
-          email: user.email,
-          displayName: user.displayName
+          uid: authData.user.id,
+          email: authData.user.email,
+          displayName: authData.user.user_metadata.displayName || email.split('@')[0]
         },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
@@ -85,11 +72,11 @@ const authService = {
       return {
         token,
         user: {
-          uid: user._id,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          emailVerified: user.emailVerified
+          uid: authData.user.id,
+          email: authData.user.email,
+          displayName: authData.user.user_metadata.displayName || email.split('@')[0],
+          photoURL: authData.user.user_metadata.photoURL || null,
+          emailVerified: authData.user.email_confirmed_at ? true : false
         }
       };
     } catch (error) {
@@ -110,23 +97,33 @@ const authService = {
   // Actualizar perfil de usuario
   async updateProfile(userId, data) {
     try {
-      const user = await User.findById(userId);
-      if (!user) {
-        throw new Error('Usuario no encontrado');
-      }
+      // Obtener usuario actual
+      const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+      
+      if (getUserError) throw new Error(getUserError.message);
+      if (!userData) throw new Error('Usuario no encontrado');
 
-      // Actualizar campos
-      if (data.displayName) user.displayName = data.displayName;
-      if (data.photoURL) user.photoURL = data.photoURL;
+      // Preparar datos para actualizar
+      const userMetadata = {
+        ...userData.user.user_metadata,
+        displayName: data.displayName || userData.user.user_metadata.displayName,
+        photoURL: data.photoURL || userData.user.user_metadata.photoURL
+      };
 
-      await user.save();
+      // Actualizar usuario
+      const { data: updatedUser, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { user_metadata: userMetadata }
+      );
+
+      if (updateError) throw new Error(updateError.message);
 
       return {
-        uid: user._id,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        emailVerified: user.emailVerified
+        uid: updatedUser.user.id,
+        email: updatedUser.user.email,
+        displayName: updatedUser.user.user_metadata.displayName,
+        photoURL: updatedUser.user.user_metadata.photoURL,
+        emailVerified: updatedUser.user.email_confirmed_at ? true : false
       };
     } catch (error) {
       throw error;
@@ -136,23 +133,55 @@ const authService = {
   // Cambiar contraseña
   async updatePassword(userId, currentPassword, newPassword) {
     try {
-      const user = await User.findById(userId);
-      if (!user) {
-        throw new Error('Usuario no encontrado');
-      }
+      // Primero verificamos las credenciales actuales
+      const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+      
+      if (getUserError) throw new Error(getUserError.message);
+      
+      // Verificar contraseña actual (esto requiere iniciar sesión)
+      const { error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+        email: userData.user.email,
+        password: currentPassword
+      });
 
-      // Verificar la contraseña actual
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        throw new Error('Contraseña actual incorrecta');
-      }
+      if (signInError) throw new Error('Contraseña actual incorrecta');
 
-      // Encriptar la nueva contraseña
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(newPassword, salt);
-      user.password = hashedPassword;
+      // Actualizar contraseña
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { password: newPassword }
+      );
 
-      await user.save();
+      if (updateError) throw new Error(updateError.message);
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Enviar correo de restablecimiento de contraseña
+  async resetPassword(email) {
+    try {
+      const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email);
+      if (error) throw new Error(error.message);
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Verificar correo electrónico
+  async verifyEmail(userId) {
+    try {
+      // En Supabase, esto se maneja automáticamente
+      // Pero podemos forzar la verificación para un usuario específico
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { email_confirm: true }
+      );
+      
+      if (error) throw new Error(error.message);
       return true;
     } catch (error) {
       throw error;

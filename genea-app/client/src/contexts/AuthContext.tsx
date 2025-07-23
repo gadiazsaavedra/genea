@@ -1,37 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged,
-  User as FirebaseUser,
-  updateProfile,
-  sendPasswordResetEmail,
-  GoogleAuthProvider,
-  signInWithPopup,
-  sendEmailVerification,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updatePassword
-} from 'firebase/auth';
-import { initializeApp } from 'firebase/app';
+import { supabase } from '../config/supabase.config';
+import { Session, User as SupabaseUser, AuthError } from '@supabase/supabase-js';
 import axios from 'axios';
-
-// Configuración de Firebase
-const firebaseConfig = {
-  // Aquí deberás colocar tu configuración de Firebase
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID
-};
-
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 
 // Interfaz para el usuario
 interface User {
@@ -85,37 +55,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Observar cambios en el estado de autenticación
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const token = await firebaseUser.getIdToken();
-        
+    // Obtener la sesión inicial
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSessionData(session);
+      setLoading(false);
+    };
+
+    getInitialSession();
+
+    // Suscribirse a cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSessionData(session);
+    });
+
+    // Función para procesar los datos de la sesión
+    const setSessionData = (session: Session | null) => {
+      if (session) {
+        const user = session.user;
         setCurrentUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
-          token
+          uid: user.id,
+          email: user.email,
+          displayName: user.user_metadata?.displayName || user.email?.split('@')[0] || null,
+          photoURL: user.user_metadata?.photoURL || null,
+          token: session.access_token
         });
       } else {
         setCurrentUser(null);
       }
-      setLoading(false);
-    });
+    };
 
-    return unsubscribe;
+    // Limpiar suscripción
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Función para registrar un nuevo usuario
   async function register(email: string, password: string, displayName: string) {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            displayName
+          }
+        }
+      });
       
-      // Actualizar el perfil del usuario con el nombre
-      if (userCredential.user) {
-        await updateProfile(userCredential.user, {
-          displayName
-        });
-      }
+      if (error) throw error;
     } catch (error) {
       console.error('Error al registrar usuario:', error);
       throw error;
@@ -125,7 +114,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Función para iniciar sesión
   async function login(email: string, password: string) {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
       throw error;
@@ -135,7 +129,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Función para cerrar sesión
   async function logout() {
     try {
-      await signOut(auth);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
       throw error;
@@ -145,21 +140,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Función para actualizar el perfil del usuario
   async function updateUserProfile(displayName: string, photoURL?: string) {
     try {
-      const user = auth.currentUser;
-      if (user) {
-        await updateProfile(user, {
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
           displayName,
-          photoURL: photoURL || user.photoURL
-        });
-        
-        // Actualizar el estado local
-        if (currentUser) {
-          setCurrentUser({
-            ...currentUser,
-            displayName,
-            photoURL: photoURL || currentUser.photoURL
-          });
+          photoURL: photoURL || currentUser?.photoURL
         }
+      });
+      
+      if (error) throw error;
+      
+      // Actualizar el estado local
+      if (currentUser && data.user) {
+        setCurrentUser({
+          ...currentUser,
+          displayName,
+          photoURL: photoURL || currentUser.photoURL
+        });
       }
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
@@ -170,8 +166,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Función para iniciar sesión con Google
   async function loginWithGoogle() {
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
     } catch (error) {
       console.error('Error al iniciar sesión con Google:', error);
       throw error;
@@ -181,7 +183,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Función para enviar correo de restablecimiento de contraseña
   async function resetPassword(email: string) {
     try {
-      await sendPasswordResetEmail(auth, email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      
+      if (error) throw error;
     } catch (error) {
       console.error('Error al enviar correo de restablecimiento:', error);
       throw error;
@@ -190,26 +196,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Función para enviar correo de verificación
   async function verifyEmail() {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        await sendEmailVerification(user);
-      }
-    } catch (error) {
-      console.error('Error al enviar correo de verificación:', error);
-      throw error;
-    }
+    // En Supabase, esto se maneja automáticamente al registrarse
+    // Esta función se mantiene por compatibilidad
+    console.log('La verificación de correo se maneja automáticamente en Supabase');
+    return Promise.resolve();
   }
 
   // Función para actualizar la contraseña del usuario
   async function updateUserPassword(currentPassword: string, newPassword: string) {
     try {
-      const user = auth.currentUser;
-      if (user && user.email) {
-        const credential = EmailAuthProvider.credential(user.email, currentPassword);
-        await reauthenticateWithCredential(user, credential);
-        await updatePassword(user, newPassword);
-      }
+      // Primero reautenticamos al usuario
+      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
+        email: currentUser?.email || '',
+        password: currentPassword
+      });
+      
+      if (signInError) throw new Error('Contraseña actual incorrecta');
+      
+      // Luego actualizamos la contraseña
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) throw error;
     } catch (error) {
       console.error('Error al actualizar contraseña:', error);
       throw error;
@@ -218,7 +227,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Función para verificar si el correo está verificado
   function isEmailVerified() {
-    return auth.currentUser?.emailVerified || false;
+    // Supabase proporciona esta información en la sesión
+    return supabase.auth.getSession().then(({ data }) => {
+      return !!data.session?.user.email_confirmed_at;
+    });
   }
 
   const value = {

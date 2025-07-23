@@ -1,101 +1,143 @@
-const fs = require('fs');
+const { supabaseClient, supabaseAdmin } = require('../config/supabase.config');
 const path = require('path');
-const crypto = require('crypto');
+const fs = require('fs');
 
-// Directorio base para almacenamiento de archivos
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads');
+// Nombre del bucket para almacenar archivos
+const BUCKET_NAME = 'genea-media';
 
-// Asegurar que los directorios existan
-const ensureDirectoryExists = (directory) => {
-  if (!fs.existsSync(directory)) {
-    fs.mkdirSync(directory, { recursive: true });
-  }
-};
-
-// Inicializar directorios
-ensureDirectoryExists(UPLOAD_DIR);
-ensureDirectoryExists(path.join(UPLOAD_DIR, 'profilePhotos'));
-ensureDirectoryExists(path.join(UPLOAD_DIR, 'photos'));
-ensureDirectoryExists(path.join(UPLOAD_DIR, 'documents'));
-
+// Servicio para gestionar el almacenamiento de archivos
 const storageService = {
-  // Guardar un archivo
-  saveFile: async (file, type, userId, familyId = null) => {
+  // Inicializar el bucket si no existe
+  async initBucket() {
     try {
-      // Generar un nombre único para el archivo
-      const fileExtension = path.extname(file.originalname);
-      const fileName = `${crypto.randomBytes(16).toString('hex')}${fileExtension}`;
+      // Verificar si el bucket existe
+      const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+      const bucketExists = buckets.some(bucket => bucket.name === BUCKET_NAME);
       
-      let filePath;
-      let fileUrl;
-      
-      // Determinar la ruta según el tipo de archivo
-      switch (type) {
-        case 'profilePhoto':
-          const profileDir = path.join(UPLOAD_DIR, 'profilePhotos', userId);
-          ensureDirectoryExists(profileDir);
-          filePath = path.join(profileDir, fileName);
-          fileUrl = `/uploads/profilePhotos/${userId}/${fileName}`;
-          break;
+      // Si no existe, crearlo
+      if (!bucketExists) {
+        const { error } = await supabaseAdmin.storage.createBucket(BUCKET_NAME, {
+          public: false, // Archivos privados por defecto
+          fileSizeLimit: 10485760 // 10MB
+        });
         
-        case 'photo':
-          if (!familyId) throw new Error('Se requiere familyId para fotos');
-          const photoDir = path.join(UPLOAD_DIR, 'photos', familyId);
-          ensureDirectoryExists(photoDir);
-          filePath = path.join(photoDir, fileName);
-          fileUrl = `/uploads/photos/${familyId}/${fileName}`;
-          break;
+        if (error) throw new Error(`Error al crear bucket: ${error.message}`);
         
-        case 'document':
-          if (!familyId) throw new Error('Se requiere familyId para documentos');
-          const docDir = path.join(UPLOAD_DIR, 'documents', familyId);
-          ensureDirectoryExists(docDir);
-          filePath = path.join(docDir, fileName);
-          fileUrl = `/uploads/documents/${familyId}/${fileName}`;
-          break;
+        // Configurar políticas de acceso
+        await this.setupBucketPolicies();
         
-        default:
-          throw new Error('Tipo de archivo no válido');
+        console.log(`Bucket ${BUCKET_NAME} creado correctamente`);
       }
+    } catch (error) {
+      console.error('Error al inicializar bucket:', error);
+      throw error;
+    }
+  },
+  
+  // Configurar políticas de acceso al bucket
+  async setupBucketPolicies() {
+    try {
+      // Política para que los usuarios puedan ver sus propios archivos
+      await supabaseAdmin.storage.from(BUCKET_NAME).createPolicy('read_policy', {
+        name: 'Read access for authenticated users',
+        definition: {
+          role_id: 'authenticated',
+          operation: 'SELECT',
+          check: "auth.uid() = owner_id"
+        }
+      });
       
-      // Guardar el archivo
-      await fs.promises.writeFile(filePath, file.buffer);
+      // Política para que los usuarios puedan subir archivos
+      await supabaseAdmin.storage.from(BUCKET_NAME).createPolicy('insert_policy', {
+        name: 'Insert access for authenticated users',
+        definition: {
+          role_id: 'authenticated',
+          operation: 'INSERT',
+          check: "auth.uid() = owner_id"
+        }
+      });
+      
+      console.log('Políticas de bucket configuradas correctamente');
+    } catch (error) {
+      console.error('Error al configurar políticas de bucket:', error);
+      throw error;
+    }
+  },
+  
+  // Subir un archivo
+  async uploadFile(file, userId, folder = '') {
+    try {
+      // Crear ruta de almacenamiento
+      const filePath = folder ? `${folder}/${file.filename}` : file.filename;
+      
+      // Leer el archivo
+      const fileBuffer = fs.readFileSync(file.path);
+      
+      // Subir a Supabase Storage
+      const { data, error } = await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .upload(filePath, fileBuffer, {
+          contentType: file.mimetype,
+          upsert: true,
+          metadata: {
+            owner_id: userId,
+            originalName: file.originalname
+          }
+        });
+      
+      if (error) throw new Error(`Error al subir archivo: ${error.message}`);
+      
+      // Eliminar archivo temporal
+      fs.unlinkSync(file.path);
+      
+      // Generar URL firmada para acceso temporal
+      const { data: urlData } = await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(filePath, 60 * 60 * 24); // URL válida por 24 horas
       
       return {
-        fileName,
-        filePath,
-        fileUrl,
-        contentType: file.mimetype,
+        path: filePath,
+        url: urlData.signedUrl,
+        mimetype: file.mimetype,
         size: file.size
       };
     } catch (error) {
+      console.error('Error al subir archivo:', error);
+      throw error;
+    }
+  },
+  
+  // Obtener URL de un archivo
+  async getFileUrl(filePath) {
+    try {
+      // Generar URL firmada para acceso temporal
+      const { data, error } = await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(filePath, 60 * 60 * 24); // URL válida por 24 horas
+      
+      if (error) throw new Error(`Error al obtener URL: ${error.message}`);
+      
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error al obtener URL de archivo:', error);
       throw error;
     }
   },
   
   // Eliminar un archivo
-  deleteFile: async (fileUrl) => {
+  async deleteFile(filePath) {
     try {
-      // Convertir URL a ruta de archivo
-      const relativePath = fileUrl.replace('/uploads/', '');
-      const filePath = path.join(UPLOAD_DIR, relativePath);
+      const { error } = await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .remove([filePath]);
       
-      // Verificar si el archivo existe
-      if (fs.existsSync(filePath)) {
-        await fs.promises.unlink(filePath);
-        return true;
-      }
+      if (error) throw new Error(`Error al eliminar archivo: ${error.message}`);
       
-      return false;
+      return true;
     } catch (error) {
+      console.error('Error al eliminar archivo:', error);
       throw error;
     }
-  },
-  
-  // Obtener URL pública de un archivo
-  getPublicUrl: (filePath) => {
-    const relativePath = path.relative(UPLOAD_DIR, filePath);
-    return `/uploads/${relativePath.replace(/\\/g, '/')}`;
   }
 };
 

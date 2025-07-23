@@ -1,4 +1,5 @@
 const authService = require('../services/auth.service');
+const { supabaseAdmin } = require('../config/supabase.config');
 
 const authController = {
   // Registrar un nuevo usuario
@@ -72,10 +73,45 @@ const authController = {
   // Obtener perfil del usuario
   getProfile: async (req, res) => {
     try {
+      // Obtener información adicional del usuario desde Supabase
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(req.user.uid);
+      
+      if (userError) throw new Error(userError.message);
+      
+      // Obtener membresías familiares del usuario
+      const { data: familyMemberships, error: membershipsError } = await supabaseAdmin
+        .from('family_members')
+        .select(`
+          id,
+          family_id,
+          role,
+          joined_at,
+          families:family_id (
+            id,
+            name,
+            description
+          )
+        `)
+        .eq('user_id', req.user.uid);
+      
+      if (membershipsError) throw new Error(membershipsError.message);
+      
+      // Formatear la respuesta
+      const userProfile = {
+        ...req.user,
+        families: familyMemberships ? familyMemberships.map(membership => ({
+          id: membership.family_id,
+          name: membership.families.name,
+          description: membership.families.description,
+          role: membership.role,
+          joinedAt: membership.joined_at
+        })) : []
+      };
+      
       res.status(200).json({
         success: true,
         data: {
-          user: req.user
+          user: userProfile
         }
       });
     } catch (error) {
@@ -139,6 +175,35 @@ const authController = {
       res.status(400).json({
         success: false,
         message: 'Error al cambiar contraseña',
+        error: error.message
+      });
+    }
+  },
+  
+  // Restablecer contraseña
+  resetPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      // Validar datos
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'El correo electrónico es requerido'
+        });
+      }
+      
+      await authService.resetPassword(email);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Se ha enviado un correo para restablecer la contraseña'
+      });
+    } catch (error) {
+      console.error('Error al restablecer contraseña:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al restablecer contraseña',
         error: error.message
       });
     }

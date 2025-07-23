@@ -15,9 +15,10 @@ Genea es una aplicación web y móvil para gestionar, controlar y editar árbole
 
 ### Backend
 - Node.js con Express
-- MongoDB para la base de datos
-- Firebase Authentication para la gestión de usuarios
-- Multer para la gestión de archivos
+- PostgreSQL (Supabase) para la base de datos
+- Supabase Authentication para la gestión de usuarios
+- Supabase Storage para el almacenamiento de archivos
+- Multer para la gestión temporal de archivos
 
 ### Frontend
 - React con TypeScript
@@ -48,15 +49,14 @@ genea-app/
 │   │   ├── routes/         # Rutas API
 │   │   ├── services/       # Servicios
 │   │   └── utils/          # Utilidades
-│   └── uploads/            # Archivos subidos
+│   └── uploads/            # Archivos temporales
 ```
 
 ## Instalación y configuración
 
 ### Requisitos previos
 - Node.js (v14 o superior)
-- MongoDB
-- Cuenta en Firebase
+- Cuenta en Supabase
 
 ### Configuración del backend
 
@@ -72,17 +72,24 @@ genea-app/
 
 3. Crea un archivo `.env` en el directorio raíz del servidor con las siguientes variables:
    ```
+   # Supabase
+   SUPABASE_URL=https://tu-proyecto.supabase.co
+   SUPABASE_ANON_KEY=tu-clave-anonima
+   SUPABASE_SERVICE_ROLE_KEY=tu-clave-de-servicio
+   
+   # Servidor
    PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/genea
    NODE_ENV=development
+   
+   # JWT
+   JWT_SECRET=tu-clave-secreta
+   JWT_EXPIRES_IN=7d
+   
+   # Directorio para almacenamiento temporal
+   UPLOAD_DIR=./uploads
    ```
 
-4. Configura Firebase:
-   - Crea un proyecto en Firebase Console
-   - Genera una clave privada para Firebase Admin SDK
-   - Guarda el archivo JSON de la clave como `firebase-service-account.json` en la raíz del servidor
-
-5. Inicia el servidor:
+4. Inicia el servidor:
    ```
    npm run dev
    ```
@@ -101,18 +108,53 @@ genea-app/
 
 3. Crea un archivo `.env` en el directorio raíz del cliente con las siguientes variables:
    ```
-   REACT_APP_FIREBASE_API_KEY=tu_api_key
-   REACT_APP_FIREBASE_AUTH_DOMAIN=tu_auth_domain
-   REACT_APP_FIREBASE_PROJECT_ID=tu_project_id
-   REACT_APP_FIREBASE_STORAGE_BUCKET=tu_storage_bucket
-   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=tu_messaging_sender_id
-   REACT_APP_FIREBASE_APP_ID=tu_app_id
+   # Supabase
+   REACT_APP_SUPABASE_URL=https://tu-proyecto.supabase.co
+   REACT_APP_SUPABASE_ANON_KEY=tu-clave-anonima
+   
+   # API
+   REACT_APP_API_URL=http://localhost:5000/api
    ```
 
 4. Inicia la aplicación:
    ```
    npm start
    ```
+
+## Configuración de Supabase
+
+1. Crea una cuenta en [Supabase](https://supabase.com/)
+2. Crea un nuevo proyecto
+3. Ve a la sección SQL Editor y ejecuta el script SQL que se encuentra en `MIGRATION_TO_SUPABASE.md`
+4. Configura las políticas de seguridad según tus necesidades
+
+## Pruebas
+
+Para probar la aplicación, sigue estos pasos:
+
+1. **Instalar dependencias**:
+   ```bash
+   ./install-dependencies.sh
+   ```
+
+2. **Verificar conexión a Supabase**:
+   ```bash
+   cd genea-app/server
+   node ../../test-backend-connection.js
+   ```
+
+3. **Iniciar la aplicación**:
+   ```bash
+   ./start-app.sh
+   ```
+
+4. **Probar funcionalidades**:
+   ```bash
+   cd genea-app/server
+   node ../../test-functionality.js
+   ```
+
+Para más detalles sobre las pruebas, consulta la guía completa en `TESTING_GUIDE.md`.
 
 ## Uso
 
@@ -121,6 +163,14 @@ genea-app/
 3. Agrega personas al árbol genealógico
 4. Explora y edita el árbol familiar
 5. Comparte el árbol con otros miembros de la familia
+
+## Migración desde Firebase/MongoDB
+
+Si estás migrando desde la versión anterior con Firebase/MongoDB, consulta la guía detallada en `MIGRATION_TO_SUPABASE.md`.
+
+## Despliegue
+
+Para desplegar la aplicación en producción, consulta la guía detallada en `DEPLOYMENT_SUPABASE.md`.
 
 ## Contribución
 

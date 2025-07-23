@@ -1,4 +1,5 @@
 import api from './api';
+import { supabase } from '../config/supabase.config';
 
 // Servicio para gestionar personas
 const personService = {
@@ -6,6 +7,21 @@ const personService = {
   getAllPersons: async (params = {}) => {
     try {
       const response = await api.get('/persons', { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Obtener personas de una familia
+  getFamilyPersons: async (familyId, params = {}) => {
+    try {
+      const response = await api.get('/persons', { 
+        params: { 
+          ...params, 
+          familyId 
+        } 
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -76,6 +92,31 @@ const personService = {
   getPersonTree: async (id, params = {}) => {
     try {
       const response = await api.get(`/persons/${id}/tree`, { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Buscar personas por nombre
+  searchPersons: async (query, familyId) => {
+    try {
+      const response = await api.get('/persons', { 
+        params: { 
+          query, 
+          familyId 
+        } 
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Obtener relaciones de una persona
+  getPersonRelationships: async (personId) => {
+    try {
+      const response = await api.get(`/persons/${personId}/relationships`);
       return response.data;
     } catch (error) {
       throw error;

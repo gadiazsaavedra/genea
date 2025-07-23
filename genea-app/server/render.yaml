@@ -9,7 +9,13 @@ services:
         value: production
       - key: PORT
         value: 8080
-      - key: MONGODB_URI
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
         sync: false

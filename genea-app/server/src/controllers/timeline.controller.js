@@ -1,79 +1,100 @@
-const Person = require('../models/person.model');
-const Family = require('../models/family.model');
+const { supabaseClient } = require('../config/supabase.config');
 
 const timelineController = {
   // Obtener línea temporal de una familia
   getFamilyTimeline: async (req, res) => {
     try {
       const { familyId } = req.params;
+      const userId = req.user.uid;
       
       // Verificar que el usuario tiene acceso a esta familia
-      const family = await Family.findById(familyId);
-      if (!family) {
-        return res.status(404).json({ message: 'Familia no encontrada' });
-      }
+      const { data: memberCheck, error: memberError } = await supabaseClient
+        .from('family_members')
+        .select('id')
+        .eq('family_id', familyId)
+        .eq('user_id', userId);
       
-      const userId = req.user.uid;
-      if (!family.members.includes(userId) && !family.admins.includes(userId) && !family.editors.includes(userId)) {
-        return res.status(403).json({ message: 'No tienes acceso a esta familia' });
+      if (memberError || !memberCheck || memberCheck.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes acceso a esta familia'
+        });
       }
       
       // Obtener todas las personas de la familia
-      const persons = await Person.find({ familyId });
+      const { data: persons, error: personsError } = await supabaseClient
+        .from('people')
+        .select('*')
+        .eq('family_id', familyId);
+      
+      if (personsError) throw new Error(personsError.message);
       
       // Crear eventos para la línea temporal
       const timelineEvents = [];
       
       // Eventos de nacimiento
       persons.forEach(person => {
-        if (person.birthDate) {
+        if (person.birth_date) {
           timelineEvents.push({
-            date: new Date(person.birthDate),
+            date: new Date(person.birth_date),
             type: 'birth',
-            personId: person._id,
-            personName: `${person.firstName} ${person.lastName}`,
-            description: `Nacimiento de ${person.firstName} ${person.lastName}`,
-            place: person.birthPlace || 'Lugar desconocido'
+            personId: person.id,
+            personName: `${person.first_name} ${person.last_name || ''}`.trim(),
+            description: `Nacimiento de ${person.first_name} ${person.last_name || ''}`.trim(),
+            place: person.birth_place || 'Lugar desconocido'
           });
         }
       });
       
+      // Obtener relaciones para matrimonios
+      const { data: marriages, error: marriagesError } = await supabaseClient
+        .from('relationships')
+        .select('*')
+        .eq('relationship_type', 'spouse')
+        .in('person1_id', persons.map(p => p.id));
+      
+      if (marriagesError) throw new Error(marriagesError.message);
+      
       // Eventos de matrimonio
-      persons.forEach(person => {
-        if (person.spouses && person.spouses.length > 0 && person.marriageDate) {
-          person.spouses.forEach((spouseId, index) => {
-            const spouse = persons.find(p => p._id.toString() === spouseId.toString());
-            
-            if (spouse) {
-              // Evitar duplicados (solo añadir si la persona actual tiene ID menor que su cónyuge)
-              if (person._id.toString() < spouseId.toString()) {
-                timelineEvents.push({
-                  date: new Date(person.marriageDate),
-                  type: 'marriage',
-                  personId: person._id,
-                  personName: `${person.firstName} ${person.lastName}`,
-                  spouseId: spouse._id,
-                  spouseName: `${spouse.firstName} ${spouse.lastName}`,
-                  description: `Matrimonio de ${person.firstName} ${person.lastName} y ${spouse.firstName} ${spouse.lastName}`,
-                  place: person.marriagePlace || 'Lugar desconocido'
-                });
-              }
-            }
+      const processedMarriages = new Set();
+      
+      marriages.forEach(marriage => {
+        // Evitar duplicados
+        const marriageKey = [marriage.person1_id, marriage.person2_id].sort().join('-');
+        if (processedMarriages.has(marriageKey)) return;
+        processedMarriages.add(marriageKey);
+        
+        const person1 = persons.find(p => p.id === marriage.person1_id);
+        const person2 = persons.find(p => p.id === marriage.person2_id);
+        
+        if (person1 && person2 && marriage.marriage_date) {
+          timelineEvents.push({
+            date: new Date(marriage.marriage_date),
+            type: 'marriage',
+            personId: person1.id,
+            personName: `${person1.first_name} ${person1.last_name || ''}`.trim(),
+            spouseId: person2.id,
+            spouseName: `${person2.first_name} ${person2.last_name || ''}`.trim(),
+            description: `Matrimonio de ${person1.first_name} ${person1.last_name || ''} y ${person2.first_name} ${person2.last_name || ''}`.trim(),
+            place: marriage.marriage_place || 'Lugar desconocido'
           });
         }
       });
       
       // Eventos de fallecimiento
       persons.forEach(person => {
-        if (person.deathDate) {
+        if (person.death_date) {
+          const birthDate = person.birth_date ? new Date(person.birth_date) : null;
+          const deathDate = new Date(person.death_date);
+          
           timelineEvents.push({
-            date: new Date(person.deathDate),
+            date: deathDate,
             type: 'death',
-            personId: person._id,
-            personName: `${person.firstName} ${person.lastName}`,
-            description: `Fallecimiento de ${person.firstName} ${person.lastName}`,
-            place: person.deathPlace || 'Lugar desconocido',
-            age: person.birthDate ? Math.floor((new Date(person.deathDate) - new Date(person.birthDate)) / (1000 * 60 * 60 * 24 * 365.25)) : null
+            personId: person.id,
+            personName: `${person.first_name} ${person.last_name || ''}`.trim(),
+            description: `Fallecimiento de ${person.first_name} ${person.last_name || ''}`.trim(),
+            place: person.death_place || 'Lugar desconocido',
+            age: birthDate ? Math.floor((deathDate - birthDate) / (1000 * 60 * 60 * 24 * 365.25)) : null
           });
         }
       });
@@ -97,10 +118,17 @@ const timelineController = {
         events
       })).sort((a, b) => a.year - b.year);
       
-      res.status(200).json(timeline);
+      res.status(200).json({
+        success: true,
+        data: timeline
+      });
     } catch (error) {
       console.error('Error al obtener línea temporal:', error);
-      res.status(500).json({ message: 'Error al obtener línea temporal', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al obtener línea temporal', 
+        error: error.message 
+      });
     }
   },
   
@@ -108,100 +136,128 @@ const timelineController = {
   getPersonTimeline: async (req, res) => {
     try {
       const { personId } = req.params;
-      
-      // Obtener la persona
-      const person = await Person.findById(personId);
-      if (!person) {
-        return res.status(404).json({ message: 'Persona no encontrada' });
-      }
-      
-      // Verificar que el usuario tiene acceso a la familia de esta persona
-      const family = await Family.findById(person.familyId);
-      if (!family) {
-        return res.status(404).json({ message: 'Familia no encontrada' });
-      }
-      
       const userId = req.user.uid;
-      if (!family.members.includes(userId) && !family.admins.includes(userId) && !family.editors.includes(userId)) {
-        return res.status(403).json({ message: 'No tienes acceso a esta familia' });
+      
+      // Obtener la persona y verificar acceso
+      const { data: person, error: personError } = await supabaseClient
+        .from('people')
+        .select('*, families:family_id(*)')
+        .eq('id', personId)
+        .single();
+      
+      if (personError || !person) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Persona no encontrada' 
+        });
+      }
+      
+      // Verificar que el usuario tiene acceso a la familia
+      const { data: memberCheck, error: memberError } = await supabaseClient
+        .from('family_members')
+        .select('id')
+        .eq('family_id', person.family_id)
+        .eq('user_id', userId);
+      
+      if (memberError || !memberCheck || memberCheck.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes acceso a esta persona'
+        });
       }
       
       // Crear eventos para la línea temporal
       const timelineEvents = [];
       
       // Evento de nacimiento
-      if (person.birthDate) {
+      if (person.birth_date) {
         timelineEvents.push({
-          date: new Date(person.birthDate),
+          date: new Date(person.birth_date),
           type: 'birth',
-          description: `Nacimiento de ${person.firstName} ${person.lastName}`,
-          place: person.birthPlace || 'Lugar desconocido'
+          description: `Nacimiento de ${person.first_name} ${person.last_name || ''}`.trim(),
+          place: person.birth_place || 'Lugar desconocido'
         });
       }
+      
+      // Obtener relaciones
+      const { data: relationships, error: relError } = await supabaseClient
+        .from('relationships')
+        .select('*, people1:person1_id(*), people2:person2_id(*)')
+        .or(`person1_id.eq.${personId},person2_id.eq.${personId}`);
+      
+      if (relError) throw new Error(relError.message);
       
       // Eventos de matrimonio
-      if (person.spouses && person.spouses.length > 0 && person.marriageDate) {
-        // Obtener cónyuges
-        const spouses = await Person.find({ _id: { $in: person.spouses } });
+      const spouseRelationships = relationships.filter(rel => rel.relationship_type === 'spouse');
+      
+      spouseRelationships.forEach(rel => {
+        const spouse = rel.person1_id === personId ? rel.people2 : rel.people1;
         
-        spouses.forEach((spouse, index) => {
+        if (spouse && rel.marriage_date) {
           timelineEvents.push({
-            date: new Date(person.marriageDate),
+            date: new Date(rel.marriage_date),
             type: 'marriage',
-            spouseId: spouse._id,
-            spouseName: `${spouse.firstName} ${spouse.lastName}`,
-            description: `Matrimonio con ${spouse.firstName} ${spouse.lastName}`,
-            place: person.marriagePlace || 'Lugar desconocido'
+            spouseId: spouse.id,
+            spouseName: `${spouse.first_name} ${spouse.last_name || ''}`.trim(),
+            description: `Matrimonio con ${spouse.first_name} ${spouse.last_name || ''}`.trim(),
+            place: rel.marriage_place || 'Lugar desconocido'
           });
-        });
-      }
+        }
+      });
       
       // Eventos de nacimiento de hijos
-      if (person.children && person.children.length > 0) {
-        // Obtener hijos
-        const children = await Person.find({ _id: { $in: person.children } });
+      const childRelationships = relationships.filter(rel => 
+        (rel.relationship_type === 'parent' && rel.person1_id === personId) || 
+        (rel.relationship_type === 'child' && rel.person2_id === personId)
+      );
+      
+      childRelationships.forEach(rel => {
+        const child = rel.relationship_type === 'parent' ? rel.people2 : rel.people1;
         
-        children.forEach(child => {
-          if (child.birthDate) {
-            timelineEvents.push({
-              date: new Date(child.birthDate),
-              type: 'childBirth',
-              childId: child._id,
-              childName: `${child.firstName} ${child.lastName}`,
-              description: `Nacimiento de su hijo/a ${child.firstName} ${child.lastName}`,
-              place: child.birthPlace || 'Lugar desconocido'
-            });
-          }
-        });
-      }
+        if (child && child.birth_date) {
+          timelineEvents.push({
+            date: new Date(child.birth_date),
+            type: 'childBirth',
+            childId: child.id,
+            childName: `${child.first_name} ${child.last_name || ''}`.trim(),
+            description: `Nacimiento de su hijo/a ${child.first_name} ${child.last_name || ''}`.trim(),
+            place: child.birth_place || 'Lugar desconocido'
+          });
+        }
+      });
       
       // Eventos de fallecimiento de padres
-      if (person.parents && person.parents.length > 0) {
-        // Obtener padres
-        const parents = await Person.find({ _id: { $in: person.parents } });
+      const parentRelationships = relationships.filter(rel => 
+        (rel.relationship_type === 'parent' && rel.person2_id === personId) || 
+        (rel.relationship_type === 'child' && rel.person1_id === personId)
+      );
+      
+      parentRelationships.forEach(rel => {
+        const parent = rel.relationship_type === 'parent' ? rel.people1 : rel.people2;
         
-        parents.forEach(parent => {
-          if (parent.deathDate) {
-            timelineEvents.push({
-              date: new Date(parent.deathDate),
-              type: 'parentDeath',
-              parentId: parent._id,
-              parentName: `${parent.firstName} ${parent.lastName}`,
-              description: `Fallecimiento de su ${parent.gender === 'male' ? 'padre' : 'madre'} ${parent.firstName} ${parent.lastName}`,
-              place: parent.deathPlace || 'Lugar desconocido'
-            });
-          }
-        });
-      }
+        if (parent && parent.death_date) {
+          timelineEvents.push({
+            date: new Date(parent.death_date),
+            type: 'parentDeath',
+            parentId: parent.id,
+            parentName: `${parent.first_name} ${parent.last_name || ''}`.trim(),
+            description: `Fallecimiento de su ${parent.gender === 'male' ? 'padre' : 'madre'} ${parent.first_name} ${parent.last_name || ''}`.trim(),
+            place: parent.death_place || 'Lugar desconocido'
+          });
+        }
+      });
       
       // Evento de fallecimiento
-      if (person.deathDate) {
+      if (person.death_date) {
+        const birthDate = person.birth_date ? new Date(person.birth_date) : null;
+        const deathDate = new Date(person.death_date);
+        
         timelineEvents.push({
-          date: new Date(person.deathDate),
+          date: deathDate,
           type: 'death',
-          description: `Fallecimiento de ${person.firstName} ${person.lastName}`,
-          place: person.deathPlace || 'Lugar desconocido',
-          age: person.birthDate ? Math.floor((new Date(person.deathDate) - new Date(person.birthDate)) / (1000 * 60 * 60 * 24 * 365.25)) : null
+          description: `Fallecimiento de ${person.first_name} ${person.last_name || ''}`.trim(),
+          place: person.death_place || 'Lugar desconocido',
+          age: birthDate ? Math.floor((deathDate - birthDate) / (1000 * 60 * 60 * 24 * 365.25)) : null
         });
       }
       
@@ -209,13 +265,20 @@ const timelineController = {
       timelineEvents.sort((a, b) => a.date - b.date);
       
       res.status(200).json({
-        personId: person._id,
-        personName: `${person.firstName} ${person.lastName}`,
-        events: timelineEvents
+        success: true,
+        data: {
+          personId: person.id,
+          personName: `${person.first_name} ${person.last_name || ''}`.trim(),
+          events: timelineEvents
+        }
       });
     } catch (error) {
       console.error('Error al obtener línea temporal de persona:', error);
-      res.status(500).json({ message: 'Error al obtener línea temporal', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al obtener línea temporal', 
+        error: error.message 
+      });
     }
   }
 };

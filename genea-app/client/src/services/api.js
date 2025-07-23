@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from '../config/supabase.config';
 
 // Configuración base de axios
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -13,10 +14,13 @@ const api = axios.create({
 
 // Interceptor para añadir el token de autenticación a las solicitudes
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+  async (config) => {
+    // Obtener la sesión actual de Supabase
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+    
+    if (session) {
+      config.headers['Authorization'] = `Bearer ${session.access_token}`;
     }
     return config;
   },
@@ -33,8 +37,9 @@ api.interceptors.response.use(
   (error) => {
     // Manejar errores de autenticación (401)
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('authToken');
-      window.location.href = '/auth/login';
+      // Cerrar sesión en Supabase
+      supabase.auth.signOut();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

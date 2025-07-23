@@ -1,6 +1,4 @@
-const Invitation = require('../models/invitation.model');
-const Family = require('../models/family.model');
-const admin = require('firebase-admin');
+const { supabaseClient, supabaseAdmin } = require('../config/supabase.config');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
@@ -20,42 +18,74 @@ const invitationController = {
       const { familyId, invitedEmail, role } = req.body;
       const invitedBy = req.user.uid;
 
-      // Verificar si el usuario tiene permisos para invitar (debe ser admin de la familia)
-      const family = await Family.findById(familyId);
-      if (!family) {
-        return res.status(404).json({ message: 'Familia no encontrada' });
+      // Verificar si la familia existe
+      const { data: family, error: familyError } = await supabaseClient
+        .from('families')
+        .select('name')
+        .eq('id', familyId)
+        .single();
+
+      if (familyError || !family) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Familia no encontrada' 
+        });
       }
 
       // Verificar si el usuario es administrador de la familia
-      if (family.admins.indexOf(invitedBy) === -1) {
-        return res.status(403).json({ message: 'No tienes permisos para invitar a esta familia' });
+      const { data: memberCheck, error: memberError } = await supabaseClient
+        .from('family_members')
+        .select('role')
+        .eq('family_id', familyId)
+        .eq('user_id', invitedBy)
+        .single();
+
+      if (memberError || !memberCheck || memberCheck.role !== 'admin') {
+        return res.status(403).json({ 
+          success: false,
+          message: 'No tienes permisos para invitar a esta familia' 
+        });
       }
 
       // Verificar si ya existe una invitación pendiente para este email en esta familia
-      const existingInvitation = await Invitation.findOne({
-        familyId,
-        invitedEmail,
-        status: 'pending'
-      });
+      const { data: existingInvitation, error: invitationError } = await supabaseClient
+        .from('invitations')
+        .select('id')
+        .eq('family_id', familyId)
+        .eq('invited_email', invitedEmail)
+        .eq('status', 'pending')
+        .single();
 
       if (existingInvitation) {
-        return res.status(400).json({ message: 'Ya existe una invitación pendiente para este email' });
+        return res.status(400).json({ 
+          success: false,
+          message: 'Ya existe una invitación pendiente para este email' 
+        });
       }
 
       // Generar token único
       const token = crypto.randomBytes(32).toString('hex');
+      
+      // Calcular fecha de expiración (7 días)
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
 
       // Crear la invitación
-      const invitation = new Invitation({
-        familyId,
-        invitedBy,
-        invitedEmail,
-        role,
-        token,
-        expiresAt: new Date(+new Date() + 7*24*60*60*1000) // 7 días
-      });
+      const { data: invitation, error: createError } = await supabaseClient
+        .from('invitations')
+        .insert([{
+          family_id: familyId,
+          invited_by: invitedBy,
+          invited_email: invitedEmail,
+          role,
+          token,
+          expires_at: expiresAt.toISOString(),
+          status: 'pending'
+        }])
+        .select()
+        .single();
 
-      await invitation.save();
+      if (createError) throw new Error(createError.message);
 
       // Enviar email de invitación
       const inviteUrl = `${process.env.FRONTEND_URL}/invitation/accept/${token}`;
@@ -76,18 +106,23 @@ const invitationController = {
       await transporter.sendMail(mailOptions);
 
       res.status(201).json({
+        success: true,
         message: 'Invitación enviada correctamente',
-        invitation: {
-          id: invitation._id,
-          familyId: invitation.familyId,
-          invitedEmail: invitation.invitedEmail,
+        data: {
+          id: invitation.id,
+          familyId: invitation.family_id,
+          invitedEmail: invitation.invited_email,
           status: invitation.status,
-          expiresAt: invitation.expiresAt
+          expiresAt: invitation.expires_at
         }
       });
     } catch (error) {
       console.error('Error al crear invitación:', error);
-      res.status(500).json({ message: 'Error al crear invitación', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al crear invitación', 
+        error: error.message 
+      });
     }
   },
 
@@ -96,13 +131,30 @@ const invitationController = {
     try {
       const userId = req.user.uid;
       
-      const invitations = await Invitation.find({ invitedBy: userId })
-        .sort({ createdAt: -1 });
+      const { data: invitations, error: invitationsError } = await supabaseClient
+        .from('invitations')
+        .select(`
+          *,
+          families:family_id (
+            name
+          )
+        `)
+        .eq('invited_by', userId)
+        .order('created_at', { ascending: false });
       
-      res.status(200).json(invitations);
+      if (invitationsError) throw new Error(invitationsError.message);
+      
+      res.status(200).json({
+        success: true,
+        data: invitations
+      });
     } catch (error) {
       console.error('Error al obtener invitaciones:', error);
-      res.status(500).json({ message: 'Error al obtener invitaciones', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al obtener invitaciones', 
+        error: error.message 
+      });
     }
   },
 
@@ -110,17 +162,34 @@ const invitationController = {
   getInvitationsReceived: async (req, res) => {
     try {
       const userEmail = req.user.email;
+      const now = new Date().toISOString();
       
-      const invitations = await Invitation.find({ 
-        invitedEmail: userEmail,
-        status: 'pending',
-        expiresAt: { $gt: new Date() }
-      }).sort({ createdAt: -1 });
+      const { data: invitations, error: invitationsError } = await supabaseClient
+        .from('invitations')
+        .select(`
+          *,
+          families:family_id (
+            name
+          )
+        `)
+        .eq('invited_email', userEmail)
+        .eq('status', 'pending')
+        .gt('expires_at', now)
+        .order('created_at', { ascending: false });
       
-      res.status(200).json(invitations);
+      if (invitationsError) throw new Error(invitationsError.message);
+      
+      res.status(200).json({
+        success: true,
+        data: invitations
+      });
     } catch (error) {
       console.error('Error al obtener invitaciones:', error);
-      res.status(500).json({ message: 'Error al obtener invitaciones', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al obtener invitaciones', 
+        error: error.message 
+      });
     }
   },
 
@@ -129,61 +198,96 @@ const invitationController = {
     try {
       const { token } = req.params;
       const userId = req.user.uid;
+      const now = new Date().toISOString();
       
       // Buscar la invitación por token
-      const invitation = await Invitation.findOne({ 
-        token,
-        status: 'pending',
-        expiresAt: { $gt: new Date() }
-      });
+      const { data: invitation, error: invitationError } = await supabaseClient
+        .from('invitations')
+        .select('*')
+        .eq('token', token)
+        .eq('status', 'pending')
+        .gt('expires_at', now)
+        .single();
       
-      if (!invitation) {
-        return res.status(404).json({ message: 'Invitación no encontrada o expirada' });
+      if (invitationError || !invitation) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Invitación no encontrada o expirada' 
+        });
       }
       
       // Verificar que el email de la invitación coincide con el del usuario
-      if (invitation.invitedEmail !== req.user.email) {
-        return res.status(403).json({ message: 'Esta invitación no está dirigida a tu cuenta' });
+      if (invitation.invited_email !== req.user.email) {
+        return res.status(403).json({ 
+          success: false,
+          message: 'Esta invitación no está dirigida a tu cuenta' 
+        });
       }
       
-      // Actualizar la familia para añadir al usuario
-      const family = await Family.findById(invitation.familyId);
+      // Verificar que la familia existe
+      const { data: family, error: familyError } = await supabaseClient
+        .from('families')
+        .select('name')
+        .eq('id', invitation.family_id)
+        .single();
       
-      if (!family) {
-        return res.status(404).json({ message: 'Familia no encontrada' });
+      if (familyError || !family) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Familia no encontrada' 
+        });
       }
       
-      // Añadir al usuario según el rol
-      if (invitation.role === 'admin') {
-        if (!family.admins.includes(userId)) {
-          family.admins.push(userId);
-        }
-      } else if (invitation.role === 'editor') {
-        if (!family.editors.includes(userId)) {
-          family.editors.push(userId);
+      // Verificar si el usuario ya es miembro de la familia
+      const { data: existingMember, error: memberError } = await supabaseClient
+        .from('family_members')
+        .select('id')
+        .eq('family_id', invitation.family_id)
+        .eq('user_id', userId)
+        .single();
+      
+      if (existingMember) {
+        // Actualizar el rol si es necesario
+        if (invitation.role === 'admin') {
+          await supabaseClient
+            .from('family_members')
+            .update({ role: 'admin' })
+            .eq('id', existingMember.id);
         }
       } else {
-        if (!family.members.includes(userId)) {
-          family.members.push(userId);
-        }
+        // Añadir al usuario como miembro de la familia
+        await supabaseClient
+          .from('family_members')
+          .insert([{
+            family_id: invitation.family_id,
+            user_id: userId,
+            role: invitation.role
+          }]);
       }
       
-      await family.save();
-      
       // Actualizar el estado de la invitación
-      invitation.status = 'accepted';
-      await invitation.save();
+      await supabaseClient
+        .from('invitations')
+        .update({ status: 'accepted' })
+        .eq('id', invitation.id);
       
       res.status(200).json({ 
+        success: true,
         message: 'Invitación aceptada correctamente',
-        family: {
-          id: family._id,
-          name: family.name
+        data: {
+          family: {
+            id: invitation.family_id,
+            name: family.name
+          }
         }
       });
     } catch (error) {
       console.error('Error al aceptar invitación:', error);
-      res.status(500).json({ message: 'Error al aceptar invitación', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al aceptar invitación', 
+        error: error.message 
+      });
     }
   },
 
@@ -193,28 +297,45 @@ const invitationController = {
       const { token } = req.params;
       
       // Buscar la invitación por token
-      const invitation = await Invitation.findOne({ 
-        token,
-        status: 'pending'
-      });
+      const { data: invitation, error: invitationError } = await supabaseClient
+        .from('invitations')
+        .select('*')
+        .eq('token', token)
+        .eq('status', 'pending')
+        .single();
       
-      if (!invitation) {
-        return res.status(404).json({ message: 'Invitación no encontrada' });
+      if (invitationError || !invitation) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Invitación no encontrada' 
+        });
       }
       
       // Verificar que el email de la invitación coincide con el del usuario
-      if (invitation.invitedEmail !== req.user.email) {
-        return res.status(403).json({ message: 'Esta invitación no está dirigida a tu cuenta' });
+      if (invitation.invited_email !== req.user.email) {
+        return res.status(403).json({ 
+          success: false,
+          message: 'Esta invitación no está dirigida a tu cuenta' 
+        });
       }
       
       // Actualizar el estado de la invitación
-      invitation.status = 'rejected';
-      await invitation.save();
+      await supabaseClient
+        .from('invitations')
+        .update({ status: 'rejected' })
+        .eq('id', invitation.id);
       
-      res.status(200).json({ message: 'Invitación rechazada correctamente' });
+      res.status(200).json({ 
+        success: true,
+        message: 'Invitación rechazada correctamente' 
+      });
     } catch (error) {
       console.error('Error al rechazar invitación:', error);
-      res.status(500).json({ message: 'Error al rechazar invitación', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al rechazar invitación', 
+        error: error.message 
+      });
     }
   },
 
@@ -225,24 +346,44 @@ const invitationController = {
       const userId = req.user.uid;
       
       // Buscar la invitación
-      const invitation = await Invitation.findById(invitationId);
+      const { data: invitation, error: invitationError } = await supabaseClient
+        .from('invitations')
+        .select('*')
+        .eq('id', invitationId)
+        .single();
       
-      if (!invitation) {
-        return res.status(404).json({ message: 'Invitación no encontrada' });
+      if (invitationError || !invitation) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Invitación no encontrada' 
+        });
       }
       
       // Verificar que el usuario es quien envió la invitación
-      if (invitation.invitedBy !== userId) {
-        return res.status(403).json({ message: 'No tienes permisos para cancelar esta invitación' });
+      if (invitation.invited_by !== userId) {
+        return res.status(403).json({ 
+          success: false,
+          message: 'No tienes permisos para cancelar esta invitación' 
+        });
       }
       
       // Eliminar la invitación
-      await Invitation.findByIdAndDelete(invitationId);
+      await supabaseClient
+        .from('invitations')
+        .delete()
+        .eq('id', invitationId);
       
-      res.status(200).json({ message: 'Invitación cancelada correctamente' });
+      res.status(200).json({ 
+        success: true,
+        message: 'Invitación cancelada correctamente' 
+      });
     } catch (error) {
       console.error('Error al cancelar invitación:', error);
-      res.status(500).json({ message: 'Error al cancelar invitación', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al cancelar invitación', 
+        error: error.message 
+      });
     }
   }
 };

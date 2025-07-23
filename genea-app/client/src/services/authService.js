@@ -1,45 +1,22 @@
-import api from './api';
-import firebase from 'firebase/app';
-import 'firebase/auth';
+import { supabase } from '../config/supabase.config';
 
 // Servicio para gestionar la autenticación
 const authService = {
-  // Inicializar Firebase (llamar al inicio de la aplicación)
-  initFirebase: () => {
-    // Configuración de Firebase (reemplazar con tus propias credenciales)
-    const firebaseConfig = {
-      apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-      authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.REACT_APP_FIREBASE_APP_ID
-    };
-    
-    // Inicializar Firebase solo si no está ya inicializado
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-  },
-
   // Registrar un nuevo usuario
   register: async (email, password, displayName) => {
     try {
-      // Crear usuario en Firebase
-      const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-      
-      // Actualizar el perfil del usuario
-      await userCredential.user.updateProfile({
-        displayName
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            displayName
+          }
+        }
       });
       
-      // Obtener el token ID
-      const token = await userCredential.user.getIdToken();
-      
-      // Guardar el token en localStorage
-      localStorage.setItem('authToken', token);
-      
-      return userCredential.user;
+      if (error) throw error;
+      return data.user;
     } catch (error) {
       throw error;
     }
@@ -48,16 +25,13 @@ const authService = {
   // Iniciar sesión
   login: async (email, password) => {
     try {
-      // Iniciar sesión en Firebase
-      const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      // Obtener el token ID
-      const token = await userCredential.user.getIdToken();
-      
-      // Guardar el token en localStorage
-      localStorage.setItem('authToken', token);
-      
-      return userCredential.user;
+      if (error) throw error;
+      return data.user;
     } catch (error) {
       throw error;
     }
@@ -66,16 +40,15 @@ const authService = {
   // Iniciar sesión con Google
   loginWithGoogle: async () => {
     try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      const userCredential = await firebase.auth().signInWithPopup(provider);
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
       
-      // Obtener el token ID
-      const token = await userCredential.user.getIdToken();
-      
-      // Guardar el token en localStorage
-      localStorage.setItem('authToken', token);
-      
-      return userCredential.user;
+      if (error) throw error;
+      return data;
     } catch (error) {
       throw error;
     }
@@ -84,8 +57,8 @@ const authService = {
   // Cerrar sesión
   logout: async () => {
     try {
-      await firebase.auth().signOut();
-      localStorage.removeItem('authToken');
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error) {
       throw error;
     }
@@ -94,20 +67,54 @@ const authService = {
   // Restablecer contraseña
   resetPassword: async (email) => {
     try {
-      await firebase.auth().sendPasswordResetEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      
+      if (error) throw error;
     } catch (error) {
       throw error;
     }
   },
 
   // Verificar si el usuario está autenticado
-  isAuthenticated: () => {
-    return localStorage.getItem('authToken') !== null;
+  isAuthenticated: async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session !== null;
   },
 
   // Obtener el usuario actual
-  getCurrentUser: () => {
-    return firebase.auth().currentUser;
+  getCurrentUser: async () => {
+    const { data } = await supabase.auth.getUser();
+    return data.user;
+  },
+  
+  // Actualizar perfil de usuario
+  updateProfile: async (userData) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: userData
+      });
+      
+      if (error) throw error;
+      return data.user;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Cambiar contraseña
+  changePassword: async (newPassword) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) throw error;
+      return data.user;
+    } catch (error) {
+      throw error;
+    }
   }
 };
 

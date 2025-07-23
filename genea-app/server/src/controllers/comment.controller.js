@@ -1,83 +1,159 @@
-const Comment = require('../models/comment.model');
-const Notification = require('../models/notification.model');
-const Family = require('../models/family.model');
+const { supabaseClient } = require('../config/supabase.config');
 
 const commentController = {
   // Crear un nuevo comentario
   createComment: async (req, res) => {
     try {
-      const { mediaId, mediaType, text, mentions } = req.body;
+      const { mediaId, text, mentions } = req.body;
       const userId = req.user.uid;
       const userName = req.user.displayName || 'Usuario';
       const userPhotoURL = req.user.photoURL || null;
       
-      // Crear el comentario
-      const comment = new Comment({
-        mediaId,
-        mediaType,
-        userId,
-        userName,
-        userPhotoURL,
-        text,
-        mentions: mentions || []
-      });
+      // Verificar que el medio existe y el usuario tiene acceso
+      const { data: media, error: mediaError } = await supabaseClient
+        .from('media')
+        .select('*, people:person_id(family_id)')
+        .eq('id', mediaId)
+        .single();
       
-      await comment.save();
+      if (mediaError || !media) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Medio no encontrado' 
+        });
+      }
+      
+      // Verificar acceso a la familia
+      const { data: memberCheck, error: memberError } = await supabaseClient
+        .from('family_members')
+        .select('id')
+        .eq('family_id', media.people.family_id)
+        .eq('user_id', userId);
+      
+      if (memberError || !memberCheck || memberCheck.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes acceso a este contenido'
+        });
+      }
+      
+      // Crear el comentario
+      const { data: comment, error: commentError } = await supabaseClient
+        .from('comments')
+        .insert([{
+          media_id: mediaId,
+          user_id: userId,
+          user_name: userName,
+          user_photo_url: userPhotoURL,
+          text,
+          mentions: mentions || []
+        }])
+        .select()
+        .single();
+      
+      if (commentError) throw new Error(commentError.message);
       
       // Crear notificaciones para las menciones
       if (mentions && mentions.length > 0) {
         const notificationPromises = mentions.map(mention => {
-          return new Notification({
-            userId: mention.userId,
-            type: 'mention',
-            title: 'Te han mencionado en un comentario',
-            message: `${userName} te ha mencionado en un comentario: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
-            data: {
-              mediaId,
-              mediaType,
-              commentId: comment._id
-            },
-            link: `/media/${mediaType}/${mediaId}`
-          }).save();
+          return supabaseClient
+            .from('notifications')
+            .insert([{
+              user_id: mention.userId,
+              type: 'mention',
+              title: 'Te han mencionado en un comentario',
+              message: `${userName} te ha mencionado en un comentario: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
+              data: {
+                mediaId,
+                commentId: comment.id
+              },
+              link: `/media/${mediaId}`
+            }]);
         });
         
         await Promise.all(notificationPromises);
       }
       
       res.status(201).json({
+        success: true,
         message: 'Comentario creado correctamente',
-        comment
+        data: comment
       });
     } catch (error) {
       console.error('Error al crear comentario:', error);
-      res.status(500).json({ message: 'Error al crear comentario', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al crear comentario', 
+        error: error.message 
+      });
     }
   },
   
   // Obtener comentarios de un medio
   getMediaComments: async (req, res) => {
     try {
-      const { mediaId, mediaType } = req.params;
+      const { mediaId } = req.params;
       const { page = 1, limit = 10 } = req.query;
+      const userId = req.user.uid;
       
-      const options = {
-        sort: { createdAt: -1 },
-        limit: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit)
-      };
+      // Verificar que el medio existe y el usuario tiene acceso
+      const { data: media, error: mediaError } = await supabaseClient
+        .from('media')
+        .select('*, people:person_id(family_id)')
+        .eq('id', mediaId)
+        .single();
       
-      const comments = await Comment.find({ mediaId, mediaType }, null, options);
-      const total = await Comment.countDocuments({ mediaId, mediaType });
+      if (mediaError || !media) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Medio no encontrado' 
+        });
+      }
+      
+      // Verificar acceso a la familia
+      const { data: memberCheck, error: memberError } = await supabaseClient
+        .from('family_members')
+        .select('id')
+        .eq('family_id', media.people.family_id)
+        .eq('user_id', userId);
+      
+      if (memberError || !memberCheck || memberCheck.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes acceso a este contenido'
+        });
+      }
+      
+      // Calcular paginación
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      
+      // Obtener comentarios
+      const { data: comments, error: commentsError, count } = await supabaseClient
+        .from('comments')
+        .select('*', { count: 'exact' })
+        .eq('media_id', mediaId)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      
+      if (commentsError) throw new Error(commentsError.message);
       
       res.status(200).json({
-        comments,
-        totalPages: Math.ceil(total / parseInt(limit)),
-        currentPage: parseInt(page),
-        totalComments: total
+        success: true,
+        data: {
+          comments,
+          totalPages: Math.ceil(count / limit),
+          currentPage: parseInt(page),
+          totalComments: count
+        }
       });
     } catch (error) {
       console.error('Error al obtener comentarios:', error);
-      res.status(500).json({ message: 'Error al obtener comentarios', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al obtener comentarios', 
+        error: error.message 
+      });
     }
   },
   
@@ -89,30 +165,53 @@ const commentController = {
       const userId = req.user.uid;
       
       // Buscar el comentario
-      const comment = await Comment.findById(commentId);
+      const { data: comment, error: commentError } = await supabaseClient
+        .from('comments')
+        .select('*')
+        .eq('id', commentId)
+        .single();
       
-      if (!comment) {
-        return res.status(404).json({ message: 'Comentario no encontrado' });
+      if (commentError || !comment) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Comentario no encontrado' 
+        });
       }
       
       // Verificar que el usuario es el autor del comentario
-      if (comment.userId !== userId) {
-        return res.status(403).json({ message: 'No tienes permisos para editar este comentario' });
+      if (comment.user_id !== userId) {
+        return res.status(403).json({ 
+          success: false,
+          message: 'No tienes permisos para editar este comentario' 
+        });
       }
       
       // Actualizar el comentario
-      comment.text = text;
-      comment.mentions = mentions || comment.mentions;
+      const { data: updatedComment, error: updateError } = await supabaseClient
+        .from('comments')
+        .update({
+          text,
+          mentions: mentions || comment.mentions,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', commentId)
+        .select()
+        .single();
       
-      await comment.save();
+      if (updateError) throw new Error(updateError.message);
       
       res.status(200).json({
+        success: true,
         message: 'Comentario actualizado correctamente',
-        comment
+        data: updatedComment
       });
     } catch (error) {
       console.error('Error al actualizar comentario:', error);
-      res.status(500).json({ message: 'Error al actualizar comentario', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al actualizar comentario', 
+        error: error.message 
+      });
     }
   },
   
@@ -123,23 +222,55 @@ const commentController = {
       const userId = req.user.uid;
       
       // Buscar el comentario
-      const comment = await Comment.findById(commentId);
+      const { data: comment, error: commentError } = await supabaseClient
+        .from('comments')
+        .select('*')
+        .eq('id', commentId)
+        .single();
       
-      if (!comment) {
-        return res.status(404).json({ message: 'Comentario no encontrado' });
+      if (commentError || !comment) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Comentario no encontrado' 
+        });
       }
       
       // Verificar que el usuario es el autor del comentario o un administrador
-      if (comment.userId !== userId && req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'No tienes permisos para eliminar este comentario' });
+      const { data: userRole, error: roleError } = await supabaseClient
+        .from('family_members')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('family_id', comment.family_id)
+        .single();
+      
+      const isAdmin = userRole && userRole.role === 'admin';
+      
+      if (comment.user_id !== userId && !isAdmin) {
+        return res.status(403).json({ 
+          success: false,
+          message: 'No tienes permisos para eliminar este comentario' 
+        });
       }
       
-      await Comment.findByIdAndDelete(commentId);
+      // Eliminar el comentario
+      const { error: deleteError } = await supabaseClient
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
       
-      res.status(200).json({ message: 'Comentario eliminado correctamente' });
+      if (deleteError) throw new Error(deleteError.message);
+      
+      res.status(200).json({ 
+        success: true,
+        message: 'Comentario eliminado correctamente' 
+      });
     } catch (error) {
       console.error('Error al eliminar comentario:', error);
-      res.status(500).json({ message: 'Error al eliminar comentario', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al eliminar comentario', 
+        error: error.message 
+      });
     }
   }
 };

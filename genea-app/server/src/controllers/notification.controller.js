@@ -1,35 +1,59 @@
-const Notification = require('../models/notification.model');
+const { supabaseClient, supabaseAdmin } = require('../config/supabase.config');
 
 const notificationController = {
   // Crear una nueva notificación
   createNotification: async (req, res) => {
     try {
       const { userId, type, title, message, data, link } = req.body;
+      const requestingUserId = req.user.uid;
       
       // Verificar que el usuario que crea la notificación tiene permisos
       // (solo administradores o el propio sistema pueden crear notificaciones)
-      if (req.user.role !== 'admin' && req.user.uid !== 'system') {
-        return res.status(403).json({ message: 'No tienes permisos para crear notificaciones' });
+      const { data: userRole, error: roleError } = await supabaseClient
+        .from('family_members')
+        .select('role')
+        .eq('user_id', requestingUserId)
+        .eq('role', 'admin')
+        .single();
+      
+      const isAdmin = userRole && userRole.role === 'admin';
+      const isSystem = requestingUserId === 'system';
+      
+      if (!isAdmin && !isSystem) {
+        return res.status(403).json({ 
+          success: false,
+          message: 'No tienes permisos para crear notificaciones' 
+        });
       }
       
-      const notification = new Notification({
-        userId,
-        type,
-        title,
-        message,
-        data,
-        link
-      });
+      // Crear la notificación
+      const { data: notification, error: notificationError } = await supabaseClient
+        .from('notifications')
+        .insert([{
+          user_id: userId,
+          type,
+          title,
+          message,
+          data,
+          link
+        }])
+        .select()
+        .single();
       
-      await notification.save();
+      if (notificationError) throw new Error(notificationError.message);
       
       res.status(201).json({
+        success: true,
         message: 'Notificación creada correctamente',
-        notification
+        data: notification
       });
     } catch (error) {
       console.error('Error al crear notificación:', error);
-      res.status(500).json({ message: 'Error al crear notificación', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al crear notificación', 
+        error: error.message 
+      });
     }
   },
   
@@ -39,29 +63,43 @@ const notificationController = {
       const userId = req.user.uid;
       const { page = 1, limit = 10, unreadOnly = false } = req.query;
       
-      const query = { userId };
+      // Calcular paginación
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      
+      // Construir la consulta
+      let query = supabaseClient
+        .from('notifications')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId);
+      
       if (unreadOnly === 'true') {
-        query.read = false;
+        query = query.eq('read', false);
       }
       
-      const options = {
-        sort: { createdAt: -1 },
-        limit: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit)
-      };
+      // Ejecutar la consulta con paginación y ordenamiento
+      const { data: notifications, error: notificationsError, count } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to);
       
-      const notifications = await Notification.find(query, null, options);
-      const total = await Notification.countDocuments(query);
+      if (notificationsError) throw new Error(notificationsError.message);
       
       res.status(200).json({
-        notifications,
-        totalPages: Math.ceil(total / parseInt(limit)),
-        currentPage: parseInt(page),
-        totalNotifications: total
+        success: true,
+        data: {
+          notifications,
+          totalPages: Math.ceil(count / limit),
+          currentPage: parseInt(page),
+          totalNotifications: count
+        }
       });
     } catch (error) {
       console.error('Error al obtener notificaciones:', error);
-      res.status(500).json({ message: 'Error al obtener notificaciones', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al obtener notificaciones', 
+        error: error.message 
+      });
     }
   },
   
@@ -71,24 +109,40 @@ const notificationController = {
       const { notificationId } = req.params;
       const userId = req.user.uid;
       
-      const notification = await Notification.findById(notificationId);
+      // Verificar que la notificación existe y pertenece al usuario
+      const { data: notification, error: notificationError } = await supabaseClient
+        .from('notifications')
+        .select('*')
+        .eq('id', notificationId)
+        .eq('user_id', userId)
+        .single();
       
-      if (!notification) {
-        return res.status(404).json({ message: 'Notificación no encontrada' });
+      if (notificationError || !notification) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Notificación no encontrada' 
+        });
       }
       
-      // Verificar que la notificación pertenece al usuario
-      if (notification.userId !== userId) {
-        return res.status(403).json({ message: 'No tienes permisos para modificar esta notificación' });
-      }
+      // Marcar como leída
+      const { error: updateError } = await supabaseClient
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
       
-      notification.read = true;
-      await notification.save();
+      if (updateError) throw new Error(updateError.message);
       
-      res.status(200).json({ message: 'Notificación marcada como leída' });
+      res.status(200).json({ 
+        success: true,
+        message: 'Notificación marcada como leída' 
+      });
     } catch (error) {
       console.error('Error al marcar notificación como leída:', error);
-      res.status(500).json({ message: 'Error al marcar notificación', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al marcar notificación', 
+        error: error.message 
+      });
     }
   },
   
@@ -97,15 +151,26 @@ const notificationController = {
     try {
       const userId = req.user.uid;
       
-      await Notification.updateMany(
-        { userId, read: false },
-        { $set: { read: true } }
-      );
+      // Marcar todas las notificaciones del usuario como leídas
+      const { error: updateError } = await supabaseClient
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', userId)
+        .eq('read', false);
       
-      res.status(200).json({ message: 'Todas las notificaciones marcadas como leídas' });
+      if (updateError) throw new Error(updateError.message);
+      
+      res.status(200).json({ 
+        success: true,
+        message: 'Todas las notificaciones marcadas como leídas' 
+      });
     } catch (error) {
       console.error('Error al marcar todas las notificaciones:', error);
-      res.status(500).json({ message: 'Error al marcar notificaciones', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al marcar notificaciones', 
+        error: error.message 
+      });
     }
   },
   
@@ -115,23 +180,40 @@ const notificationController = {
       const { notificationId } = req.params;
       const userId = req.user.uid;
       
-      const notification = await Notification.findById(notificationId);
+      // Verificar que la notificación existe y pertenece al usuario
+      const { data: notification, error: notificationError } = await supabaseClient
+        .from('notifications')
+        .select('*')
+        .eq('id', notificationId)
+        .eq('user_id', userId)
+        .single();
       
-      if (!notification) {
-        return res.status(404).json({ message: 'Notificación no encontrada' });
+      if (notificationError || !notification) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Notificación no encontrada' 
+        });
       }
       
-      // Verificar que la notificación pertenece al usuario
-      if (notification.userId !== userId) {
-        return res.status(403).json({ message: 'No tienes permisos para eliminar esta notificación' });
-      }
+      // Eliminar la notificación
+      const { error: deleteError } = await supabaseClient
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
       
-      await Notification.findByIdAndDelete(notificationId);
+      if (deleteError) throw new Error(deleteError.message);
       
-      res.status(200).json({ message: 'Notificación eliminada correctamente' });
+      res.status(200).json({ 
+        success: true,
+        message: 'Notificación eliminada correctamente' 
+      });
     } catch (error) {
       console.error('Error al eliminar notificación:', error);
-      res.status(500).json({ message: 'Error al eliminar notificación', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al eliminar notificación', 
+        error: error.message 
+      });
     }
   },
   
@@ -140,12 +222,26 @@ const notificationController = {
     try {
       const userId = req.user.uid;
       
-      const count = await Notification.countDocuments({ userId, read: false });
+      // Contar notificaciones no leídas
+      const { count, error: countError } = await supabaseClient
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('read', false);
       
-      res.status(200).json({ unreadCount: count });
+      if (countError) throw new Error(countError.message);
+      
+      res.status(200).json({ 
+        success: true,
+        data: { unreadCount: count } 
+      });
     } catch (error) {
       console.error('Error al obtener conteo de notificaciones:', error);
-      res.status(500).json({ message: 'Error al obtener conteo', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al obtener conteo', 
+        error: error.message 
+      });
     }
   }
 };

@@ -1,7 +1,6 @@
-const Person = require('../models/person.model');
-const fs = require('fs');
-const path = require('path');
+const { supabaseClient } = require('../config/supabase.config');
 const storageService = require('../services/storage.service');
+const fs = require('fs');
 
 // Subir foto de perfil
 exports.uploadProfilePhoto = async (req, res) => {
@@ -14,10 +13,16 @@ exports.uploadProfilePhoto = async (req, res) => {
     }
     
     const personId = req.params.personId;
+    const userId = req.user.uid;
     
-    // Verificar si la persona existe
-    const person = await Person.findById(personId);
-    if (!person) {
+    // Verificar si la persona existe y el usuario tiene acceso
+    const { data: person, error: personError } = await supabaseClient
+      .from('people')
+      .select('family_id')
+      .eq('id', personId)
+      .single();
+    
+    if (personError || !person) {
       // Eliminar el archivo subido
       fs.unlinkSync(req.file.path);
       
@@ -27,25 +32,49 @@ exports.uploadProfilePhoto = async (req, res) => {
       });
     }
     
-    // Si ya existe una foto de perfil, eliminarla
-    if (person.profilePhoto) {
-      const oldPhotoPath = path.join(__dirname, '../../', person.profilePhoto);
-      if (fs.existsSync(oldPhotoPath)) {
-        fs.unlinkSync(oldPhotoPath);
-      }
+    // Verificar acceso a la familia
+    const { data: memberCheck, error: memberError } = await supabaseClient
+      .from('family_members')
+      .select('id')
+      .eq('family_id', person.family_id)
+      .eq('user_id', userId);
+    
+    if (memberError || !memberCheck || memberCheck.length === 0) {
+      // Eliminar el archivo subido
+      fs.unlinkSync(req.file.path);
+      
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes acceso a esta persona'
+      });
     }
     
-    // Actualizar la foto de perfil
-    const fileUrl = `/uploads/${req.file.filename}`;
-    person.profilePhoto = fileUrl;
-    await person.save();
+    // Subir archivo a Supabase Storage
+    const uploadResult = await storageService.uploadFile(
+      req.file,
+      userId,
+      `profiles/${personId}`
+    );
+    
+    // Actualizar la foto de perfil en la base de datos
+    const { data: updatedPerson, error: updateError } = await supabaseClient
+      .from('people')
+      .update({
+        photo_url: uploadResult.url,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', personId)
+      .select()
+      .single();
+    
+    if (updateError) throw new Error(updateError.message);
     
     res.status(200).json({
       success: true,
       message: 'Foto de perfil actualizada correctamente',
       data: {
-        fileUrl,
-        person
+        fileUrl: uploadResult.url,
+        person: updatedPerson
       }
     });
   } catch (error) {
@@ -64,8 +93,8 @@ exports.uploadProfilePhoto = async (req, res) => {
   }
 };
 
-// Subir fotos
-exports.uploadPhotos = async (req, res) => {
+// Subir archivos multimedia
+exports.uploadMedia = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -75,11 +104,18 @@ exports.uploadPhotos = async (req, res) => {
     }
     
     const personId = req.params.personId;
-    const captions = req.body.captions || [];
+    const userId = req.user.uid;
+    const descriptions = req.body.descriptions || [];
+    const fileTypes = req.body.fileTypes || [];
     
-    // Verificar si la persona existe
-    const person = await Person.findById(personId);
-    if (!person) {
+    // Verificar si la persona existe y el usuario tiene acceso
+    const { data: person, error: personError } = await supabaseClient
+      .from('people')
+      .select('family_id')
+      .eq('id', personId)
+      .single();
+    
+    if (personError || !person) {
       // Eliminar los archivos subidos
       req.files.forEach(file => fs.unlinkSync(file.path));
       
@@ -89,33 +125,61 @@ exports.uploadPhotos = async (req, res) => {
       });
     }
     
-    // Procesar cada archivo
-    const uploadedPhotos = req.files.map((file, index) => {
-      const fileUrl = `/uploads/${file.filename}`;
-      return {
-        url: fileUrl,
-        caption: captions[index] || '',
-        date: new Date()
-      };
+    // Verificar acceso a la familia
+    const { data: memberCheck, error: memberError } = await supabaseClient
+      .from('family_members')
+      .select('id')
+      .eq('family_id', person.family_id)
+      .eq('user_id', userId);
+    
+    if (memberError || !memberCheck || memberCheck.length === 0) {
+      // Eliminar los archivos subidos
+      req.files.forEach(file => fs.unlinkSync(file.path));
+      
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes acceso a esta persona'
+      });
+    }
+    
+    // Subir cada archivo a Supabase Storage
+    const uploadPromises = req.files.map(async (file, index) => {
+      const fileType = fileTypes[index] || determineFileType(file.mimetype);
+      const uploadResult = await storageService.uploadFile(
+        file,
+        userId,
+        `media/${personId}/${fileType}`
+      );
+      
+      // Crear registro en la tabla media
+      const { data: mediaRecord, error: mediaError } = await supabaseClient
+        .from('media')
+        .insert([{
+          person_id: personId,
+          file_name: file.originalname,
+          file_url: uploadResult.url,
+          file_type: fileType,
+          description: descriptions[index] || ''
+        }])
+        .select()
+        .single();
+      
+      if (mediaError) throw new Error(mediaError.message);
+      
+      return mediaRecord;
     });
     
-    // Agregar las fotos a la persona
-    if (!person.photos) {
-      person.photos = [];
-    }
-    person.photos.push(...uploadedPhotos);
-    await person.save();
+    const uploadedMedia = await Promise.all(uploadPromises);
     
     res.status(200).json({
       success: true,
-      message: 'Fotos subidas correctamente',
+      message: 'Archivos subidos correctamente',
       data: {
-        uploadedPhotos,
-        person
+        uploadedMedia
       }
     });
   } catch (error) {
-    console.error('Error al subir las fotos:', error);
+    console.error('Error al subir los archivos:', error);
     
     // Eliminar los archivos en caso de error
     if (req.files) {
@@ -124,75 +188,74 @@ exports.uploadPhotos = async (req, res) => {
     
     res.status(500).json({
       success: false,
-      message: 'Error al subir las fotos',
+      message: 'Error al subir los archivos',
       error: error.message
     });
   }
 };
 
-// Subir documentos
-exports.uploadDocuments = async (req, res) => {
+// Obtener archivos multimedia de una persona
+exports.getPersonMedia = async (req, res) => {
   try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No se han proporcionado archivos'
-      });
-    }
-    
     const personId = req.params.personId;
-    const titles = req.body.titles || [];
-    const types = req.body.types || [];
+    const userId = req.user.uid;
     
-    // Verificar si la persona existe
-    const person = await Person.findById(personId);
-    if (!person) {
-      // Eliminar los archivos subidos
-      req.files.forEach(file => fs.unlinkSync(file.path));
-      
+    // Verificar si la persona existe y el usuario tiene acceso
+    const { data: person, error: personError } = await supabaseClient
+      .from('people')
+      .select('family_id')
+      .eq('id', personId)
+      .single();
+    
+    if (personError || !person) {
       return res.status(404).json({
         success: false,
         message: 'Persona no encontrada'
       });
     }
     
-    // Procesar cada archivo
-    const uploadedDocuments = req.files.map((file, index) => {
-      const fileUrl = `/uploads/${file.filename}`;
-      return {
-        url: fileUrl,
-        title: titles[index] || file.originalname,
-        type: types[index] || 'Otro',
-        date: new Date()
-      };
-    });
+    // Verificar acceso a la familia
+    const { data: memberCheck, error: memberError } = await supabaseClient
+      .from('family_members')
+      .select('id')
+      .eq('family_id', person.family_id)
+      .eq('user_id', userId);
     
-    // Agregar los documentos a la persona
-    if (!person.documents) {
-      person.documents = [];
+    if (memberError || !memberCheck || memberCheck.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes acceso a esta persona'
+      });
     }
-    person.documents.push(...uploadedDocuments);
-    await person.save();
+    
+    // Obtener archivos multimedia
+    const { data: media, error: mediaError } = await supabaseClient
+      .from('media')
+      .select('*')
+      .eq('person_id', personId)
+      .order('created_at', { ascending: false });
+    
+    if (mediaError) throw new Error(mediaError.message);
+    
+    // Generar URLs firmadas para cada archivo
+    const mediaWithUrls = await Promise.all(media.map(async (item) => {
+      const signedUrl = await storageService.getFileUrl(item.file_url);
+      return {
+        ...item,
+        signed_url: signedUrl
+      };
+    }));
     
     res.status(200).json({
       success: true,
-      message: 'Documentos subidos correctamente',
-      data: {
-        uploadedDocuments,
-        person
-      }
+      count: mediaWithUrls.length,
+      data: mediaWithUrls
     });
   } catch (error) {
-    console.error('Error al subir los documentos:', error);
-    
-    // Eliminar los archivos en caso de error
-    if (req.files) {
-      req.files.forEach(file => fs.unlinkSync(file.path));
-    }
-    
+    console.error('Error al obtener archivos multimedia:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al subir los documentos',
+      message: 'Error al obtener archivos multimedia',
       error: error.message
     });
   }
@@ -201,63 +264,48 @@ exports.uploadDocuments = async (req, res) => {
 // Eliminar un archivo multimedia
 exports.deleteMedia = async (req, res) => {
   try {
-    const { personId, type, fileId } = req.params;
+    const mediaId = req.params.mediaId;
+    const userId = req.user.uid;
     
-    // Verificar si la persona existe
-    const person = await Person.findById(personId);
-    if (!person) {
+    // Obtener información del archivo
+    const { data: media, error: mediaError } = await supabaseClient
+      .from('media')
+      .select('*, people:person_id(family_id)')
+      .eq('id', mediaId)
+      .single();
+    
+    if (mediaError || !media) {
       return res.status(404).json({
         success: false,
-        message: 'Persona no encontrada'
+        message: 'Archivo no encontrado'
       });
     }
     
-    let fileUrl;
+    // Verificar acceso a la familia
+    const { data: memberCheck, error: memberError } = await supabaseClient
+      .from('family_members')
+      .select('role')
+      .eq('family_id', media.people.family_id)
+      .eq('user_id', userId)
+      .single();
     
-    // Eliminar según el tipo de archivo
-    switch (type) {
-      case 'profilePhoto':
-        fileUrl = person.profilePhoto;
-        person.profilePhoto = '';
-        break;
-      case 'photos':
-        const photoIndex = person.photos.findIndex(p => p._id.toString() === fileId);
-        if (photoIndex === -1) {
-          return res.status(404).json({
-            success: false,
-            message: 'Foto no encontrada'
-          });
-        }
-        fileUrl = person.photos[photoIndex].url;
-        person.photos.splice(photoIndex, 1);
-        break;
-      case 'documents':
-        const docIndex = person.documents.findIndex(d => d._id.toString() === fileId);
-        if (docIndex === -1) {
-          return res.status(404).json({
-            success: false,
-            message: 'Documento no encontrado'
-          });
-        }
-        fileUrl = person.documents[docIndex].url;
-        person.documents.splice(docIndex, 1);
-        break;
-      default:
-        return res.status(400).json({
-          success: false,
-          message: 'Tipo de archivo no válido'
-        });
+    if (memberError || !memberCheck || !['admin', 'editor'].includes(memberCheck.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para eliminar este archivo'
+      });
     }
     
-    await person.save();
+    // Eliminar el archivo de Supabase Storage
+    await storageService.deleteFile(media.file_url);
     
-    // Eliminar el archivo físico
-    if (fileUrl) {
-      const filePath = path.join(__dirname, '../../', fileUrl);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
+    // Eliminar el registro de la base de datos
+    const { error: deleteError } = await supabaseClient
+      .from('media')
+      .delete()
+      .eq('id', mediaId);
+    
+    if (deleteError) throw new Error(deleteError.message);
     
     res.status(200).json({
       success: true,
@@ -272,3 +320,18 @@ exports.deleteMedia = async (req, res) => {
     });
   }
 };
+
+// Función auxiliar para determinar el tipo de archivo
+function determineFileType(mimetype) {
+  if (mimetype.startsWith('image/')) {
+    return 'photo';
+  } else if (mimetype.startsWith('video/')) {
+    return 'video';
+  } else if (mimetype === 'application/pdf' || 
+             mimetype.includes('document') || 
+             mimetype.includes('msword')) {
+    return 'document';
+  } else {
+    return 'other';
+  }
+}

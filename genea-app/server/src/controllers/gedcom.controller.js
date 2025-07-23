@@ -1,25 +1,55 @@
-const Person = require('../models/person.model');
-const Family = require('../models/family.model');
+const { supabaseClient } = require('../config/supabase.config');
 
 const gedcomController = {
   // Exportar árbol genealógico en formato GEDCOM
   exportGedcom: async (req, res) => {
     try {
       const { familyId } = req.params;
+      const userId = req.user.uid;
       
       // Verificar que el usuario tiene acceso a esta familia
-      const family = await Family.findById(familyId);
-      if (!family) {
-        return res.status(404).json({ message: 'Familia no encontrada' });
+      const { data: memberCheck, error: memberError } = await supabaseClient
+        .from('family_members')
+        .select('id')
+        .eq('family_id', familyId)
+        .eq('user_id', userId);
+      
+      if (memberError || !memberCheck || memberCheck.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes acceso a esta familia'
+        });
       }
       
-      const userId = req.user.uid;
-      if (!family.members.includes(userId) && !family.admins.includes(userId) && !family.editors.includes(userId)) {
-        return res.status(403).json({ message: 'No tienes acceso a esta familia' });
+      // Obtener información de la familia
+      const { data: family, error: familyError } = await supabaseClient
+        .from('families')
+        .select('*')
+        .eq('id', familyId)
+        .single();
+      
+      if (familyError || !family) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Familia no encontrada' 
+        });
       }
       
       // Obtener todas las personas de la familia
-      const persons = await Person.find({ familyId });
+      const { data: persons, error: personsError } = await supabaseClient
+        .from('people')
+        .select('*')
+        .eq('family_id', familyId);
+      
+      if (personsError) throw new Error(personsError.message);
+      
+      // Obtener todas las relaciones
+      const { data: relationships, error: relError } = await supabaseClient
+        .from('relationships')
+        .select('*')
+        .in('person1_id', persons.map(p => p.id));
+      
+      if (relError) throw new Error(relError.message);
       
       // Generar el archivo GEDCOM
       let gedcom = [];
@@ -35,7 +65,7 @@ const gedcomController = {
       gedcom.push(`2 NAME Genea - Sistema de Gestión de Árbol Genealógico`);
       gedcom.push(`1 DATE ${new Date().toLocaleDateString('en-US')}`);
       gedcom.push('2 TIME ' + new Date().toLocaleTimeString('en-US'));
-      gedcom.push(`1 FILE ${family.name.replace(/\\s/g, '_')}.ged`);
+      gedcom.push(`1 FILE ${family.name.replace(/\s/g, '_')}.ged`);
       gedcom.push(`1 SUBM @SUBM@`);
       
       // Información del remitente
@@ -44,104 +74,156 @@ const gedcomController = {
       
       // Personas
       persons.forEach(person => {
-        gedcom.push(`0 @I${person._id}@ INDI`);
-        gedcom.push(`1 NAME ${person.firstName} /${person.lastName}/`);
+        gedcom.push(`0 @I${person.id}@ INDI`);
+        gedcom.push(`1 NAME ${person.first_name} /${person.last_name || ''}/`);
         
         if (person.gender) {
           gedcom.push(`1 SEX ${person.gender === 'male' ? 'M' : person.gender === 'female' ? 'F' : 'U'}`);
         }
         
-        if (person.birthDate) {
+        if (person.birth_date) {
           gedcom.push('1 BIRT');
-          gedcom.push(`2 DATE ${new Date(person.birthDate).toLocaleDateString('en-US')}`);
+          gedcom.push(`2 DATE ${new Date(person.birth_date).toLocaleDateString('en-US')}`);
           
-          if (person.birthPlace) {
-            gedcom.push(`2 PLAC ${person.birthPlace}`);
+          if (person.birth_place) {
+            gedcom.push(`2 PLAC ${person.birth_place}`);
           }
         }
         
-        if (person.deathDate) {
+        if (person.death_date) {
           gedcom.push('1 DEAT');
-          gedcom.push(`2 DATE ${new Date(person.deathDate).toLocaleDateString('en-US')}`);
+          gedcom.push(`2 DATE ${new Date(person.death_date).toLocaleDateString('en-US')}`);
           
-          if (person.deathPlace) {
-            gedcom.push(`2 PLAC ${person.deathPlace}`);
+          if (person.death_place) {
+            gedcom.push(`2 PLAC ${person.death_place}`);
           }
-        }
-        
-        // Relaciones familiares
-        if (person.parents && person.parents.length > 0) {
-          person.parents.forEach(parentId => {
-            gedcom.push(`1 FAMC @F${parentId}@`);
-          });
-        }
-        
-        if (person.spouses && person.spouses.length > 0) {
-          person.spouses.forEach(spouseId => {
-            gedcom.push(`1 FAMS @F${spouseId}@`);
-          });
         }
         
         // Notas
-        if (person.notes) {
-          gedcom.push(`1 NOTE ${person.notes.replace(/\\n/g, '\\n1 CONT ')}`);
+        if (person.biography) {
+          gedcom.push(`1 NOTE ${person.biography.replace(/\n/g, '\n1 CONT ')}`);
         }
       });
       
-      // Familias
-      const families = [];
+      // Procesar relaciones para crear familias GEDCOM
+      const familyRelations = new Map();
       
-      // Crear familias basadas en relaciones padre-hijo
-      persons.forEach(person => {
-        if (person.children && person.children.length > 0) {
-          const spouseIds = person.spouses || [];
-          
-          spouseIds.forEach(spouseId => {
-            const familyId = `${person._id}_${spouseId}`;
-            
-            if (!families.includes(familyId)) {
-              families.push(familyId);
-              
-              gedcom.push(`0 @F${familyId}@ FAM`);
-              
-              if (person.gender === 'male') {
-                gedcom.push(`1 HUSB @I${person._id}@`);
-                gedcom.push(`1 WIFE @I${spouseId}@`);
-              } else {
-                gedcom.push(`1 HUSB @I${spouseId}@`);
-                gedcom.push(`1 WIFE @I${person._id}@`);
-              }
-              
-              // Añadir hijos
-              person.children.forEach(childId => {
-                gedcom.push(`1 CHIL @I${childId}@`);
-              });
-              
-              // Añadir fecha de matrimonio si existe
-              const spouse = persons.find(p => p._id.toString() === spouseId.toString());
-              if (spouse && spouse.marriageDate) {
-                gedcom.push('1 MARR');
-                gedcom.push(`2 DATE ${new Date(spouse.marriageDate).toLocaleDateString('en-US')}`);
-                
-                if (spouse.marriagePlace) {
-                  gedcom.push(`2 PLAC ${spouse.marriagePlace}`);
-                }
-              }
-            }
+      // Identificar relaciones padre-hijo
+      const parentChildRelations = relationships.filter(rel => 
+        rel.relationship_type === 'parent' || rel.relationship_type === 'child'
+      );
+      
+      // Identificar relaciones de cónyuges
+      const spouseRelations = relationships.filter(rel => rel.relationship_type === 'spouse');
+      
+      // Crear un mapa de familias basado en relaciones de cónyuges
+      spouseRelations.forEach(rel => {
+        const familyKey = [rel.person1_id, rel.person2_id].sort().join('_');
+        
+        if (!familyRelations.has(familyKey)) {
+          familyRelations.set(familyKey, {
+            husband: null,
+            wife: null,
+            children: [],
+            marriageDate: rel.marriage_date,
+            marriagePlace: rel.marriage_place
           });
         }
+        
+        // Asignar esposo y esposa según el género
+        const person1 = persons.find(p => p.id === rel.person1_id);
+        const person2 = persons.find(p => p.id === rel.person2_id);
+        
+        if (person1 && person2) {
+          if (person1.gender === 'male') {
+            familyRelations.get(familyKey).husband = person1.id;
+            familyRelations.get(familyKey).wife = person2.id;
+          } else {
+            familyRelations.get(familyKey).husband = person2.id;
+            familyRelations.get(familyKey).wife = person1.id;
+          }
+        }
       });
+      
+      // Asignar hijos a las familias
+      parentChildRelations.forEach(rel => {
+        const parentId = rel.relationship_type === 'parent' ? rel.person1_id : rel.person2_id;
+        const childId = rel.relationship_type === 'parent' ? rel.person2_id : rel.person1_id;
+        
+        // Buscar la familia a la que pertenece este padre
+        for (const [key, family] of familyRelations.entries()) {
+          if (family.husband === parentId || family.wife === parentId) {
+            if (!family.children.includes(childId)) {
+              family.children.push(childId);
+            }
+            break;
+          }
+        }
+      });
+      
+      // Generar registros GEDCOM para familias
+      let familyCounter = 1;
+      for (const [key, family] of familyRelations.entries()) {
+        gedcom.push(`0 @F${familyCounter}@ FAM`);
+        
+        if (family.husband) {
+          gedcom.push(`1 HUSB @I${family.husband}@`);
+          
+          // Añadir referencia a la familia en el individuo
+          const husbIndex = gedcom.findIndex(line => line === `0 @I${family.husband}@ INDI`);
+          if (husbIndex !== -1) {
+            gedcom.splice(husbIndex + 1, 0, `1 FAMS @F${familyCounter}@`);
+          }
+        }
+        
+        if (family.wife) {
+          gedcom.push(`1 WIFE @I${family.wife}@`);
+          
+          // Añadir referencia a la familia en el individuo
+          const wifeIndex = gedcom.findIndex(line => line === `0 @I${family.wife}@ INDI`);
+          if (wifeIndex !== -1) {
+            gedcom.splice(wifeIndex + 1, 0, `1 FAMS @F${familyCounter}@`);
+          }
+        }
+        
+        // Añadir hijos
+        family.children.forEach(childId => {
+          gedcom.push(`1 CHIL @I${childId}@`);
+          
+          // Añadir referencia a la familia en el hijo
+          const childIndex = gedcom.findIndex(line => line === `0 @I${childId}@ INDI`);
+          if (childIndex !== -1) {
+            gedcom.splice(childIndex + 1, 0, `1 FAMC @F${familyCounter}@`);
+          }
+        });
+        
+        // Añadir fecha de matrimonio si existe
+        if (family.marriageDate) {
+          gedcom.push('1 MARR');
+          gedcom.push(`2 DATE ${new Date(family.marriageDate).toLocaleDateString('en-US')}`);
+          
+          if (family.marriagePlace) {
+            gedcom.push(`2 PLAC ${family.marriagePlace}`);
+          }
+        }
+        
+        familyCounter++;
+      }
       
       // Finalizar archivo GEDCOM
       gedcom.push('0 TRLR');
       
       // Enviar el archivo GEDCOM como respuesta
       res.setHeader('Content-Type', 'text/plain');
-      res.setHeader('Content-Disposition', `attachment; filename="${family.name.replace(/\\s/g, '_')}.ged"`);
-      res.send(gedcom.join('\\n'));
+      res.setHeader('Content-Disposition', `attachment; filename="${family.name.replace(/\s/g, '_')}.ged"`);
+      res.send(gedcom.join('\n'));
     } catch (error) {
       console.error('Error al exportar GEDCOM:', error);
-      res.status(500).json({ message: 'Error al exportar GEDCOM', error: error.message });
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al exportar GEDCOM', 
+        error: error.message 
+      });
     }
   }
 };
