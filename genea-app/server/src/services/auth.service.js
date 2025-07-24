@@ -4,7 +4,6 @@ const { supabaseAdmin } = require('../config/supabase.config');
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   console.error('ERROR: JWT_SECRET no está definido en las variables de entorno');
-  process.exit(1);
 }
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 

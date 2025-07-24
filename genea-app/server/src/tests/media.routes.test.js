@@ -6,16 +6,14 @@ const Person = require('../models/person.model');
 const mediaRoutes = require('../routes/media.routes');
 
 // Mock del middleware de autenticación
-jest.mock('../middleware/auth.middleware', () => ({
-  authMiddleware: (req, res, next) => {
-    req.user = {
-      _id: '60d0fe4f5311236168a109ca',
-      email: 'test@example.com',
-      displayName: 'Test User'
-    };
-    next();
-  }
-}));
+jest.mock('../middleware/auth.middleware', () => (req, res, next) => {
+  req.user = {
+    _id: '60d0fe4f5311236168a109ca',
+    email: 'test@example.com',
+    displayName: 'Test User'
+  };
+  next();
+});
 
 // Mock de multer para pruebas
 jest.mock('multer', () => {

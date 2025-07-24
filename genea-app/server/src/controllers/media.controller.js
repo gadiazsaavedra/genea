@@ -94,7 +94,7 @@ exports.uploadProfilePhoto = async (req, res) => {
 };
 
 // Subir archivos multimedia
-exports.uploadMedia = async (req, res) => {
+exports.uploadPhotos = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -106,7 +106,6 @@ exports.uploadMedia = async (req, res) => {
     const personId = req.params.personId;
     const userId = req.user.uid;
     const descriptions = req.body.descriptions || [];
-    const fileTypes = req.body.fileTypes || [];
     
     // Verificar si la persona existe y el usuario tiene acceso
     const { data: person, error: personError } = await supabaseClient
@@ -144,11 +143,10 @@ exports.uploadMedia = async (req, res) => {
     
     // Subir cada archivo a Supabase Storage
     const uploadPromises = req.files.map(async (file, index) => {
-      const fileType = fileTypes[index] || determineFileType(file.mimetype);
       const uploadResult = await storageService.uploadFile(
         file,
         userId,
-        `media/${personId}/${fileType}`
+        `media/${personId}/photo`
       );
       
       // Crear registro en la tabla media
@@ -158,7 +156,105 @@ exports.uploadMedia = async (req, res) => {
           person_id: personId,
           file_name: file.originalname,
           file_url: uploadResult.url,
-          file_type: fileType,
+          file_type: 'photo',
+          description: descriptions[index] || ''
+        }])
+        .select()
+        .single();
+
+      if (mediaError) throw new Error(mediaError.message);
+
+      return mediaRecord;
+    });
+
+    const uploadedMedia = await Promise.all(uploadPromises);
+
+    res.status(200).json({
+      success: true,
+      message: 'Archivos subidos correctamente',
+      data: {
+        uploadedMedia
+      }
+    });
+  } catch (error) {
+    console.error('Error al subir los archivos:', error);
+
+    // Eliminar los archivos en caso de error
+    if (req.files) {
+      req.files.forEach(file => fs.unlinkSync(file.path));
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error al subir los archivos',
+      error: error.message
+    });
+  }
+};
+
+exports.uploadDocuments = async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se han proporcionado archivos'
+      });
+    }
+
+    const personId = req.params.personId;
+    const userId = req.user.uid;
+    const descriptions = req.body.descriptions || [];
+
+    // Verificar si la persona existe y el usuario tiene acceso
+    const { data: person, error: personError } = await supabaseClient
+      .from('people')
+      .select('family_id')
+      .eq('id', personId)
+      .single();
+
+    if (personError || !person) {
+      // Eliminar los archivos subidos
+      req.files.forEach(file => fs.unlinkSync(file.path));
+
+      return res.status(404).json({
+        success: false,
+        message: 'Persona no encontrada'
+      });
+    }
+
+    // Verificar acceso a la familia
+    const { data: memberCheck, error: memberError } = await supabaseClient
+      .from('family_members')
+      .select('id')
+      .eq('family_id', person.family_id)
+      .eq('user_id', userId);
+
+    if (memberError || !memberCheck || memberCheck.length === 0) {
+      // Eliminar los archivos subidos
+      req.files.forEach(file => fs.unlinkSync(file.path));
+
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes acceso a esta persona'
+      });
+    }
+
+    // Subir cada archivo a Supabase Storage
+    const uploadPromises = req.files.map(async (file, index) => {
+      const uploadResult = await storageService.uploadFile(
+        file,
+        userId,
+        `media/${personId}/document`
+      );
+
+      // Crear registro en la tabla media
+      const { data: mediaRecord, error: mediaError } = await supabaseClient
+        .from('media')
+        .insert([{
+          person_id: personId,
+          file_name: file.originalname,
+          file_url: uploadResult.url,
+          file_type: 'document',
           description: descriptions[index] || ''
         }])
         .select()
@@ -265,7 +361,7 @@ exports.getPersonMedia = async (req, res) => {
 exports.deleteMedia = async (req, res) => {
   try {
     const mediaId = req.params.mediaId;
-    const userId = req.user.uid;
+    const userId = req.user._id;
     
     // Obtener información del archivo
     const { data: media, error: mediaError } = await supabaseClient
@@ -320,18 +416,3 @@ exports.deleteMedia = async (req, res) => {
     });
   }
 };
-
-// Función auxiliar para determinar el tipo de archivo
-function determineFileType(mimetype) {
-  if (mimetype.startsWith('image/')) {
-    return 'photo';
-  } else if (mimetype.startsWith('video/')) {
-    return 'video';
-  } else if (mimetype === 'application/pdf' || 
-             mimetype.includes('document') || 
-             mimetype.includes('msword')) {
-    return 'document';
-  } else {
-    return 'other';
-  }
-}

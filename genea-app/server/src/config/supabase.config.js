@@ -11,7 +11,6 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('ERROR: Variables de entorno de Supabase no configuradas');
   console.error('Asegúrate de configurar SUPABASE_URL, SUPABASE_ANON_KEY y SUPABASE_SERVICE_ROLE_KEY');
-  process.exit(1);
 }
 
 // Cliente de Supabase con clave anónima (para operaciones públicas)

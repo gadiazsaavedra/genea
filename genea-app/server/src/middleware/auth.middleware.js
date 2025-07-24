@@ -1,8 +1,7 @@
 const { supabaseAdmin } = require('../config/supabase.config');
 const authService = require('../services/auth.service');
 
-// Middleware para verificar la autenticación del usuario
-exports.verifyToken = async (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     // Verificar si hay un token de autenticación
     const authHeader = req.headers.authorization;
@@ -55,3 +54,5 @@ exports.verifyToken = async (req, res, next) => {
     });
   }
 };
+
+module.exports = authMiddleware;
