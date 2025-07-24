@@ -24,7 +24,7 @@ const personRoutes = require('./routes/person.routes');
 const familyRoutes = require('./routes/family.routes');
 const mediaRoutes = require('./routes/media.routes');
 const authRoutes = require('./routes/auth.routes');
-const treeRoutes = require('./routes/tree.routes');
+// const treeRoutes = require('./routes/tree.routes'); // Comentado temporalmente
 const invitationRoutes = require('./routes/invitation.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const commentRoutes = require('./routes/comment.routes');
@@ -70,7 +70,7 @@ initializeSupabase()
     app.use('/api/families', familyRoutes);
     app.use('/api/media', mediaRoutes);
     app.use('/api/auth', authRoutes);
-    app.use('/api/tree', treeRoutes);
+    // app.use('/api/tree', treeRoutes); // Comentado temporalmente
     app.use('/api/invitations', invitationRoutes);
     app.use('/api/notifications', notificationRoutes);
     app.use('/api/comments', commentRoutes);

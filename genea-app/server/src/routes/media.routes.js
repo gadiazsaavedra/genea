@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { authMiddleware } = require('../middleware/auth.middleware');
+const { verifyToken } = require('../middleware/auth.middleware');
 const mediaController = require('../controllers/media.controller');
 
 // Configuración de multer para almacenamiento de archivos
@@ -47,7 +47,7 @@ const upload = multer({
 });
 
 // Rutas protegidas por autenticación
-router.use(authMiddleware);
+router.use(verifyToken);
 
 // Subir una foto de perfil para una persona
 router.post('/profilePhoto/:personId', upload.single('profilePhoto'), mediaController.uploadProfilePhoto);

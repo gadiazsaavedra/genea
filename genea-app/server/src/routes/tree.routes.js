@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Person = require('../models/person.model');
-const { authMiddleware } = require('../middleware/auth.middleware');
+const { verifyToken } = require('../middleware/auth.middleware');
 
 // Proteger todas las rutas con autenticación
-router.use(authMiddleware);
+router.use(verifyToken);
 
 // Obtener árbol genealógico a partir de una persona
 router.get('/:personId', async (req, res) => {

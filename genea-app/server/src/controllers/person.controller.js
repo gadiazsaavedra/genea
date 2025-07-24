@@ -609,3 +609,69 @@ exports.removeRelation = async (req, res) => {
     });
   }
 };
+
+// Obtener el árbol genealógico de una persona
+exports.getPersonTree = async (req, res) => {
+  try {
+    const personId = req.params.id;
+    const userId = req.user.uid;
+    
+    // Obtener la persona
+    const { data: person, error: personError } = await supabaseClient
+      .from('people')
+      .select('*')
+      .eq('id', personId)
+      .single();
+    
+    if (personError || !person) {
+      return res.status(404).json({
+        success: false,
+        message: 'Persona no encontrada'
+      });
+    }
+    
+    // Verificar acceso a la familia
+    const { data: memberCheck, error: memberError } = await supabaseClient
+      .from('family_members')
+      .select('id')
+      .eq('family_id', person.family_id)
+      .eq('user_id', userId);
+    
+    if (memberError || !memberCheck || memberCheck.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes acceso a esta familia'
+      });
+    }
+    
+    // Obtener todas las personas de la familia
+    const { data: allPeople, error: peopleError } = await supabaseClient
+      .from('people')
+      .select('*')
+      .eq('family_id', person.family_id);
+    
+    if (peopleError) throw new Error(peopleError.message);
+    
+    // Obtener todas las relaciones de la familia
+    const { data: relationships, error: relError } = await supabaseClient
+      .from('relationships')
+      .select('*');
+    
+    if (relError) throw new Error(relError.message);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        people: allPeople || [],
+        relationships: relationships || [],
+        rootPerson: person
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener el árbol genealógico',
+      error: error.message
+    });
+  }
+};

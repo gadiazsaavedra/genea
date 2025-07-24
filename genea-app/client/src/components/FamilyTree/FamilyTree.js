@@ -123,8 +123,8 @@ const FamilyTree = ({ data, onPersonClick, viewType = 'horizontal' }) => {
     
     // Añadir gestos táctiles para dispositivos móviles
     if ('ontouchstart' in window) {
-      svg.on('touchstart', function() {
-        d3.event.preventDefault();
+      svg.on('touchstart', function(event) {
+        event.preventDefault();
       });
     }
     

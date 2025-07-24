@@ -1,0 +1,12 @@
+
+> genea-server@1.0.0 start
+> node src/index.js
+
+Inicializando Supabase...
+Conexión a Supabase establecida correctamente
+Bucket de almacenamiento inicializado correctamente
+Servidor corriendo en el puerto 5001
+Error al iniciar sesión: Error: Email not confirmed
+    at Object.login (/Users/gustavo/Documents/develp/genea/genea-app/server/src/services/auth.service.js:58:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async login (/Users/gustavo/Documents/develp/genea/genea-app/server/src/controllers/auth.controller.js:53:22)

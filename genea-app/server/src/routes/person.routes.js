@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const personController = require('../controllers/person.controller');
-const { authMiddleware } = require('../middleware/auth.middleware');
+const { verifyToken } = require('../middleware/auth.middleware');
 
 // Rutas protegidas por autenticación
-router.use(authMiddleware);
+router.use(verifyToken);
 
 // Rutas para personas
 router.get('/', personController.getAllPersons);
