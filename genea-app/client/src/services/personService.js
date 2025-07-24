@@ -1,5 +1,4 @@
 import api from './api';
-import { supabase } from '../config/supabase.config';
 
 // Servicio para gestionar personas
 const personService = {
