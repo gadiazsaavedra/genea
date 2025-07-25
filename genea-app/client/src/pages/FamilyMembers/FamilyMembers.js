@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import InvitationModal from '../../components/InvitationModal';
 
 const FamilyMembers = () => {
   const { familyId } = useParams();
   const [family, setFamily] = useState(null);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   useEffect(() => {
+    // Obtener datos de la familia desde localStorage o API
+    const savedFamilies = JSON.parse(localStorage.getItem('families') || '[]');
+    const currentFamily = savedFamilies.find(f => f._id === familyId);
+    
     setTimeout(() => {
       setFamily({
         id: familyId,
-        name: `Familia ${familyId}`,
-        description: 'Tu familia genealógica'
+        name: currentFamily?.name || 'Mi Familia',
+        description: currentFamily?.description || 'Tu familia genealógica'
       });
       
       setMembers([]);
@@ -33,7 +39,7 @@ const FamilyMembers = () => {
       <div style={{ marginBottom: '20px' }}>
         <h3>{members.length} miembros</h3>
         <button 
-          onClick={() => alert('Funcionalidad de invitación en desarrollo. Próximamente podrás invitar familiares por email o WhatsApp.')}
+          onClick={() => setShowInviteModal(true)}
           style={{ padding: '10px 20px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
         >
           + Invitar Miembro
@@ -45,7 +51,7 @@ const FamilyMembers = () => {
           <h3>No hay miembros en esta familia</h3>
           <p style={{ color: '#666', marginBottom: '20px' }}>Invita a familiares para que se unan y colaboren en el árbol genealógico.</p>
           <button 
-            onClick={() => alert('Funcionalidad de invitación en desarrollo. Próximamente podrás invitar familiares por email o WhatsApp.')}
+            onClick={() => setShowInviteModal(true)}
             style={{ padding: '10px 20px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
           >
             Invitar Primer Miembro
@@ -102,6 +108,12 @@ const FamilyMembers = () => {
           Volver a Familias
         </Link>
       </div>
+
+      <InvitationModal 
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        familyName={family?.name || 'esta familia'}
+      />
     </div>
   );
 };
