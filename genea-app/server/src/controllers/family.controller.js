@@ -171,6 +171,9 @@ exports.createFamily = async (req, res) => {
       };
     }
     
+    // Nota: La verificación de descendientes se hará después de crear la familia
+    // cuando se agreguen personas al árbol genealógico
+    
     // Crear la familia
     const { data: family, error: familyError } = await supabaseClient
       .from('families')

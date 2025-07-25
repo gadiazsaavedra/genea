@@ -1,7 +1,13 @@
 const { supabaseClient } = require('../config/supabase.config');
+const { checkBarbaraDescendant } = require('../utils/barbara-descendant-checker');
 
 // Familias con licencia gratuita
-const FREE_FAMILIES = ['barbara', 'barbará'];
+const FREE_FAMILIES = [
+  'barbara', 'barbará', 'bárbara',
+  'familia barbara', 'familia barbará', 'familia bárbara',
+  'descendencia barbara', 'descendencia barbará',
+  'linaje barbara', 'linaje barbará'
+];
 
 // Información de contacto para licencias
 const LICENSE_CONTACT = {
@@ -43,7 +49,20 @@ const checkLicense = async (req, res, next) => {
       const familyName = family.name.toLowerCase();
       
       // Verificar si es familia Barbará (gratis)
-      if (FREE_FAMILIES.some(freeName => familyName.includes(freeName))) {
+      const isFreeFamily = FREE_FAMILIES.some(freeName => {
+        return familyName.includes(freeName.toLowerCase()) || 
+               familyName.startsWith(freeName.toLowerCase()) ||
+               familyName.endsWith(freeName.toLowerCase());
+      });
+      
+      if (isFreeFamily) {
+        hasValidLicense = true;
+        break;
+      }
+      
+      // Verificar si es descendiente de Barbará
+      const isBarbaraDescendant = await checkBarbaraDescendant(family.id);
+      if (isBarbaraDescendant) {
         hasValidLicense = true;
         break;
       }
