@@ -9,7 +9,8 @@ import './App.css';
 import './styles/mobile-optimizations.css';
 
 // Carga perezosa de componentes para mejorar el rendimiento
-const Home = lazy(() => import('./pages/Home/Home'));
+const Home = lazy(() => import('./pages/Home.tsx'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 const TreeView = lazy(() => import('./pages/TreeView/TreeView'));
 const PersonManagement = lazy(() => import('./pages/PersonManagement/PersonManagement'));
 const FamilyManagement = lazy(() => import('./pages/FamilyManagement/FamilyManagement'));
@@ -52,6 +53,14 @@ function App() {
                   <Route path="/auth/register" element={<Register />} />
                   
                   {/* Rutas protegidas */}
+                  <Route 
+                    path="/dashboard" 
+                    element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    } 
+                  />
                   <Route 
                     path="/family/:familyId/tree" 
                     element={
