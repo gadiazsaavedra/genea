@@ -58,6 +58,23 @@ const Navbar = () => {
                   {t('nav.people')}
                 </Link>
               </li>
+              <li className="nav-item">
+                <button 
+                  className="nav-link logout-btn" 
+                  onClick={handleLogout}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: '#fff', 
+                    cursor: 'pointer',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '4px',
+                    backgroundColor: '#dc3545'
+                  }}
+                >
+                  {t('nav.logout')}
+                </button>
+              </li>
               <li className="nav-item dropdown">
                 <span className="nav-link dropdown-toggle">
                   Mi Cuenta
@@ -71,7 +88,7 @@ const Navbar = () => {
                   </Link>
                   <div className="dropdown-divider"></div>
                   <button className="dropdown-item" onClick={handleLogout}>
-                    Cerrar Sesión
+                    {t('nav.logout')}
                   </button>
                 </div>
               </li>
