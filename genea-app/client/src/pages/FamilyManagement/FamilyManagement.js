@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../../config/supabase.config';
 import './FamilyManagement.css';
 
 const FamilyManagement = () => {
@@ -15,11 +16,30 @@ const FamilyManagement = () => {
   useEffect(() => {
     const fetchFamilies = async () => {
       try {
-        setTimeout(() => {
-          const savedFamilies = JSON.parse(localStorage.getItem('families') || '[]');
-          setFamilies(savedFamilies);
-          setLoading(false);
-        }, 600);
+        const loadFamiliesFromSupabase = async () => {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+              setLoading(false);
+              return;
+            }
+            
+            const { data, error } = await supabase
+              .from('families')
+              .select('*')
+              .eq('user_id', user.id);
+            
+            if (error) throw error;
+            setFamilies(data || []);
+          } catch (error) {
+            console.error('Error loading families:', error);
+            setFamilies([]);
+          } finally {
+            setLoading(false);
+          }
+        };
+        
+        loadFamiliesFromSupabase();
       } catch (error) {
         console.error('Error al cargar familias:', error);
         setLoading(false);
@@ -72,25 +92,40 @@ const FamilyManagement = () => {
     try {
       if (editingFamily) {
         // Actualizar familia existente
+        const { data, error } = await supabase
+          .from('families')
+          .update({
+            name: formData.name,
+            description: formData.description
+          })
+          .eq('id', editingFamily.id)
+          .select();
+        
+        if (error) throw error;
+        
         const updatedFamilies = families.map(f => 
-          f._id === editingFamily._id ? { ...f, ...formData } : f
+          f.id === editingFamily.id ? data[0] : f
         );
         setFamilies(updatedFamilies);
-        // Guardar en localStorage
-        localStorage.setItem('families', JSON.stringify(updatedFamilies));
       } else {
         // Crear nueva familia
-        const newFamily = {
-          _id: Date.now().toString(),
-          ...formData,
-          membersCount: 1,
-          createdAt: new Date().toISOString().split('T')[0],
-          isAdmin: true
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const familyData = {
+          name: formData.name,
+          description: formData.description,
+          user_id: user?.id,
+          created_at: new Date().toISOString()
         };
-        const updatedFamilies = [...families, newFamily];
-        setFamilies(updatedFamilies);
-        // Guardar en localStorage
-        localStorage.setItem('families', JSON.stringify(updatedFamilies));
+        
+        const { data, error } = await supabase
+          .from('families')
+          .insert([familyData])
+          .select();
+        
+        if (error) throw error;
+        
+        setFamilies([...families, data[0]]);
       }
       setShowForm(false);
     } catch (error) {

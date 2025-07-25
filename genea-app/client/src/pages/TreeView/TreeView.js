@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import PersonModal from '../../components/PersonModal';
 import TreeVisualization from '../../components/TreeVisualization';
+import { supabase } from '../../config/supabase.config';
 
 const TreeView = () => {
   const { familyId } = useParams();
@@ -23,18 +24,62 @@ const TreeView = () => {
         description: 'Tu árbol genealógico'
       });
       
-      // Cargar personas de la familia
-      const savedPeople = JSON.parse(localStorage.getItem(`family_${familyId}_people`) || '[]');
-      setPeople(savedPeople);
+      // Cargar personas de la familia desde Supabase
+      loadPeopleFromSupabase();
       
       setLoading(false);
     }, 500);
   }, [familyId]);
 
-  const handleAddPerson = (person) => {
-    const updatedPeople = [...people, person];
-    setPeople(updatedPeople);
-    localStorage.setItem(`family_${familyId}_people`, JSON.stringify(updatedPeople));
+  const loadPeopleFromSupabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('persons')
+        .select('*')
+        .eq('family_id', familyId);
+      
+      if (error) throw error;
+      setPeople(data || []);
+    } catch (error) {
+      console.error('Error loading people:', error);
+      setPeople([]);
+    }
+  };
+
+  const handleAddPerson = async (person) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const personData = {
+        ...person,
+        family_id: familyId,
+        user_id: user?.id,
+        full_name: person.fullName,
+        first_name: person.firstName,
+        last_name: person.lastName,
+        birth_date: person.birthDate || null,
+        birth_place: person.birthPlace || null,
+        death_date: person.deathDate || null,
+        death_place: person.deathPlace || null,
+        is_alive: person.isAlive,
+        is_founder: person.isFounder,
+        created_at: new Date().toISOString()
+      };
+      
+      const { data, error } = await supabase
+        .from('persons')
+        .insert([personData])
+        .select();
+      
+      if (error) throw error;
+      
+      // Actualizar lista local
+      setPeople([...people, data[0]]);
+      
+    } catch (error) {
+      console.error('Error adding person:', error);
+      alert('Error al agregar persona. Inténtalo de nuevo.');
+    }
   };
 
   const openFounderModal = () => {

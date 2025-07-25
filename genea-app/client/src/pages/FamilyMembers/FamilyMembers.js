@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { supabase } from '../../config/supabase.config';
 import InvitationModal from '../../components/InvitationModal';
 
 const FamilyMembers = () => {
@@ -10,11 +11,26 @@ const FamilyMembers = () => {
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   useEffect(() => {
-    // Obtener datos de la familia desde localStorage o API
-    const savedFamilies = JSON.parse(localStorage.getItem('families') || '[]');
-    const currentFamily = savedFamilies.find(f => f._id === familyId);
+    // Obtener datos de la familia desde Supabase
+    const loadFamilyFromSupabase = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('families')
+          .select('*')
+          .eq('id', familyId)
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error loading family:', error);
+        return null;
+      }
+    };
     
-    setTimeout(() => {
+    const initializeFamily = async () => {
+      const currentFamily = await loadFamilyFromSupabase();
+      
       setFamily({
         id: familyId,
         name: currentFamily?.name || 'Mi Familia',
@@ -24,7 +40,9 @@ const FamilyMembers = () => {
       setMembers([]);
       
       setLoading(false);
-    }, 500);
+    };
+    
+    initializeFamily();
   }, [familyId]);
 
   if (loading) {
