@@ -18,32 +18,7 @@ const FamilyManagement = () => {
         // Aquí se cargarían las familias desde la API
         // Por ahora usamos datos de ejemplo
         setTimeout(() => {
-          const mockFamilies = [
-            {
-              _id: '1',
-              name: 'Familia Pérez',
-              description: 'Familia originaria de Madrid',
-              membersCount: 12,
-              createdAt: '2023-01-15',
-              isAdmin: true
-            },
-            {
-              _id: '2',
-              name: 'Familia García',
-              description: 'Rama familiar de Barcelona',
-              membersCount: 8,
-              createdAt: '2023-02-20',
-              isAdmin: true
-            },
-            {
-              _id: '3',
-              name: 'Familia López',
-              description: 'Familia extendida con raíces en Valencia',
-              membersCount: 15,
-              createdAt: '2023-03-05',
-              isAdmin: false
-            }
-          ];
+          const mockFamilies = [];
           setFamilies(mockFamilies);
           setLoading(false);
         }, 600);
