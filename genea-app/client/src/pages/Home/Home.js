@@ -13,11 +13,7 @@ const Home = () => {
       try {
         // Simulamos una llamada a la API
         setTimeout(() => {
-          setRecentFamilies([
-            { _id: '1', name: 'Familia Pérez', membersCount: 12, lastUpdated: '2023-07-15' },
-            { _id: '2', name: 'Familia García', membersCount: 8, lastUpdated: '2023-07-10' },
-            { _id: '3', name: 'Familia López', membersCount: 15, lastUpdated: '2023-07-05' }
-          ]);
+          setRecentFamilies([]);
           setLoading(false);
         }, 500);
       } catch (error) {
@@ -44,6 +40,11 @@ const Home = () => {
         <h2>Familias recientes</h2>
         {loading ? (
           <div className="loading">Cargando familias...</div>
+        ) : recentFamilies.length === 0 ? (
+          <div className="no-families">
+            <p>No tienes familias creadas aún.</p>
+            <Link to="/family/new" className="btn btn-primary">Crear tu primera familia</Link>
+          </div>
         ) : (
           <div className="families-grid">
             {recentFamilies.map(family => (
@@ -58,7 +59,7 @@ const Home = () => {
               </div>
             ))}
           </div>
-        )}
+        )
       </section>
 
       <section className="features-section">
