@@ -141,7 +141,7 @@ const Dashboard: React.FC = () => {
 
   // Navegar a la página de creación de familia
   const handleCreateFamily = () => {
-    navigate('/family/new');
+    navigate('/families');
   };
 
   // Navegar a la página de creación de persona
