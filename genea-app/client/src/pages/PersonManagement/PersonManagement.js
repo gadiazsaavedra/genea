@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../../config/supabase.config';
 import PersonForm from '../../components/PersonForm/PersonForm';
+import BulkDeleteModal from '../../components/BulkDeleteModal';
 import './PersonManagement.css';
 
 const PersonManagement = () => {
@@ -9,55 +11,14 @@ const PersonManagement = () => {
   const [editingPerson, setEditingPerson] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPersons, setFilteredPersons] = useState([]);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
 
   useEffect(() => {
     const fetchPersons = async () => {
       try {
         // Aquí se cargarían las personas desde la API
         // Por ahora usamos datos de ejemplo
-        setTimeout(() => {
-          const mockPersons = [
-            {
-              _id: '1',
-              fullName: 'Juan Pérez',
-              birthDate: '1950-05-15',
-              birthPlace: 'Madrid, España',
-              isAlive: true,
-              occupation: 'Ingeniero (jubilado)'
-            },
-            {
-              _id: '2',
-              fullName: 'María Pérez',
-              birthDate: '1975-08-20',
-              birthPlace: 'Barcelona, España',
-              isAlive: true,
-              occupation: 'Médico'
-            },
-            {
-              _id: '3',
-              fullName: 'Pedro Pérez',
-              birthDate: '1978-12-03',
-              birthPlace: 'Valencia, España',
-              isAlive: true,
-              occupation: 'Abogado'
-            },
-            {
-              _id: '4',
-              fullName: 'Carlos Gómez',
-              birthDate: '2000-03-10',
-              birthPlace: 'Madrid, España',
-              isAlive: true,
-              occupation: 'Estudiante'
-            },
-            {
-              _id: '5',
-              fullName: 'Laura Gómez',
-              birthDate: '2002-11-05',
-              birthPlace: 'Madrid, España',
-              isAlive: true,
-              occupation: 'Estudiante'
-            }
-          ];
+          const mockPersons = [];
           setPersons(mockPersons);
           setFilteredPersons(mockPersons);
           setLoading(false);
@@ -95,13 +56,40 @@ const PersonManagement = () => {
   const handleDeletePerson = async (personId) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta persona?')) {
       try {
-        // Aquí se eliminaría la persona a través de la API
-        // Por ahora simulamos la eliminación
-        setPersons(persons.filter(p => p._id !== personId));
-        setFilteredPersons(filteredPersons.filter(p => p._id !== personId));
+        const { error } = await supabase
+          .from('persons')
+          .delete()
+          .eq('id', personId);
+        
+        if (error) throw error;
+        
+        setPersons(persons.filter(p => p.id !== personId));
+        setFilteredPersons(filteredPersons.filter(p => p.id !== personId));
       } catch (error) {
         console.error('Error al eliminar persona:', error);
+        alert('Error al eliminar persona');
       }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { error } = await supabase
+        .from('persons')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      setPersons([]);
+      setFilteredPersons([]);
+      alert('Todas las personas han sido eliminadas');
+    } catch (error) {
+      console.error('Error al eliminar personas:', error);
+      alert('Error al eliminar personas');
     }
   };
 
@@ -142,9 +130,20 @@ const PersonManagement = () => {
     <div className="person-management-container">
       <div className="person-management-header">
         <h1>Gestión de Personas</h1>
-        <button className="btn btn-primary" onClick={handleAddPerson}>
-          Añadir Persona
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button className="btn btn-primary" onClick={handleAddPerson}>
+            Añadir Persona
+          </button>
+          {persons.length > 0 && (
+            <button 
+              className="btn btn-danger" 
+              onClick={() => setShowBulkDelete(true)}
+              style={{ backgroundColor: '#d32f2f' }}
+            >
+              Eliminar Todas
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="search-bar">
@@ -174,7 +173,7 @@ const PersonManagement = () => {
             <tbody>
               {filteredPersons.length > 0 ? (
                 filteredPersons.map(person => (
-                  <tr key={person._id}>
+                  <tr key={person.id}>
                     <td>{person.fullName}</td>
                     <td>{formatDate(person.birthDate)}</td>
                     <td>{person.birthPlace || 'Desconocido'}</td>
@@ -198,7 +197,7 @@ const PersonManagement = () => {
                       <button 
                         className="action-btn delete-btn" 
                         title="Eliminar"
-                        onClick={() => handleDeletePerson(person._id)}
+                        onClick={() => handleDeletePerson(person.id)}
                       >
                         🗑️
                       </button>
@@ -228,6 +227,12 @@ const PersonManagement = () => {
           </div>
         </div>
       )}
+      
+      <BulkDeleteModal 
+        isOpen={showBulkDelete}
+        onClose={() => setShowBulkDelete(false)}
+        onConfirm={handleBulkDelete}
+      />
     </div>
   );
 };
