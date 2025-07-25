@@ -17,6 +17,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard.tsx'));
 const TreeView = lazy(() => import('./pages/TreeView/TreeView'));
 const PersonManagement = lazy(() => import('./pages/PersonManagement/PersonManagement'));
 const FamilyManagement = lazy(() => import('./pages/FamilyManagement/FamilyManagement'));
+const FamilyMembers = lazy(() => import('./pages/FamilyMembers/FamilyMembers'));
 const MediaManagement = lazy(() => import('./pages/MediaManagement/MediaManagement'));
 const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
@@ -87,6 +88,14 @@ function App() {
                     element={
                       <PrivateRoute>
                         <FamilyManagement />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/family/:familyId/members" 
+                    element={
+                      <PrivateRoute>
+                        <FamilyMembers />
                       </PrivateRoute>
                     } 
                   />
