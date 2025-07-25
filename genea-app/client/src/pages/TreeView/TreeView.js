@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import PersonModal from '../../components/PersonModal';
+import TreeVisualization from '../../components/TreeVisualization';
 
 const TreeView = () => {
   const { familyId } = useParams();
   const [family, setFamily] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [people, setPeople] = useState([]);
+  const [showPersonModal, setShowPersonModal] = useState(false);
+  const [isFounderMode, setIsFounderMode] = useState(false);
+  const [viewType, setViewType] = useState('traditional');
 
   useEffect(() => {
     const savedFamilies = JSON.parse(localStorage.getItem('families') || '[]');
@@ -16,9 +22,30 @@ const TreeView = () => {
         name: 'Mi Familia',
         description: 'Tu árbol genealógico'
       });
+      
+      // Cargar personas de la familia
+      const savedPeople = JSON.parse(localStorage.getItem(`family_${familyId}_people`) || '[]');
+      setPeople(savedPeople);
+      
       setLoading(false);
     }, 500);
   }, [familyId]);
+
+  const handleAddPerson = (person) => {
+    const updatedPeople = [...people, person];
+    setPeople(updatedPeople);
+    localStorage.setItem(`family_${familyId}_people`, JSON.stringify(updatedPeople));
+  };
+
+  const openFounderModal = () => {
+    setIsFounderMode(true);
+    setShowPersonModal(true);
+  };
+
+  const openPersonModal = () => {
+    setIsFounderMode(false);
+    setShowPersonModal(true);
+  };
 
   if (loading) {
     return <div style={{ padding: '20px' }}>Cargando árbol...</div>;
@@ -29,39 +56,93 @@ const TreeView = () => {
       <h1>Árbol Genealógico - {family?.name}</h1>
       <p>{family?.description}</p>
       
-      <div style={{ 
-        border: '2px dashed #ddd', 
-        borderRadius: '8px', 
-        padding: '60px 20px', 
-        textAlign: 'center',
-        margin: '40px 0'
-      }}>
-        <h3>Árbol genealógico en construcción</h3>
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Agrega personas a tu familia para ver el árbol genealógico interactivo.
-        </p>
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button style={{ 
-            padding: '10px 20px', 
-            backgroundColor: '#1976d2', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-            + Agregar Fundadores
-          </button>
-          <button style={{ 
-            padding: '10px 20px', 
-            backgroundColor: '#4caf50', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-            + Agregar Persona
-          </button>
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => setViewType('traditional')}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: viewType === 'traditional' ? '#1976d2' : 'white',
+                color: viewType === 'traditional' ? 'white' : '#1976d2',
+                border: '1px solid #1976d2',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              🌳 Tradicional
+            </button>
+            <button 
+              onClick={() => setViewType('timeline')}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: viewType === 'timeline' ? '#1976d2' : 'white',
+                color: viewType === 'timeline' ? 'white' : '#1976d2',
+                border: '1px solid #1976d2',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              ⏰ Timeline
+            </button>
+            <button 
+              onClick={() => setViewType('circular')}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: viewType === 'circular' ? '#1976d2' : 'white',
+                color: viewType === 'circular' ? 'white' : '#1976d2',
+                border: '1px solid #1976d2',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              ⭕ Circular
+            </button>
+            <button 
+              onClick={() => setViewType('fan')}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: viewType === 'fan' ? '#1976d2' : 'white',
+                color: viewType === 'fan' ? 'white' : '#1976d2',
+                border: '1px solid #1976d2',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              🌟 Abanico
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={openFounderModal}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: '#1976d2', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              + Fundadores
+            </button>
+            <button 
+              onClick={openPersonModal}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: '#4caf50', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              + Persona
+            </button>
+          </div>
         </div>
+        
+        <TreeVisualization people={people} viewType={viewType} />
       </div>
 
       <div style={{ 
@@ -70,14 +151,14 @@ const TreeView = () => {
         borderRadius: '8px',
         marginBottom: '20px'
       }}>
-        <h4>Próximamente disponible:</h4>
-        <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
-          <li>🌳 Vista tradicional del árbol</li>
-          <li>⏰ Timeline familiar</li>
-          <li>⭕ Vista circular</li>
-          <li>🌟 Vista en abanico</li>
-          <li>🔍 Zoom y navegación interactiva</li>
-        </ul>
+        <h4>Personas en el árbol: {people.length}</h4>
+        <p style={{ margin: '8px 0', color: '#666' }}>
+          Fundadores: {people.filter(p => p.isFounder).length} | 
+          Otros miembros: {people.filter(p => !p.isFounder).length}
+        </p>
+        <p style={{ margin: '8px 0', fontSize: '14px', color: '#888' }}>
+          🔍 Usa la rueda del ratón para hacer zoom y arrastra para navegar
+        </p>
       </div>
 
       <div style={{ marginTop: '40px' }}>
@@ -107,6 +188,13 @@ const TreeView = () => {
           Ver Miembros
         </Link>
       </div>
+
+      <PersonModal 
+        isOpen={showPersonModal}
+        onClose={() => setShowPersonModal(false)}
+        onSave={handleAddPerson}
+        isFounder={isFounderMode}
+      />
     </div>
   );
 };
