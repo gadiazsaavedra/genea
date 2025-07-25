@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import GoogleLoginButton from '../../components/Auth/GoogleLoginButton';
 import './Auth.css';
 
 const Login = () => {
@@ -113,14 +114,10 @@ const Login = () => {
           <span>O</span>
         </div>
 
-        <button 
-          type="button"
-          className="social-button google"
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-        >
-          Continuar con Google
-        </button>
+        <GoogleLoginButton 
+          onSuccess={() => navigate('/dashboard')}
+          onError={(error) => setError(error.message)}
+        />
 
         <div className="auth-footer">
           ¿No tienes una cuenta? <Link to="/auth/register">Regístrate</Link>

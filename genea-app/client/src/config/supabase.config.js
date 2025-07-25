@@ -7,6 +7,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Variables de entorno de Supabase no configuradas');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    redirectTo: `${window.location.origin}/auth/callback`
+  }
+});
 
 export default supabase;

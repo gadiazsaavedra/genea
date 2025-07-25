@@ -20,6 +20,7 @@ const FamilyManagement = lazy(() => import('./pages/FamilyManagement/FamilyManag
 const MediaManagement = lazy(() => import('./pages/MediaManagement/MediaManagement'));
 const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
+const AuthCallback = lazy(() => import('./pages/Auth/AuthCallback'));
 const Profile = lazy(() => import('./pages/Profile/Profile'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 
@@ -54,6 +55,7 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/auth/login" element={<Login />} />
                   <Route path="/auth/register" element={<Register />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
                   
                   {/* Rutas protegidas */}
                   <Route 
