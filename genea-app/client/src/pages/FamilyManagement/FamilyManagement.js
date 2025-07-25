@@ -111,10 +111,15 @@ const FamilyManagement = () => {
         // Crear nueva familia
         const { data: { user } } = await supabase.auth.getUser();
         
+        if (!user) {
+          alert('Debes estar logueado para crear una familia');
+          return;
+        }
+        
         const familyData = {
           name: formData.name,
           description: formData.description,
-          user_id: user?.id,
+          user_id: user.id,
           created_at: new Date().toISOString()
         };
         
@@ -123,13 +128,19 @@ const FamilyManagement = () => {
           .insert([familyData])
           .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          alert(`Error al crear familia: ${error.message}`);
+          return;
+        }
         
         setFamilies([...families, data[0]]);
       }
       setShowForm(false);
+      setFormData({ name: '', description: '' });
     } catch (error) {
       console.error('Error al guardar familia:', error);
+      alert('Error al guardar familia. Inténtalo de nuevo.');
     }
   };
 
@@ -152,39 +163,34 @@ const FamilyManagement = () => {
         <div className="families-grid">
           {families.length > 0 ? (
             families.map(family => (
-              <div key={family._id} className="family-card">
+              <div key={family.id} className="family-card">
                 <div className="family-card-header">
                   <h2>{family.name}</h2>
-                  {family.isAdmin && <span className="admin-badge">Admin</span>}
+                  <span className="admin-badge">Admin</span>
                 </div>
                 <p className="family-description">{family.description}</p>
                 <div className="family-meta">
-                  <span>{family.membersCount} miembros</span>
-                  <span>Creada: {formatDate(family.createdAt)}</span>
+                  <span>Creada: {formatDate(family.created_at)}</span>
                 </div>
                 <div className="family-actions">
-                  <Link to={`/family/${family._id}/tree`} className="btn btn-sm">
+                  <Link to={`/family/${family.id}/tree`} className="btn btn-sm">
                     Ver árbol
                   </Link>
-                  <Link to={`/family/${family._id}/members`} className="btn btn-sm btn-outline">
+                  <Link to={`/family/${family.id}/members`} className="btn btn-sm btn-outline">
                     Miembros
                   </Link>
-                  {family.isAdmin && (
-                    <>
-                      <button 
-                        className="btn btn-sm btn-outline"
-                        onClick={() => handleEditFamily(family)}
-                      >
-                        Editar
-                      </button>
-                      <button 
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDeleteFamily(family._id)}
-                      >
-                        Eliminar
-                      </button>
-                    </>
-                  )}
+                  <button 
+                    className="btn btn-sm btn-outline"
+                    onClick={() => handleEditFamily(family)}
+                  >
+                    Editar
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleDeleteFamily(family.id)}
+                  >
+                    Eliminar
+                  </button>
                 </div>
               </div>
             ))
