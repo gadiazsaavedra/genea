@@ -59,7 +59,7 @@ const Home = () => {
               </div>
             ))}
           </div>
-        )
+        )}
       </section>
 
       <section className="features-section">
