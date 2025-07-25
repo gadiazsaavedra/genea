@@ -15,11 +15,9 @@ const FamilyManagement = () => {
   useEffect(() => {
     const fetchFamilies = async () => {
       try {
-        // Aquí se cargarían las familias desde la API
-        // Por ahora usamos datos de ejemplo
         setTimeout(() => {
-          const mockFamilies = [];
-          setFamilies(mockFamilies);
+          const savedFamilies = JSON.parse(localStorage.getItem('families') || '[]');
+          setFamilies(savedFamilies);
           setLoading(false);
         }, 600);
       } catch (error) {
@@ -78,16 +76,21 @@ const FamilyManagement = () => {
           f._id === editingFamily._id ? { ...f, ...formData } : f
         );
         setFamilies(updatedFamilies);
+        // Guardar en localStorage
+        localStorage.setItem('families', JSON.stringify(updatedFamilies));
       } else {
         // Crear nueva familia
         const newFamily = {
-          _id: Date.now().toString(), // Simulamos un ID
+          _id: Date.now().toString(),
           ...formData,
           membersCount: 1,
           createdAt: new Date().toISOString().split('T')[0],
           isAdmin: true
         };
-        setFamilies([...families, newFamily]);
+        const updatedFamilies = [...families, newFamily];
+        setFamilies(updatedFamilies);
+        // Guardar en localStorage
+        localStorage.setItem('families', JSON.stringify(updatedFamilies));
       }
       setShowForm(false);
     } catch (error) {

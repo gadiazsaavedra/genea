@@ -1,213 +1,112 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import FamilyTree from '../../components/FamilyTree/FamilyTree';
-import PersonDetail from '../../components/PersonDetail/PersonDetail';
-import personService from '../../services/personService';
-import './TreeView.css';
+import { useParams, Link } from 'react-router-dom';
 
 const TreeView = () => {
   const { familyId } = useParams();
-  const [treeData, setTreeData] = useState(null);
+  const [family, setFamily] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedPerson, setSelectedPerson] = useState(null);
-  const [viewType, setViewType] = useState('horizontal');
-  const [generations, setGenerations] = useState(3);
-  const [includeSpouses, setIncludeSpouses] = useState(true);
 
   useEffect(() => {
-    const fetchTreeData = async () => {
-      try {
-        setLoading(true);
-        
-        // Intentar cargar datos reales desde la API
-        try {
-          // Obtener el ID de la persona raíz para esta familia
-          // Esto podría requerir una llamada adicional a la API para obtener el fundador de la familia
-          const rootPersonId = '1'; // Esto debería venir de la API
-          
-          const response = await personService.getPersonTree(rootPersonId, {
-            generations,
-            includeSpouses
-          });
-          
-          if (response.success && response.data) {
-            setTreeData(response.data);
-            setLoading(false);
-            return;
-          }
-        } catch (apiError) {
-          console.warn('Error al cargar datos de la API, usando datos de ejemplo:', apiError);
-        }
-        
-        // Si falla la API, usar datos de ejemplo
-        setTimeout(() => {
-          const mockData = {
-            _id: '1',
-            name: 'Juan Pérez',
-            fullName: 'Juan Pérez',
-            birthDate: '1950-05-15',
-            isAlive: true,
-            children: [
-              {
-                _id: '2',
-                name: 'María Pérez',
-                fullName: 'María Pérez',
-                birthDate: '1975-08-20',
-                isAlive: true,
-                children: [
-                  {
-                    _id: '4',
-                    name: 'Carlos Gómez',
-                    fullName: 'Carlos Gómez',
-                    birthDate: '2000-03-10',
-                    isAlive: true
-                  },
-                  {
-                    _id: '5',
-                    name: 'Laura Gómez',
-                    fullName: 'Laura Gómez',
-                    birthDate: '2002-11-05',
-                    isAlive: true
-                  }
-                ]
-              },
-              {
-                _id: '3',
-                name: 'Pedro Pérez',
-                fullName: 'Pedro Pérez',
-                birthDate: '1978-12-03',
-                isAlive: true,
-                children: [
-                  {
-                    _id: '6',
-                    name: 'Ana Pérez',
-                    fullName: 'Ana Pérez',
-                    birthDate: '2005-07-22',
-                    isAlive: true
-                  }
-                ]
-              }
-            ]
-          };
-          setTreeData(mockData);
-          setLoading(false);
-        }, 800);
-      } catch (err) {
-        setError('Error al cargar los datos del árbol genealógico');
-        setLoading(false);
-        console.error('Error fetching tree data:', err);
-      }
-    };
-
-    fetchTreeData();
-  }, [familyId, generations, includeSpouses]);
-
-  const handlePersonClick = (person) => {
-    setSelectedPerson(person);
-  };
-
-  const handleCloseDetail = () => {
-    setSelectedPerson(null);
-  };
-  
-  const handleViewTypeChange = (type) => {
-    setViewType(type);
-  };
-  
-  const handleGenerationsChange = (e) => {
-    setGenerations(parseInt(e.target.value));
-  };
-  
-  const handleIncludeSpousesChange = () => {
-    setIncludeSpouses(!includeSpouses);
-  };
-  
-  const handleExportTree = () => {
-    // Implementar exportación del árbol (GEDCOM, PDF, etc.)
-    alert('Funcionalidad de exportación en desarrollo');
-  };
+    const savedFamilies = JSON.parse(localStorage.getItem('families') || '[]');
+    const currentFamily = savedFamilies.find(f => f._id === familyId);
+    
+    setTimeout(() => {
+      setFamily(currentFamily || {
+        id: familyId,
+        name: 'Mi Familia',
+        description: 'Tu árbol genealógico'
+      });
+      setLoading(false);
+    }, 500);
+  }, [familyId]);
 
   if (loading) {
-    return <div className="loading-container">Cargando árbol genealógico...</div>;
-  }
-
-  if (error) {
-    return <div className="error-container">{error}</div>;
+    return <div style={{ padding: '20px' }}>Cargando árbol...</div>;
   }
 
   return (
-    <div className="tree-view-container">
-      <div className="tree-header">
-        <h1>Árbol Genealógico</h1>
-        <div className="tree-options">
-          <div className="view-type-selector">
-            <button 
-              className={`view-type-btn ${viewType === 'horizontal' ? 'active' : ''}`}
-              onClick={() => handleViewTypeChange('horizontal')}
-              title="Vista horizontal"
-            >
-              ↔️
-            </button>
-            <button 
-              className={`view-type-btn ${viewType === 'vertical' ? 'active' : ''}`}
-              onClick={() => handleViewTypeChange('vertical')}
-              title="Vista vertical"
-            >
-              ↕️
-            </button>
-          </div>
-          
-          <div className="generations-selector">
-            <label htmlFor="generations">Generaciones:</label>
-            <select 
-              id="generations" 
-              value={generations} 
-              onChange={handleGenerationsChange}
-            >
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-            </select>
-          </div>
-          
-          <div className="spouses-selector">
-            <input 
-              type="checkbox" 
-              id="includeSpouses" 
-              checked={includeSpouses} 
-              onChange={handleIncludeSpousesChange}
-            />
-            <label htmlFor="includeSpouses">Incluir cónyuges</label>
-          </div>
-        </div>
-        
-        <div className="tree-actions">
-          <button className="btn btn-outline" onClick={handleExportTree}>Exportar árbol</button>
-          <button className="btn btn-primary">Añadir persona</button>
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <h1>Árbol Genealógico - {family?.name}</h1>
+      <p>{family?.description}</p>
+      
+      <div style={{ 
+        border: '2px dashed #ddd', 
+        borderRadius: '8px', 
+        padding: '60px 20px', 
+        textAlign: 'center',
+        margin: '40px 0'
+      }}>
+        <h3>Árbol genealógico en construcción</h3>
+        <p style={{ color: '#666', marginBottom: '20px' }}>
+          Agrega personas a tu familia para ver el árbol genealógico interactivo.
+        </p>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button style={{ 
+            padding: '10px 20px', 
+            backgroundColor: '#1976d2', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+            + Agregar Fundadores
+          </button>
+          <button style={{ 
+            padding: '10px 20px', 
+            backgroundColor: '#4caf50', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+            + Agregar Persona
+          </button>
         </div>
       </div>
-      
-      <div className="tree-visualization">
-        <FamilyTree 
-          data={treeData} 
-          onPersonClick={handlePersonClick}
-          viewType={viewType}
-        />
+
+      <div style={{ 
+        backgroundColor: '#f5f5f5', 
+        padding: '20px', 
+        borderRadius: '8px',
+        marginBottom: '20px'
+      }}>
+        <h4>Próximamente disponible:</h4>
+        <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
+          <li>🌳 Vista tradicional del árbol</li>
+          <li>⏰ Timeline familiar</li>
+          <li>⭕ Vista circular</li>
+          <li>🌟 Vista en abanico</li>
+          <li>🔍 Zoom y navegación interactiva</li>
+        </ul>
       </div>
-      
-      {selectedPerson && (
-        <div className="person-detail-overlay">
-          <div className="person-detail-container">
-            <PersonDetail 
-              person={selectedPerson} 
-              onClose={handleCloseDetail} 
-            />
-          </div>
-        </div>
-      )}
+
+      <div style={{ marginTop: '40px' }}>
+        <Link 
+          to="/families" 
+          style={{ 
+            padding: '10px 20px', 
+            border: '1px solid #1976d2', 
+            color: '#1976d2', 
+            textDecoration: 'none', 
+            borderRadius: '4px',
+            marginRight: '12px'
+          }}
+        >
+          Volver a Familias
+        </Link>
+        <Link 
+          to={`/family/${familyId}/members`}
+          style={{ 
+            padding: '10px 20px', 
+            backgroundColor: '#1976d2', 
+            color: 'white', 
+            textDecoration: 'none', 
+            borderRadius: '4px'
+          }}
+        >
+          Ver Miembros
+        </Link>
+      </div>
     </div>
   );
 };
