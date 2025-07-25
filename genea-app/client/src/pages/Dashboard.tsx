@@ -52,7 +52,7 @@ interface Person {
 
 // Componente principal
 const Dashboard: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -76,44 +76,62 @@ const Dashboard: React.FC = () => {
     const fetchFamilies = async () => {
       try {
         setLoading(prev => ({ ...prev, families: true }));
-        const response = await axios.get('/api/families');
-        setFamilies(response.data.data);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/families`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser?.access_token}`
+          }
+        });
+        setFamilies(response.data.data || []);
         setError(prev => ({ ...prev, families: null }));
       } catch (err: any) {
         console.error('Error al cargar familias:', err);
+        setFamilies([]);
         setError(prev => ({ 
           ...prev, 
-          families: 'Error al cargar las familias. Por favor, intenta de nuevo.' 
+          families: null
         }));
       } finally {
         setLoading(prev => ({ ...prev, families: false }));
       }
     };
 
-    fetchFamilies();
-  }, []);
+    if (currentUser) {
+      fetchFamilies();
+    } else {
+      setLoading(prev => ({ ...prev, families: false }));
+    }
+  }, [currentUser]);
 
   // Cargar datos de personas
   useEffect(() => {
     const fetchPersons = async () => {
       try {
         setLoading(prev => ({ ...prev, persons: true }));
-        const response = await axios.get('/api/persons');
-        setPersons(response.data.data);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/persons`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser?.access_token}`
+          }
+        });
+        setPersons(response.data.data || []);
         setError(prev => ({ ...prev, persons: null }));
       } catch (err: any) {
         console.error('Error al cargar personas:', err);
+        setPersons([]);
         setError(prev => ({ 
           ...prev, 
-          persons: 'Error al cargar las personas. Por favor, intenta de nuevo.' 
+          persons: null
         }));
       } finally {
         setLoading(prev => ({ ...prev, persons: false }));
       }
     };
 
-    fetchPersons();
-  }, []);
+    if (currentUser) {
+      fetchPersons();
+    } else {
+      setLoading(prev => ({ ...prev, persons: false }));
+    }
+  }, [currentUser]);
 
   // Manejar cambio de pestaña
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -163,7 +181,7 @@ const Dashboard: React.FC = () => {
       {/* Encabezado */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Bienvenido, {currentUser?.displayName || 'Usuario'}
+          Bienvenido, {currentUser?.user_metadata?.displayName || currentUser?.email?.split('@')[0] || 'Usuario'}
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Gestiona tus árboles genealógicos y familiares desde este panel.
