@@ -33,6 +33,7 @@ const statsRoutes = require('./routes/stats.routes');
 const timelineRoutes = require('./routes/timeline.routes');
 const licenseRoutes = require('./routes/license.routes');
 const descendantRoutes = require('./routes/descendant.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -81,6 +82,7 @@ initializeSupabase()
     app.use('/api/timeline', timelineRoutes);
     app.use('/api/license', licenseRoutes);
     app.use('/api/descendant', descendantRoutes);
+    app.use('/api/payments', paymentRoutes);
 
     // Ruta de prueba
     app.get('/', (req, res) => {

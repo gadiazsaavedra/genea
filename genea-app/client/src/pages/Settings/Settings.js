@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import DeveloperInfo from '../../components/DeveloperInfo';
 import {
   Container,
   Paper,
@@ -231,6 +232,9 @@ const Settings = () => {
           </form>
         </CardContent>
       </Card>
+
+      {/* Información del desarrollador */}
+      <DeveloperInfo variant="sidebar" />
 
       {/* Zona de peligro */}
       <Card sx={{ mb: 3, border: '1px solid', borderColor: 'error.main' }}>

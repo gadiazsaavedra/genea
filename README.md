@@ -192,8 +192,26 @@ Para preguntas o sugerencias, por favor contacta a: info@genea-app.com
 
 ## Desarrollo
 
-Este proyecto fue desarrollado por:
+### Desarrollador Principal
 
-**Gustavo Diaz Saavedra**  
-Teléfono: +54 11-4973-7619  
-Email: gadiazsaavedra@gmail.com
+**Gustavo Díaz Saavedra**  
+*Desarrollador Full Stack*
+
+- 📧 **Email:** [gadiazsaavedra@gmail.com](mailto:gadiazsaavedra@gmail.com)
+- 📱 **WhatsApp:** [+54 11 4973-7619](https://wa.me/5491149737619)
+- 💼 **GitHub:** [github.com/gadiazsaavedra](https://github.com/gadiazsaavedra)
+- 🌐 **LinkedIn:** [linkedin.com/in/gadiazsaavedra](https://linkedin.com/in/gadiazsaavedra)
+
+### Sobre el Proyecto
+
+Genea es un sistema completo de gestión de árboles genealógicos desarrollado con tecnologías modernas como React, Node.js y Supabase. El proyecto incluye funcionalidades avanzadas como autenticación, gestión de medios, colaboración familiar y visualización interactiva de árboles genealógicos.
+
+### Servicios de Desarrollo
+
+Si necesitas desarrollo de aplicaciones web o móviles similares, no dudes en contactarme. Ofrezco servicios de:
+
+- Desarrollo Full Stack (React, Node.js, Python)
+- Aplicaciones web y móviles
+- Bases de datos y APIs
+- Integración con servicios en la nube
+- Consultoría técnica

@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ConnectionProvider } from './contexts/ConnectionContext';
 import PrivateRoute from './components/PrivateRoute';
 import authService from './services/authService';
+import DeveloperInfo from './components/DeveloperInfo';
 import './App.css';
 import './styles/mobile-optimizations.css';
 
@@ -115,11 +116,7 @@ function App() {
                 </Routes>
               </Suspense>
             </main>
-            <footer className="footer">
-              <div className="footer-content">
-                <p>&copy; {new Date().getFullYear()} Genea - Sistema de Gestión de Árbol Genealógico</p>
-              </div>
-            </footer>
+            <DeveloperInfo variant="footer" />
           </div>
         </Router>
       </ConnectionProvider>
