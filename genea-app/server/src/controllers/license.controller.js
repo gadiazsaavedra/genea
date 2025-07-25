@@ -2,7 +2,7 @@ const { LICENSE_CONTACT, FREE_FAMILIES } = require('../middleware/license.middle
 const { supabaseClient } = require('../config/supabase.config');
 
 // Obtener información de licencia
-exports.getLicenseInfo = async (req, res) => {
+const getLicenseInfo = async (req, res) => {
   try {
     res.status(200).json({
       success: true,
@@ -59,7 +59,7 @@ exports.getLicenseInfo = async (req, res) => {
 };
 
 // Solicitar licencia
-exports.requestLicense = async (req, res) => {
+const requestLicense = async (req, res) => {
   try {
     const { familyName, contactEmail, message, familyId } = req.body;
     const userId = req.user?.uid;
@@ -110,7 +110,7 @@ exports.requestLicense = async (req, res) => {
 };
 
 // Activar licencia manualmente (solo para admin)
-exports.activateLicense = async (req, res) => {
+const activateLicense = async (req, res) => {
   try {
     const { familyId, duration = 365 } = req.body; // 365 días por defecto
     
@@ -153,4 +153,10 @@ exports.activateLicense = async (req, res) => {
       message: 'Error al activar licencia'
     });
   }
+};
+
+module.exports = {
+  getLicenseInfo,
+  requestLicense,
+  activateLicense
 };
