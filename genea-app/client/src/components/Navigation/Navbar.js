@@ -1,22 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../../config/supabase.config';
 import LanguageSelector from '../LanguageSelector';
 import './Navbar.css';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const { t } = useTranslation();
   
-  // Verificar si el usuario está autenticado
-  const isAuthenticated = localStorage.getItem('authToken') !== null;
+  // Verificar autenticación con Supabase
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      setUser(session?.user || null);
+    };
+    
+    checkAuth();
+    
+    // Escuchar cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      setUser(session?.user || null);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
   
-  const handleLogout = () => {
-    // Eliminar el token de autenticación
-    localStorage.removeItem('authToken');
-    // Redirigir al inicio de sesión
-    navigate('/auth/login');
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/auth/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
   
   const toggleMenu = () => {
@@ -77,7 +98,7 @@ const Navbar = () => {
               </li>
               <li className="nav-item dropdown">
                 <span className="nav-link dropdown-toggle">
-                  Mi Cuenta
+                  {user?.user_metadata?.displayName || user?.email?.split('@')[0] || 'Mi Cuenta'}
                 </span>
                 <div className="dropdown-menu">
                   <Link to="/profile" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
