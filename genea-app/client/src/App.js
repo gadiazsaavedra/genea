@@ -6,6 +6,8 @@ import { ConnectionProvider } from './contexts/ConnectionContext';
 import PrivateRoute from './components/PrivateRoute';
 import authService from './services/authService';
 import DeveloperInfo from './components/DeveloperInfo';
+import MobileNavigation from './components/Mobile/MobileNavigation';
+import './i18n';
 import './App.css';
 import './styles/mobile-optimizations.css';
 
@@ -116,6 +118,7 @@ function App() {
                 </Routes>
               </Suspense>
             </main>
+            <MobileNavigation />
             <DeveloperInfo variant="footer" />
           </div>
         </Router>

@@ -15,8 +15,16 @@ const invitationController = {
   // Crear una nueva invitación
   createInvitation: async (req, res) => {
     try {
-      const { familyId, invitedEmail, role } = req.body;
+      const { familyId, invitedEmail, invitedPhone, role, invitationMethod } = req.body;
       const invitedBy = req.user.uid;
+      
+      // Validar que se proporcione al menos email o teléfono
+      if (!invitedEmail && !invitedPhone) {
+        return res.status(400).json({
+          success: false,
+          message: 'Debe proporcionar email o número de teléfono'
+        });
+      }
 
       // Verificar si la familia existe
       const { data: family, error: familyError } = await supabaseClient
@@ -47,19 +55,26 @@ const invitationController = {
         });
       }
 
-      // Verificar si ya existe una invitación pendiente para este email en esta familia
-      const { data: existingInvitation, error: invitationError } = await supabaseClient
+      // Verificar si ya existe una invitación pendiente
+      let existingQuery = supabaseClient
         .from('invitations')
         .select('id')
         .eq('family_id', familyId)
-        .eq('invited_email', invitedEmail)
-        .eq('status', 'pending')
-        .single();
+        .eq('status', 'pending');
+      
+      if (invitedEmail) {
+        existingQuery = existingQuery.eq('invited_email', invitedEmail);
+      }
+      if (invitedPhone) {
+        existingQuery = existingQuery.eq('invited_phone', invitedPhone);
+      }
+      
+      const { data: existingInvitation } = await existingQuery.single();
 
       if (existingInvitation) {
         return res.status(400).json({ 
           success: false,
-          message: 'Ya existe una invitación pendiente para este email' 
+          message: 'Ya existe una invitación pendiente para este contacto' 
         });
       }
 
@@ -71,49 +86,71 @@ const invitationController = {
       expiresAt.setDate(expiresAt.getDate() + 7);
 
       // Crear la invitación
+      const invitationData = {
+        family_id: familyId,
+        invited_by: invitedBy,
+        role,
+        token,
+        expires_at: expiresAt.toISOString(),
+        status: 'pending',
+        invitation_method: invitationMethod || 'email'
+      };
+      
+      if (invitedEmail) invitationData.invited_email = invitedEmail;
+      if (invitedPhone) invitationData.invited_phone = invitedPhone;
+      
       const { data: invitation, error: createError } = await supabaseClient
         .from('invitations')
-        .insert([{
-          family_id: familyId,
-          invited_by: invitedBy,
-          invited_email: invitedEmail,
-          role,
-          token,
-          expires_at: expiresAt.toISOString(),
-          status: 'pending'
-        }])
+        .insert([invitationData])
         .select()
         .single();
 
       if (createError) throw new Error(createError.message);
 
-      // Enviar email de invitación
+      // Enviar invitación según el método seleccionado
       const inviteUrl = `${process.env.FRONTEND_URL}/invitation/accept/${token}`;
       
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: invitedEmail,
-        subject: `Invitación a unirse a la familia ${family.name} en Genea`,
-        html: `
-          <h1>Has sido invitado a unirte a la familia ${family.name} en Genea</h1>
-          <p>Haz clic en el siguiente enlace para aceptar la invitación:</p>
-          <a href="${inviteUrl}" style="padding: 10px 15px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px;">Aceptar invitación</a>
-          <p>Este enlace expirará en 7 días.</p>
-          <p>Si no conoces a quien te ha invitado, puedes ignorar este mensaje.</p>
-        `
-      };
+      if (invitedEmail && (invitationMethod === 'email' || invitationMethod === 'both')) {
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: invitedEmail,
+          subject: `Invitación a unirse a la familia ${family.name} en Genea`,
+          html: `
+            <h1>Has sido invitado a unirte a la familia ${family.name} en Genea</h1>
+            <p>Haz clic en el siguiente enlace para aceptar la invitación:</p>
+            <a href="${inviteUrl}" style="padding: 10px 15px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px;">Aceptar invitación</a>
+            <p>Este enlace expirará en 7 días.</p>
+            <p>Si no conoces a quien te ha invitado, puedes ignorar este mensaje.</p>
+          `
+        };
+        
+        try {
+          await transporter.sendMail(mailOptions);
+        } catch (emailError) {
+          console.error('Error enviando email:', emailError);
+        }
+      }
 
-      await transporter.sendMail(mailOptions);
-
+      // Generar mensaje para WhatsApp si es necesario
+      let whatsappMessage = '';
+      if (invitedPhone && (invitationMethod === 'whatsapp' || invitationMethod === 'both')) {
+        whatsappMessage = `🌳 *Invitación a Genea*\n\nHas sido invitado a unirte a la familia *${family.name}* en Genea.\n\n🔗 Enlace de invitación:\n${inviteUrl}\n\n⏰ Este enlace expira en 7 días.\n\n📱 Genea - Sistema de Gestión de Árbol Genealógico`;
+      }
+      
       res.status(201).json({
         success: true,
-        message: 'Invitación enviada correctamente',
+        message: 'Invitación creada correctamente',
         data: {
           id: invitation.id,
           familyId: invitation.family_id,
           invitedEmail: invitation.invited_email,
+          invitedPhone: invitation.invited_phone,
+          invitationMethod: invitation.invitation_method,
           status: invitation.status,
-          expiresAt: invitation.expires_at
+          expiresAt: invitation.expires_at,
+          inviteUrl,
+          whatsappMessage,
+          whatsappUrl: invitedPhone ? `https://wa.me/${invitedPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}` : null
         }
       });
     } catch (error) {

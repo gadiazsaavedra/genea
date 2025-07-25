@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from '../LanguageSelector';
 import './Navbar.css';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // Verificar si el usuario está autenticado
   const isAuthenticated = localStorage.getItem('authToken') !== null;
@@ -35,8 +38,11 @@ const Navbar = () => {
         
         <ul className={isMenuOpen ? 'nav-menu active' : 'nav-menu'}>
           <li className="nav-item">
+            <LanguageSelector variant="compact" />
+          </li>
+          <li className="nav-item">
             <Link to="/" className="nav-link" onClick={() => setIsMenuOpen(false)}>
-              Inicio
+              {t('nav.dashboard')}
             </Link>
           </li>
           
@@ -44,12 +50,12 @@ const Navbar = () => {
             <>
               <li className="nav-item">
                 <Link to="/families" className="nav-link" onClick={() => setIsMenuOpen(false)}>
-                  Mis Familias
+                  {t('nav.families')}
                 </Link>
               </li>
               <li className="nav-item">
                 <Link to="/persons" className="nav-link" onClick={() => setIsMenuOpen(false)}>
-                  Personas
+                  {t('nav.people')}
                 </Link>
               </li>
               <li className="nav-item dropdown">
@@ -74,12 +80,12 @@ const Navbar = () => {
             <>
               <li className="nav-item">
                 <Link to="/auth/login" className="nav-link" onClick={() => setIsMenuOpen(false)}>
-                  Iniciar Sesión
+                  {t('auth.login')}
                 </Link>
               </li>
               <li className="nav-item">
                 <Link to="/auth/register" className="nav-link nav-link-highlight" onClick={() => setIsMenuOpen(false)}>
-                  Registrarse
+                  {t('auth.register')}
                 </Link>
               </li>
             </>

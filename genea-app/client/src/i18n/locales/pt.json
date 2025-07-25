@@ -1,0 +1,131 @@
+{
+  "nav": {
+    "dashboard": "Painel",
+    "families": "Famílias",
+    "people": "Pessoas",
+    "tree": "Árvore",
+    "map": "Mapa",
+    "settings": "Configurações",
+    "logout": "Sair"
+  },
+  "auth": {
+    "login": "Entrar",
+    "register": "Cadastrar",
+    "email": "E-mail",
+    "password": "Senha",
+    "confirmPassword": "Confirmar Senha",
+    "forgotPassword": "Esqueceu sua senha?",
+    "loginButton": "Entrar",
+    "registerButton": "Criar Conta",
+    "alreadyHaveAccount": "Já tem uma conta?",
+    "dontHaveAccount": "Não tem uma conta?"
+  },
+  "dashboard": {
+    "welcome": "Bem-vindo ao Genea",
+    "myFamilies": "Minhas Famílias",
+    "recentActivity": "Atividade Recente",
+    "quickActions": "Ações Rápidas",
+    "addPerson": "Adicionar Pessoa",
+    "createFamily": "Criar Família",
+    "viewTree": "Ver Árvore"
+  },
+  "family": {
+    "name": "Nome da Família",
+    "description": "Descrição",
+    "members": "Membros",
+    "created": "Criada",
+    "public": "Pública",
+    "private": "Privada",
+    "invite": "Convidar",
+    "join": "Participar",
+    "leave": "Sair"
+  },
+  "person": {
+    "firstName": "Nome",
+    "lastName": "Sobrenome",
+    "maidenName": "Nome de Solteira",
+    "birthDate": "Data de Nascimento",
+    "birthPlace": "Local de Nascimento",
+    "deathDate": "Data de Falecimento",
+    "deathPlace": "Local de Falecimento",
+    "gender": "Gênero",
+    "male": "Masculino",
+    "female": "Feminino",
+    "biography": "Biografia",
+    "documents": "Documentos",
+    "photos": "Fotos"
+  },
+  "tree": {
+    "familyTree": "Árvore Genealógica",
+    "traditional": "Vista Tradicional",
+    "timeline": "Linha do Tempo",
+    "circular": "Vista Circular",
+    "fan": "Vista Leque",
+    "zoomIn": "Aproximar",
+    "zoomOut": "Afastar",
+    "center": "Centralizar",
+    "export": "Exportar"
+  },
+  "map": {
+    "familyMap": "Mapa Familiar",
+    "locations": "Localizações",
+    "migration": "Migração",
+    "births": "Nascimentos",
+    "deaths": "Falecimentos",
+    "legend": "Legenda"
+  },
+  "ocr": {
+    "documentScanner": "Scanner de Documentos",
+    "uploadDocument": "Enviar Documento",
+    "takePhoto": "Tirar Foto",
+    "processing": "Processando documento...",
+    "extractedText": "Texto Extraído",
+    "structuredData": "Dados Estruturados",
+    "saveData": "Salvar Dados",
+    "clearAll": "Limpar Tudo"
+  },
+  "ai": {
+    "suggestions": "Sugestões de IA",
+    "relationshipSuggestions": "Sugestões de Relacionamentos",
+    "duplicateDetection": "Detecção de Duplicatas",
+    "confidence": "Confiança",
+    "apply": "Aplicar",
+    "reject": "Rejeitar",
+    "reasons": "Razões"
+  },
+  "social": {
+    "connections": "Conexões",
+    "findConnections": "Buscar Conexões",
+    "requestConnection": "Solicitar Conexão",
+    "pendingRequests": "Solicitações Pendentes",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "publicFamilies": "Famílias Públicas"
+  },
+  "license": {
+    "required": "Licença Necessária",
+    "trial": "Período de Teste",
+    "expired": "Licença Expirada",
+    "contact": "Contatar",
+    "price": "Preço: $30 USD por ano",
+    "freeFamilies": "Famílias Gratuitas"
+  },
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "search": "Buscar",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "confirm": "Confirmar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "yes": "Sim",
+    "no": "Não"
+  }
+}
