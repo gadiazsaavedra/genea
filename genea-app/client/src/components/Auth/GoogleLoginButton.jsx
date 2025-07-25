@@ -10,15 +10,12 @@ const GoogleLoginButton = ({ onSuccess, onError }) => {
     setLoading(true);
     try {
       const result = await authService.loginWithGoogle();
-      if (onSuccess) {
-        onSuccess(result);
-      }
+      // Google OAuth redirige automáticamente, no necesitamos manejar success aquí
     } catch (error) {
       console.error('Error con Google login:', error);
       if (onError) {
         onError(error);
       }
-    } finally {
       setLoading(false);
     }
   };
