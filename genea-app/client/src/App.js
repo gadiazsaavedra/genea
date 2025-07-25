@@ -16,6 +16,8 @@ const FamilyManagement = lazy(() => import('./pages/FamilyManagement/FamilyManag
 const MediaManagement = lazy(() => import('./pages/MediaManagement/MediaManagement'));
 const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
+const Profile = lazy(() => import('./pages/Profile/Profile'));
+const Settings = lazy(() => import('./pages/Settings/Settings'));
 
 // Componente para mostrar durante la carga
 const LoadingFallback = () => (
@@ -79,6 +81,22 @@ function App() {
                     element={
                       <PrivateRoute>
                         <MediaManagement />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <PrivateRoute>
+                        <Profile />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/settings" 
+                    element={
+                      <PrivateRoute>
+                        <Settings />
                       </PrivateRoute>
                     } 
                   />
