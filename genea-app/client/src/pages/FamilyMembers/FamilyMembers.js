@@ -15,29 +15,7 @@ const FamilyMembers = () => {
         description: 'Familia originaria de Buenos Aires'
       });
       
-      setMembers([
-        {
-          id: '1',
-          name: 'Juan García',
-          email: 'juan@email.com',
-          role: 'admin',
-          joinDate: '2023-01-15'
-        },
-        {
-          id: '2', 
-          name: 'María López',
-          email: 'maria@email.com',
-          role: 'editor',
-          joinDate: '2023-02-20'
-        },
-        {
-          id: '3',
-          name: 'Carlos García',
-          email: 'carlos@email.com', 
-          role: 'viewer',
-          joinDate: '2023-03-10'
-        }
-      ]);
+      setMembers([]);
       
       setLoading(false);
     }, 500);
@@ -59,8 +37,17 @@ const FamilyMembers = () => {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-        {members.map((member) => (
+      {members.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', border: '2px dashed #ddd', borderRadius: '8px' }}>
+          <h3>No hay miembros en esta familia</h3>
+          <p style={{ color: '#666', marginBottom: '20px' }}>Invita a familiares para que se unan y colaboren en el árbol genealógico.</p>
+          <button style={{ padding: '10px 20px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '4px' }}>
+            Invitar Primer Miembro
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+          {members.map((member) => (
           <div key={member.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1976d2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', marginRight: '12px' }}>
@@ -100,8 +87,9 @@ const FamilyMembers = () => {
               )}
             </div>
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div style={{ marginTop: '40px' }}>
         <Link to="/families" style={{ padding: '10px 20px', border: '1px solid #1976d2', color: '#1976d2', textDecoration: 'none', borderRadius: '4px' }}>
