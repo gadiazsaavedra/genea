@@ -16,8 +16,7 @@ const PersonManagement = () => {
   useEffect(() => {
     const fetchPersons = async () => {
       try {
-        // Aquí se cargarían las personas desde la API
-        // Por ahora usamos datos de ejemplo
+        setTimeout(() => {
           const mockPersons = [];
           setPersons(mockPersons);
           setFilteredPersons(mockPersons);
