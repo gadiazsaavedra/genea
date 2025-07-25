@@ -1,4 +1,5 @@
 const { supabaseClient } = require('../config/supabase.config');
+const { FREE_FAMILIES, LICENSE_CONTACT } = require('../middleware/license.middleware');
 
 // Obtener todas las familias del usuario
 exports.getAllFamilies = async (req, res) => {
@@ -151,6 +152,25 @@ exports.createFamily = async (req, res) => {
       });
     }
     
+    // Determinar tipo de licencia
+    const familyNameLower = name.toLowerCase();
+    const isFreeFamily = FREE_FAMILIES.some(freeName => familyNameLower.includes(freeName));
+    
+    let licenseData = {
+      license_status: 'trial',
+      license_type: 'standard',
+      license_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 días
+    };
+    
+    if (isFreeFamily) {
+      licenseData = {
+        license_status: 'active',
+        license_type: 'free',
+        license_expires_at: '2099-12-31T23:59:59.000Z',
+        payment_status: 'free'
+      };
+    }
+    
     // Crear la familia
     const { data: family, error: familyError } = await supabaseClient
       .from('families')
@@ -158,7 +178,8 @@ exports.createFamily = async (req, res) => {
         { 
           name, 
           description, 
-          created_by: userId 
+          created_by: userId,
+          ...licenseData
         }
       ])
       .select()

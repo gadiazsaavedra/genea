@@ -31,6 +31,7 @@ const commentRoutes = require('./routes/comment.routes');
 const gedcomRoutes = require('./routes/gedcom.routes');
 const statsRoutes = require('./routes/stats.routes');
 const timelineRoutes = require('./routes/timeline.routes');
+const licenseRoutes = require('./routes/license.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -77,6 +78,7 @@ initializeSupabase()
     app.use('/api/gedcom', gedcomRoutes);
     app.use('/api/stats', statsRoutes);
     app.use('/api/timeline', timelineRoutes);
+    app.use('/api/license', licenseRoutes);
 
     // Ruta de prueba
     app.get('/', (req, res) => {
