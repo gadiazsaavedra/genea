@@ -11,8 +11,8 @@ const FamilyMembers = () => {
     setTimeout(() => {
       setFamily({
         id: familyId,
-        name: 'Familia García',
-        description: 'Familia originaria de Buenos Aires'
+        name: `Familia ${familyId}`,
+        description: 'Tu familia genealógica'
       });
       
       setMembers([]);
@@ -32,8 +32,11 @@ const FamilyMembers = () => {
       
       <div style={{ marginBottom: '20px' }}>
         <h3>{members.length} miembros</h3>
-        <button style={{ padding: '10px 20px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '4px' }}>
-          Invitar Miembro
+        <button 
+          onClick={() => alert('Funcionalidad de invitación en desarrollo. Próximamente podrás invitar familiares por email o WhatsApp.')}
+          style={{ padding: '10px 20px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+        >
+          + Invitar Miembro
         </button>
       </div>
 
@@ -41,7 +44,10 @@ const FamilyMembers = () => {
         <div style={{ textAlign: 'center', padding: '40px', border: '2px dashed #ddd', borderRadius: '8px' }}>
           <h3>No hay miembros en esta familia</h3>
           <p style={{ color: '#666', marginBottom: '20px' }}>Invita a familiares para que se unan y colaboren en el árbol genealógico.</p>
-          <button style={{ padding: '10px 20px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '4px' }}>
+          <button 
+            onClick={() => alert('Funcionalidad de invitación en desarrollo. Próximamente podrás invitar familiares por email o WhatsApp.')}
+            style={{ padding: '10px 20px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
             Invitar Primer Miembro
           </button>
         </div>
