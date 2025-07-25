@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './Auth.css';
 
 const Login = () => {
@@ -10,6 +11,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn, signInWithGoogle } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,19 +21,40 @@ const Login = () => {
     });
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const { error: googleError } = await signInWithGoogle();
+      
+      if (googleError) {
+        setError(googleError.message);
+        setLoading(false);
+      }
+      // Si no hay error, Supabase redirigirá automáticamente
+    } catch (err) {
+      setError('Error al iniciar sesión con Google. Por favor, inténtalo de nuevo.');
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      // Aquí se realizaría la autenticación con Firebase o tu backend
-      // Por ahora simulamos un inicio de sesión exitoso
-      setTimeout(() => {
-        // Simular almacenamiento del token y redirección
-        localStorage.setItem('authToken', 'sample-token');
-        navigate('/');
-      }, 1000);
+      const { data, error: signInError } = await signIn(formData.email, formData.password);
+      
+      if (signInError) {
+        setError(signInError.message);
+        setLoading(false);
+        return;
+      }
+      
+      // Inicio de sesión exitoso
+      navigate('/dashboard');
     } catch (err) {
       setError('Error al iniciar sesión. Por favor, verifica tus credenciales.');
       setLoading(false);
@@ -90,7 +113,12 @@ const Login = () => {
           <span>O</span>
         </div>
 
-        <button className="social-button google">
+        <button 
+          type="button"
+          className="social-button google"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+        >
           Continuar con Google
         </button>
 

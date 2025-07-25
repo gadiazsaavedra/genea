@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './Auth.css';
 
 const Register = () => {
@@ -12,6 +13,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signUp, signInWithGoogle } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,6 +21,24 @@ const Register = () => {
       ...formData,
       [name]: value
     });
+  };
+
+  const handleGoogleSignUp = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const { error: googleError } = await signInWithGoogle();
+      
+      if (googleError) {
+        setError(googleError.message);
+        setLoading(false);
+      }
+      // Si no hay error, Supabase redirigirá automáticamente
+    } catch (err) {
+      setError('Error al registrarse con Google. Por favor, inténtalo de nuevo.');
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -39,13 +59,16 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // Aquí se realizaría el registro con Firebase o tu backend
-      // Por ahora simulamos un registro exitoso
-      setTimeout(() => {
-        // Simular almacenamiento del token y redirección
-        localStorage.setItem('authToken', 'sample-token');
-        navigate('/');
-      }, 1000);
+      const { data, error: signUpError } = await signUp(formData.email, formData.password, formData.fullName);
+      
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+      
+      // Registro exitoso
+      navigate('/dashboard');
     } catch (err) {
       setError('Error al registrar la cuenta. Por favor, inténtalo de nuevo.');
       setLoading(false);
@@ -124,7 +147,12 @@ const Register = () => {
           <span>O</span>
         </div>
 
-        <button className="social-button google">
+        <button 
+          type="button"
+          className="social-button google"
+          onClick={handleGoogleSignUp}
+          disabled={loading}
+        >
           Registrarse con Google
         </button>
 
