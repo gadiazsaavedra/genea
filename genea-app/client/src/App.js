@@ -10,7 +10,7 @@ import './styles/mobile-optimizations.css';
 
 // Carga perezosa de componentes para mejorar el rendimiento
 const Home = lazy(() => import('./pages/Home.tsx'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Dashboard = lazy(() => import('./pages/Dashboard.tsx'));
 const TreeView = lazy(() => import('./pages/TreeView/TreeView'));
 const PersonManagement = lazy(() => import('./pages/PersonManagement/PersonManagement'));
 const FamilyManagement = lazy(() => import('./pages/FamilyManagement/FamilyManagement'));
