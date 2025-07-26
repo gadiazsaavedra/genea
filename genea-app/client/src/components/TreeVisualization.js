@@ -144,32 +144,44 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               strokeDasharray = '5,5';
             }
             
-            // Líneas visibles para debug
+            // Calcular posiciones aproximadas de las tarjetas
+            const person1Index = people.findIndex(p => p.id === person1.id);
+            const person2Index = people.findIndex(p => p.id === person2.id);
+            
+            // Posiciones aproximadas (cada tarjeta ocupa ~280px de ancho + 40px gap)
+            const cardWidth = 280;
+            const gap = 40;
+            const startX = 60; // Padding inicial
+            
+            const x1 = startX + (person1Index * (cardWidth + gap)) + (cardWidth / 2);
+            const x2 = startX + (person2Index * (cardWidth + gap)) + (cardWidth / 2);
+            const y = 200; // Altura fija para las líneas
+            
             return (
               <g key={index}>
                 <line
-                  x1="100"
-                  y1={100 + (index * 50)}
-                  x2="500"
-                  y2={100 + (index * 50)}
+                  x1={x1}
+                  y1={y}
+                  x2={x2}
+                  y2={y}
                   stroke={strokeColor}
-                  strokeWidth={strokeWidth + 2}
+                  strokeWidth={strokeWidth + 1}
                   strokeDasharray={strokeDasharray}
-                  opacity="1"
+                  opacity="0.9"
                 />
                 <text
-                  x="300"
-                  y={95 + (index * 50)}
+                  x={(x1 + x2) / 2}
+                  y={y - 10}
                   fill={strokeColor}
-                  fontSize="14"
+                  fontSize="12"
                   fontWeight="bold"
                   textAnchor="middle"
-                  style={{ backgroundColor: 'white' }}
+                  style={{ backgroundColor: 'white', padding: '2px' }}
                 >
                   {rel.relationship_type === 'parent' ? 'PADRE → HIJO' : 'CÓNYUGES'}
                 </text>
-                <circle cx="100" cy={100 + (index * 50)} r="5" fill={strokeColor} />
-                <circle cx="500" cy={100 + (index * 50)} r="5" fill={strokeColor} />
+                <circle cx={x1} cy={y} r="4" fill={strokeColor} />
+                <circle cx={x2} cy={y} r="4" fill={strokeColor} />
               </g>
             );
           })}
