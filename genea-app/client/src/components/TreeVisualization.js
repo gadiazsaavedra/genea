@@ -119,92 +119,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
 
     return (
       <div style={{ position: 'relative', padding: '40px' }}>
-        {/* Indicadores de relaciones como divs HTML */}
-        {(relationships || []).map((rel, index) => {
-          const person1 = people.find(p => p.id === rel.person1_id);
-          const person2 = people.find(p => p.id === rel.person2_id);
-          
-          if (!person1 || !person2) return null;
-          
-          if (rel.relationship_type === 'spouse') {
-            return (
-              <div key={index} style={{
-                position: 'absolute',
-                top: '200px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 5
-              }}>
-                <div style={{
-                  width: '300px',
-                  height: '3px',
-                  background: 'repeating-linear-gradient(to right, #e91e63 0px, #e91e63 8px, transparent 8px, transparent 16px)',
-                  position: 'relative'
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    top: '-20px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: 'white',
-                    padding: '2px 8px',
-                    border: '1px solid #e91e63',
-                    borderRadius: '3px',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    color: '#e91e63'
-                  }}>
-                    CÓNYUGES
-                  </div>
-                </div>
-              </div>
-            );
-          } else {
-            return (
-              <div key={index} style={{
-                position: 'absolute',
-                top: '350px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 5
-              }}>
-                <div style={{
-                  width: '3px',
-                  height: '100px',
-                  backgroundColor: '#4caf50',
-                  position: 'relative',
-                  margin: '0 auto'
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    top: '40px',
-                    left: '10px',
-                    backgroundColor: 'white',
-                    padding: '2px 8px',
-                    border: '1px solid #4caf50',
-                    borderRadius: '3px',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    color: '#4caf50',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    MADRE → HIJO
-                  </div>
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '-5px',
-                    left: '-3px',
-                    width: '0',
-                    height: '0',
-                    borderLeft: '3px solid transparent',
-                    borderRight: '3px solid transparent',
-                    borderTop: '8px solid #4caf50'
-                  }}></div>
-                </div>
-              </div>
-            );
-          }
-        })}
+        {/* Las relaciones se muestran claramente con los badges en las tarjetas */}
         
         {/* Leyenda de relaciones */}
         <div style={{
@@ -218,14 +133,36 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
           fontSize: '10px',
           zIndex: 3
         }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Leyenda ({(relationships || []).length} relaciones):</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-            <div style={{ width: '20px', height: '2px', backgroundColor: '#4caf50' }}></div>
-            <span>Padre → Hijo</span>
+          <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Relaciones ({(relationships || []).length}):</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+            <span style={{ 
+              backgroundColor: '#4caf50', 
+              color: 'white', 
+              padding: '2px 6px', 
+              borderRadius: '8px', 
+              fontSize: '9px' 
+            }}>Padre/Madre</span>
+            <span style={{ fontSize: '12px' }}>Tiene hijos</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+            <span style={{ 
+              backgroundColor: '#2196f3', 
+              color: 'white', 
+              padding: '2px 6px', 
+              borderRadius: '8px', 
+              fontSize: '9px' 
+            }}>Hijo/Hija</span>
+            <span style={{ fontSize: '12px' }}>Tiene padres</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <div style={{ width: '20px', height: '2px', backgroundColor: '#e91e63', borderTop: '2px dashed #e91e63' }}></div>
-            <span>Cónyuges</span>
+            <span style={{ 
+              backgroundColor: '#e91e63', 
+              color: 'white', 
+              padding: '2px 6px', 
+              borderRadius: '8px', 
+              fontSize: '9px' 
+            }}>Cónyuge</span>
+            <span style={{ fontSize: '12px' }}>Casado/a</span>
           </div>
         </div>
         
