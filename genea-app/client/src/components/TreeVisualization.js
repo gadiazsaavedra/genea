@@ -209,18 +209,39 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   {/* Línea horizontal conectando ambos padres */}
                   <line x1={parentX} y1="320" x2={spouseX} y2="320" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
                   
-                  {/* Líneas hacia los hijos distribuidas uniformemente */}
-                  {childrenInGen1.map((child, childIdx) => {
+                  {/* Líneas hacia cada hijo desde la línea horizontal */}
+                  {(() => {
                     const totalChildren = childrenInGen1.length;
-                    const childX = 200 + (childIdx * (800 / Math.max(totalChildren - 1, 1)));
-                    return (
-                      <g key={child.id}>
-                        <line x1={centerX} y1="320" x2={childX} y2="320" stroke="#4caf50" strokeWidth="3" opacity="0.6" />
-                        <line x1={childX} y1="320" x2={childX} y2="400" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
-                        <polygon points={`${childX-5},395 ${childX},405 ${childX+5},395`} fill="#4caf50" />
-                      </g>
-                    );
-                  })}
+                    const childPositions = [];
+                    
+                    // Calcular posiciones de los hijos basadas en su distribución real
+                    for (let i = 0; i < totalChildren; i++) {
+                      if (totalChildren === 1) {
+                        childPositions.push(600); // Centro si hay un solo hijo
+                      } else if (totalChildren === 2) {
+                        childPositions.push(i === 0 ? 400 : 800); // Dos posiciones
+                      } else if (totalChildren === 3) {
+                        childPositions.push([300, 600, 900][i]); // Tres posiciones
+                      } else if (totalChildren === 4) {
+                        childPositions.push([250, 450, 650, 850][i]); // Cuatro posiciones
+                      } else if (totalChildren === 5) {
+                        childPositions.push([200, 350, 500, 650, 800][i]); // Cinco posiciones
+                      } else {
+                        // Para más de 5 hijos, distribuir uniformemente
+                        childPositions.push(200 + (i * (600 / Math.max(totalChildren - 1, 1))));
+                      }
+                    }
+                    
+                    return childrenInGen1.map((child, childIdx) => {
+                      const childX = childPositions[childIdx];
+                      return (
+                        <g key={child.id}>
+                          <line x1={childX} y1="320" x2={childX} y2="420" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
+                          <polygon points={`${childX-5},415 ${childX},425 ${childX+5},415`} fill="#4caf50" />
+                        </g>
+                      );
+                    });
+                  })()}
                   
                   {/* Etiqueta solo para la primera relación padre-hijo */}
                   {relationships.filter(r => r.relationship_type === 'parent').indexOf(rel) === 0 && (
