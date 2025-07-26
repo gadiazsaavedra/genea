@@ -259,11 +259,15 @@ const TreeView = () => {
 
   const openFounderModal = () => {
     setIsFounderMode(true);
+    setRelationshipMode(null);
+    setSelectedParent(null);
     setShowPersonModal(true);
   };
 
   const openPersonModal = () => {
     setIsFounderMode(false);
+    setRelationshipMode(null);
+    setSelectedParent(null);
     setShowPersonModal(true);
   };
 
@@ -343,6 +347,7 @@ const TreeView = () => {
                 borderRadius: '4px',
                 cursor: 'pointer'
               }}
+              title="Agregar fundadores de la familia (primera generación)"
             >
               + Fundadores
             </button>
@@ -356,6 +361,7 @@ const TreeView = () => {
                 borderRadius: '4px',
                 cursor: 'pointer'
               }}
+              title="Agregar persona independiente (sin relaciones automáticas)"
             >
               + Persona
             </button>
