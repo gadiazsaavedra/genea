@@ -144,46 +144,64 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               strokeDasharray = '5,5';
             }
             
-            // Calcular posiciones aproximadas de las tarjetas
-            const person1Index = people.findIndex(p => p.id === person1.id);
-            const person2Index = people.findIndex(p => p.id === person2.id);
+            // Simplificar - mostrar líneas en posiciones fijas pero visibles
+            const yPos = 180 + (index * 30); // Separar líneas verticalmente
             
-            // Posiciones aproximadas (cada tarjeta ocupa ~280px de ancho + 40px gap)
-            const cardWidth = 280;
-            const gap = 40;
-            const startX = 60; // Padding inicial
-            
-            const x1 = startX + (person1Index * (cardWidth + gap)) + (cardWidth / 2);
-            const x2 = startX + (person2Index * (cardWidth + gap)) + (cardWidth / 2);
-            const y = 200; // Altura fija para las líneas
-            
-            return (
-              <g key={index}>
-                <line
-                  x1={x1}
-                  y1={y}
-                  x2={x2}
-                  y2={y}
-                  stroke={strokeColor}
-                  strokeWidth={strokeWidth + 1}
-                  strokeDasharray={strokeDasharray}
-                  opacity="0.9"
-                />
-                <text
-                  x={(x1 + x2) / 2}
-                  y={y - 10}
-                  fill={strokeColor}
-                  fontSize="12"
-                  fontWeight="bold"
-                  textAnchor="middle"
-                  style={{ backgroundColor: 'white', padding: '2px' }}
-                >
-                  {rel.relationship_type === 'parent' ? 'PADRE → HIJO' : 'CÓNYUGES'}
-                </text>
-                <circle cx={x1} cy={y} r="4" fill={strokeColor} />
-                <circle cx={x2} cy={y} r="4" fill={strokeColor} />
-              </g>
-            );
+            if (rel.relationship_type === 'spouse') {
+              // Línea horizontal para cónyuges (misma generación)
+              return (
+                <g key={index}>
+                  <line
+                    x1="400"
+                    y1={yPos}
+                    x2="700"
+                    y2={yPos}
+                    stroke={strokeColor}
+                    strokeWidth="3"
+                    strokeDasharray="8,4"
+                    opacity="0.8"
+                  />
+                  <text
+                    x="550"
+                    y={yPos - 8}
+                    fill={strokeColor}
+                    fontSize="12"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                  >
+                    CÓNYUGES
+                  </text>
+                </g>
+              );
+            } else {
+              // Línea vertical para padre-hijo (diferentes generaciones)
+              return (
+                <g key={index}>
+                  <line
+                    x1="550"
+                    y1="320"
+                    x2="550"
+                    y2="420"
+                    stroke={strokeColor}
+                    strokeWidth="4"
+                    opacity="0.8"
+                  />
+                  <text
+                    x="570"
+                    y="370"
+                    fill={strokeColor}
+                    fontSize="12"
+                    fontWeight="bold"
+                  >
+                    PADRE → HIJO
+                  </text>
+                  <polygon
+                    points="545,415 550,425 555,415"
+                    fill={strokeColor}
+                  />
+                </g>
+              );
+            }
           })}
         </svg>
         
