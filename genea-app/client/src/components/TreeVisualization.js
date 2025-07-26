@@ -144,96 +144,65 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               strokeDasharray = '5,5';
             }
             
-            if (rel.relationship_type === 'spouse') {
-              // Línea horizontal para cónyuges entre Juan y Maria
-              return (
-                <g key={index}>
-                  <line
-                    x1="350"
-                    y1="150"
-                    x2="750"
-                    y2="150"
-                    stroke={strokeColor}
-                    strokeWidth="3"
-                    strokeDasharray="8,4"
-                    opacity="0.9"
-                  />
-                  <rect
-                    x="520"
-                    y="135"
-                    width="80"
-                    height="20"
-                    fill="white"
-                    stroke="none"
-                  />
-                  <text
-                    x="560"
-                    y="148"
-                    fill={strokeColor}
-                    fontSize="12"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                  >
-                    CÓNYUGES
-                  </text>
-                </g>
-              );
-            } else {
-              // Línea vertical desde Maria hacia Pedrito
-              return (
-                <g key={index}>
-                  <line
-                    x1="920"
-                    y1="280"
-                    x2="920"
-                    y2="350"
-                    stroke={strokeColor}
-                    strokeWidth="4"
-                    opacity="0.9"
-                  />
-                  <line
-                    x1="920"
-                    y1="350"
-                    x2="680"
-                    y2="350"
-                    stroke={strokeColor}
-                    strokeWidth="4"
-                    opacity="0.9"
-                  />
-                  <line
-                    x1="680"
-                    y1="350"
-                    x2="680"
-                    y2="420"
-                    stroke={strokeColor}
-                    strokeWidth="4"
-                    opacity="0.9"
-                  />
-                  <rect
-                    x="850"
-                    y="305"
-                    width="100"
-                    height="20"
-                    fill="white"
-                    stroke="none"
-                  />
-                  <text
-                    x="900"
-                    y="318"
-                    fill={strokeColor}
-                    fontSize="12"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                  >
-                    MADRE → HIJO
-                  </text>
-                  <polygon
-                    points="675,415 680,425 685,415"
-                    fill={strokeColor}
-                  />
-                </g>
-              );
-            }
+            // Mostrar indicadores simples de relaciones
+            return (
+              <g key={index}>
+                {rel.relationship_type === 'spouse' ? (
+                  // Indicador de cónyuges
+                  <g>
+                    <line
+                      x1="450"
+                      y1="230"
+                      x2="650"
+                      y2="230"
+                      stroke="#e91e63"
+                      strokeWidth="4"
+                      strokeDasharray="10,5"
+                      opacity="0.8"
+                    />
+                    <rect x="520" y="215" width="80" height="18" fill="white" stroke="#e91e63" strokeWidth="1" rx="3" />
+                    <text
+                      x="560"
+                      y="227"
+                      fill="#e91e63"
+                      fontSize="11"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                    >
+                      CÓNYUGES
+                    </text>
+                  </g>
+                ) : (
+                  // Indicador de padre-hijo
+                  <g>
+                    <line
+                      x1="550"
+                      y1="400"
+                      x2="550"
+                      y2="480"
+                      stroke="#4caf50"
+                      strokeWidth="4"
+                      opacity="0.8"
+                    />
+                    <rect x="480" y="425" width="90" height="18" fill="white" stroke="#4caf50" strokeWidth="1" rx="3" />
+                    <text
+                      x="525"
+                      y="437"
+                      fill="#4caf50"
+                      fontSize="11"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                    >
+                      MADRE → HIJO
+                    </text>
+                    <polygon
+                      points="545,475 550,485 555,475"
+                      fill="#4caf50"
+                    />
+                  </g>
+                )}
+              </g>
+            );
           })}
         </svg>
         
