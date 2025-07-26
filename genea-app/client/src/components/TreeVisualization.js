@@ -78,14 +78,10 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
       
       console.log('Founders found:', founders.length, founders.map(f => f.first_name));
       
-      // TEMPORAL: Mostrar todas las personas en generación 0 hasta que funcionen las relaciones
-      console.log('Using all people in generation 0 for now');
-      generations[0] = people;
-      
-      // Si no hay fundadores, usar todas las personas en generación 0
-      if (false && founders.length === 0) {
+      // Organizar por generaciones reales
+      if (founders.length === 0) {
         generations[0] = people;
-      } else if (false) {
+      } else {
         generations[0] = founders;
         
         // Agregar hijos en generaciones siguientes
@@ -119,7 +115,132 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
 
     return (
       <div style={{ position: 'relative', padding: '40px' }}>
-        {/* Las relaciones se muestran claramente con los badges en las tarjetas */}
+        {/* Líneas relacionales */}
+        <svg style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          pointerEvents: 'none', 
+          zIndex: 1 
+        }}>
+          {(relationships || []).map((rel, index) => {
+            const person1 = people.find(p => p.id === rel.person1_id);
+            const person2 = people.find(p => p.id === rel.person2_id);
+            
+            if (!person1 || !person2) return null;
+            
+            if (rel.relationship_type === 'spouse') {
+              // Línea horizontal punteada para cónyuges
+              return (
+                <g key={index}>
+                  <line
+                    x1="420"
+                    y1="180"
+                    x2="680"
+                    y2="180"
+                    stroke="#e91e63"
+                    strokeWidth="3"
+                    strokeDasharray="8,4"
+                    opacity="0.8"
+                  />
+                  <rect 
+                    x="520" 
+                    y="165" 
+                    width="80" 
+                    height="20" 
+                    fill="white" 
+                    stroke="#e91e63" 
+                    strokeWidth="1" 
+                    rx="3"
+                  />
+                  <text
+                    x="560"
+                    y="178"
+                    fill="#e91e63"
+                    fontSize="11"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                  >
+                    CÓNYUGES
+                  </text>
+                </g>
+              );
+            } else if (rel.relationship_type === 'parent') {
+              // Líneas desde ambos padres hacia el hijo
+              const isFromMother = person1.gender === 'female' || person1.first_name?.toLowerCase().includes('maria');
+              const xStart = isFromMother ? 680 : 420; // Posición de madre o padre
+              const xEnd = 550; // Centro del hijo
+              
+              return (
+                <g key={index}>
+                  {/* Línea vertical desde padre/madre */}
+                  <line
+                    x1={xStart}
+                    y1="240"
+                    x2={xStart}
+                    y2="300"
+                    stroke="#4caf50"
+                    strokeWidth="3"
+                    opacity="0.8"
+                  />
+                  {/* Línea horizontal hacia el centro */}
+                  <line
+                    x1={xStart}
+                    y1="300"
+                    x2={xEnd}
+                    y2="300"
+                    stroke="#4caf50"
+                    strokeWidth="3"
+                    opacity="0.8"
+                  />
+                  {/* Línea vertical hacia el hijo */}
+                  <line
+                    x1={xEnd}
+                    y1="300"
+                    x2={xEnd}
+                    y2="360"
+                    stroke="#4caf50"
+                    strokeWidth="3"
+                    opacity="0.8"
+                  />
+                  {/* Flecha */}
+                  <polygon
+                    points={`${xEnd-5},355 ${xEnd},365 ${xEnd+5},355`}
+                    fill="#4caf50"
+                  />
+                  {/* Etiqueta solo en la primera línea */}
+                  {index === 1 && (
+                    <g>
+                      <rect 
+                        x="500" 
+                        y="285" 
+                        width="100" 
+                        height="20" 
+                        fill="white" 
+                        stroke="#4caf50" 
+                        strokeWidth="1" 
+                        rx="3"
+                      />
+                      <text
+                        x="550"
+                        y="298"
+                        fill="#4caf50"
+                        fontSize="11"
+                        fontWeight="bold"
+                        textAnchor="middle"
+                      >
+                        HIJO DE AMBOS
+                      </text>
+                    </g>
+                  )}
+                </g>
+              );
+            }
+            return null;
+          })}
+        </svg>
         
         {/* Leyenda de relaciones */}
         <div style={{
@@ -171,9 +292,10 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
             <div key={genKey} style={{ 
               display: 'flex', 
               justifyContent: 'center', 
-              gap: '40px', 
-              marginBottom: '60px',
-              flexWrap: 'wrap'
+              gap: genKey === '0' ? '120px' : '80px', // Más separación para cónyuges
+              marginBottom: genKey === '0' ? '120px' : '80px', // Más espacio para líneas
+              flexWrap: 'wrap',
+              position: 'relative'
             }}>
               {generations[genKey].map((person, index) => (
                 <div key={person.id} style={{
