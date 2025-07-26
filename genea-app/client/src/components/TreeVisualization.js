@@ -71,9 +71,11 @@ const TreeVisualization = ({ people, viewType }) => {
               fontSize: '24px',
               margin: '0 auto 12px'
             }}>
-              {person.fullName.charAt(0)}
+              {(person.first_name || person.fullName || '?').charAt(0)}
             </div>
-            <h4 style={{ margin: '0 0 8px 0' }}>{person.fullName}</h4>
+            <h4 style={{ margin: '0 0 8px 0' }}>
+              {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
+            </h4>
             {person.isFounder && <span style={{ 
               backgroundColor: '#ff9800', 
               color: 'white', 
@@ -131,7 +133,9 @@ const TreeVisualization = ({ people, viewType }) => {
                 backgroundColor: 'white',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}>
-                <h4 style={{ margin: '0 0 8px 0' }}>{person.fullName}</h4>
+                <h4 style={{ margin: '0 0 8px 0' }}>
+                  {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
+                </h4>
                 <p style={{ margin: '4px 0', color: '#666' }}>
                   Nacimiento: {person.birthDate ? new Date(person.birthDate).toLocaleDateString() : 'Desconocido'}
                 </p>
@@ -164,10 +168,10 @@ const TreeVisualization = ({ people, viewType }) => {
                 <line x1={centerX} y1={centerY} x2={x} y2={y} stroke="#ddd" strokeWidth="1" />
                 <circle cx={x} cy={y} r="30" fill={person.gender === 'male' ? '#2196f3' : '#e91e63'} />
                 <text x={x} y={y} textAnchor="middle" dy="5" fill="white" fontSize="12">
-                  {person.fullName.split(' ').map(n => n.charAt(0)).join('')}
+                  {(person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || '?').split(' ').map(n => n.charAt(0)).join('')}
                 </text>
                 <text x={x} y={y + 50} textAnchor="middle" fontSize="12" fill="#333">
-                  {person.fullName}
+                  {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
                 </text>
               </g>
             );
@@ -196,10 +200,10 @@ const TreeVisualization = ({ people, viewType }) => {
                 <line x1={centerX} y1={centerY} x2={x} y2={y} stroke="#ddd" strokeWidth="1" />
                 <circle cx={x} cy={y} r="25" fill={person.gender === 'male' ? '#2196f3' : '#e91e63'} />
                 <text x={x} y={y} textAnchor="middle" dy="5" fill="white" fontSize="10">
-                  {person.fullName.split(' ').map(n => n.charAt(0)).join('')}
+                  {(person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || '?').split(' ').map(n => n.charAt(0)).join('')}
                 </text>
                 <text x={x} y={y + 40} textAnchor="middle" fontSize="10" fill="#333">
-                  {person.fullName}
+                  {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
                 </text>
               </g>
             );
