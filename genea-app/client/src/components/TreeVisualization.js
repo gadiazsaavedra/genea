@@ -119,106 +119,92 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
 
     return (
       <div style={{ position: 'relative', padding: '40px' }}>
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1, border: '1px solid blue' }}>
-          {/* Renderizar líneas de conexión */}
-          {(relationships || []).map((rel, index) => {
-            console.log('=== RENDERING LINES ===');
-            console.log(`Rendering line ${index}:`, rel);
-            
-            const person1 = people.find(p => p.id === rel.person1_id);
-            const person2 = people.find(p => p.id === rel.person2_id);
-            
-            if (!person1 || !person2) {
-              console.log('Missing person for relationship:', rel);
-              return null;
-            }
-            
-            // Diferentes estilos según el tipo de relación
-            let strokeColor = '#4caf50';
-            let strokeWidth = 3;
-            let strokeDasharray = 'none';
-            
-            if (rel.relationship_type === 'spouse') {
-              strokeColor = '#e91e63';
-              strokeWidth = 2;
-              strokeDasharray = '5,5';
-            }
-            
-            // Líneas simples y visibles
-            const yOffset = index * 40;
-            
+        {/* Indicadores de relaciones como divs HTML */}
+        {(relationships || []).map((rel, index) => {
+          const person1 = people.find(p => p.id === rel.person1_id);
+          const person2 = people.find(p => p.id === rel.person2_id);
+          
+          if (!person1 || !person2) return null;
+          
+          if (rel.relationship_type === 'spouse') {
             return (
-              <g key={index}>
-                {rel.relationship_type === 'spouse' ? (
-                  // Línea horizontal para cónyuges
-                  <g>
-                    <line
-                      x1="200"
-                      y1={150 + yOffset}
-                      x2="400"
-                      y2={150 + yOffset}
-                      stroke="#e91e63"
-                      strokeWidth="3"
-                      strokeDasharray="8,4"
-                    />
-                    <rect 
-                      x="270" 
-                      y={140 + yOffset} 
-                      width="60" 
-                      height="16" 
-                      fill="white" 
-                      stroke="#e91e63" 
-                    />
-                    <text
-                      x="300"
-                      y={150 + yOffset}
-                      fill="#e91e63"
-                      fontSize="10"
-                      fontWeight="bold"
-                      textAnchor="middle"
-                    >
-                      CÓNYUGES
-                    </text>
-                  </g>
-                ) : (
-                  // Línea vertical para padre-hijo
-                  <g>
-                    <line
-                      x1="300"
-                      y1={200 + yOffset}
-                      x2="300"
-                      y2={280 + yOffset}
-                      stroke="#4caf50"
-                      strokeWidth="3"
-                    />
-                    <rect 
-                      x="250" 
-                      y={235 + yOffset} 
-                      width="70" 
-                      height="16" 
-                      fill="white" 
-                      stroke="#4caf50" 
-                    />
-                    <text
-                      x="285"
-                      y={245 + yOffset}
-                      fill="#4caf50"
-                      fontSize="10"
-                      fontWeight="bold"
-                      textAnchor="middle"
-                    >
-                      PADRE→HIJO
-                    </text>
-                    <polygon
-                      points={`295,${275 + yOffset} 300,${285 + yOffset} 305,${275 + yOffset}`}
-                      fill="#4caf50"
-                    />
-                  </g>
-                )}
-              </g>
+              <div key={index} style={{
+                position: 'absolute',
+                top: '200px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 5
+              }}>
+                <div style={{
+                  width: '300px',
+                  height: '3px',
+                  background: 'repeating-linear-gradient(to right, #e91e63 0px, #e91e63 8px, transparent 8px, transparent 16px)',
+                  position: 'relative'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '-20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'white',
+                    padding: '2px 8px',
+                    border: '1px solid #e91e63',
+                    borderRadius: '3px',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    color: '#e91e63'
+                  }}>
+                    CÓNYUGES
+                  </div>
+                </div>
+              </div>
             );
-          })}
-        </svg>
+          } else {
+            return (
+              <div key={index} style={{
+                position: 'absolute',
+                top: '350px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 5
+              }}>
+                <div style={{
+                  width: '3px',
+                  height: '100px',
+                  backgroundColor: '#4caf50',
+                  position: 'relative',
+                  margin: '0 auto'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '40px',
+                    left: '10px',
+                    backgroundColor: 'white',
+                    padding: '2px 8px',
+                    border: '1px solid #4caf50',
+                    borderRadius: '3px',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    color: '#4caf50',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    MADRE → HIJO
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '-5px',
+                    left: '-3px',
+                    width: '0',
+                    height: '0',
+                    borderLeft: '3px solid transparent',
+                    borderRight: '3px solid transparent',
+                    borderTop: '8px solid #4caf50'
+                  }}></div>
+                </div>
+              </div>
+            );
+          }
+        })}
         
         {/* Leyenda de relaciones */}
         <div style={{
