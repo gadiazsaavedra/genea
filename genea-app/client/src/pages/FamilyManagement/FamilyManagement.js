@@ -93,8 +93,18 @@ const FamilyManagement = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
+      console.log('Session:', session);
+      console.log('Token:', token);
+      
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
+      
       if (editingFamily) {
         // Actualizar familia existente
+        console.log('Making PUT request to:', `${process.env.REACT_APP_API_URL}/families/${editingFamily.id}`);
+        console.log('With token:', token);
+        
         const response = await fetch(`${process.env.REACT_APP_API_URL}/families/${editingFamily.id}`, {
           method: 'PUT',
           headers: {

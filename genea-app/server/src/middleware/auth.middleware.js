@@ -14,8 +14,13 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
 
+    console.log('Received token:', token);
+    
     // Verificar el token con Supabase directamente
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
+    console.log('User data:', userData);
+    console.log('User error:', userError);
     
     if (userError || !userData.user) {
       console.error('Auth error:', userError);
