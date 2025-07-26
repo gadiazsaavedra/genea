@@ -292,9 +292,9 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                     })}
                   </div>
                   <p style={{ margin: '8px 0 4px 0', fontSize: '14px', color: '#666' }}>
-                    {person.birthDate ? new Date(person.birthDate).getFullYear() : '?'} - {person.isAlive ? 'Presente' : (person.deathDate ? new Date(person.deathDate).getFullYear() : '?')}
+                    {person.birth_date ? new Date(person.birth_date).getFullYear() : 'Nacimiento desconocido'} - {person.death_date ? new Date(person.death_date).getFullYear() : 'Presente'}
                   </p>
-                  {person.birthPlace && <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>📍 {person.birthPlace}</p>}
+                  {person.birth_place && <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>📍 {person.birth_place}</p>}
                   
                   <div style={{ marginTop: '12px', display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
                     <button
