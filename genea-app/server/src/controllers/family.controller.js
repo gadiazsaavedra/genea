@@ -226,9 +226,18 @@ exports.updateFamily = async (req, res) => {
     
     console.log('=== UPDATE FAMILY REQUEST ===');
     console.log('Family ID:', familyId);
+    console.log('Family ID type:', typeof familyId);
     console.log('User ID:', userId);
     console.log('Name:', name);
     console.log('Description:', description);
+    
+    // Validar que el ID de familia sea válido
+    if (!familyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de familia requerido'
+      });
+    }
     
     // TEMPORAL: Permitir todas las actualizaciones durante desarrollo
     console.log('=== SKIPPING PERMISSION CHECK FOR DEVELOPMENT ===');
@@ -237,14 +246,22 @@ exports.updateFamily = async (req, res) => {
     
     // TODO: Restaurar verificación de permisos en producción
     
-    // Actualizar la familia
+    // Actualizar la familia - versión simplificada
+    console.log('=== ATTEMPTING UPDATE ===');
+    console.log('Updating family ID:', familyId);
+    console.log('New name:', name);
+    console.log('New description:', description);
+    
+    const updateData = {
+      name: name,
+      description: description || null
+    };
+    
+    console.log('Update data:', updateData);
+    
     const { data: updatedFamily, error: updateError } = await supabaseClient
       .from('families')
-      .update({ 
-        name, 
-        description, 
-        updated_at: new Date().toISOString() 
-      })
+      .update(updateData)
       .eq('id', familyId)
       .select()
       .single();
