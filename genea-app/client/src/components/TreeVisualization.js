@@ -5,7 +5,14 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [forceUpdate, setForceUpdate] = useState(0);
   const containerRef = useRef(null);
+  
+  // Forzar re-render cuando people cambie
+  useEffect(() => {
+    console.log('People changed, forcing update:', people.length);
+    setForceUpdate(prev => prev + 1);
+  }, [people]);
 
   const handleMouseDown = (e) => {
     setIsDragging(true);
@@ -39,7 +46,9 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
   }, [zoom]);
 
   const renderTraditionalTree = () => {
-    if (people.length === 0) {
+    console.log('Rendering traditional tree with', people.length, 'people');
+    
+    if (!people || people.length === 0) {
       return (
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <p>No hay personas en el árbol</p>

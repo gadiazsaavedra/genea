@@ -75,8 +75,13 @@ const TreeView = () => {
       
       if (response.ok) {
         // Actualizar lista local y recargar relaciones
-        setPeople(people.filter(p => p.id !== personId));
-        loadRelationships(); // Recargar relaciones después de eliminar
+        const updatedPeople = people.filter(p => p.id !== personId);
+        setPeople(updatedPeople);
+        
+        // Recargar relaciones después de eliminar
+        await loadRelationships();
+        
+        console.log('Person deleted, remaining people:', updatedPeople.length);
         alert('Persona eliminada correctamente');
       } else {
         const result = await response.json();
