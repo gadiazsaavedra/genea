@@ -12,8 +12,25 @@ const TreeView = () => {
   const [showPersonModal, setShowPersonModal] = useState(false);
   const [isFounderMode, setIsFounderMode] = useState(false);
   const [viewType, setViewType] = useState('traditional');
+  const [relationshipMode, setRelationshipMode] = useState(null); // 'child' or 'spouse'
+  const [selectedParent, setSelectedParent] = useState(null);
 
   useEffect(() => {
+    // Exponer funciones globalmente para los botones
+    window.addChild = (parent) => {
+      setSelectedParent(parent);
+      setRelationshipMode('child');
+      setIsFounderMode(false);
+      setShowPersonModal(true);
+    };
+    
+    window.addSpouse = (person) => {
+      setSelectedParent(person);
+      setRelationshipMode('spouse');
+      setIsFounderMode(false);
+      setShowPersonModal(true);
+    };
+    
     const savedFamilies = JSON.parse(localStorage.getItem('families') || '[]');
     const currentFamily = savedFamilies.find(f => f._id === familyId);
     
@@ -31,6 +48,38 @@ const TreeView = () => {
     }, 500);
   }, [familyId]);
 
+  const createRelationship = async (childId, parentId, type) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) return;
+      
+      const relationshipData = {
+        person1_id: type === 'child' ? parentId : childId,
+        person2_id: type === 'child' ? childId : parentId,
+        relationship_type: type === 'child' ? 'parent' : 'spouse'
+      };
+      
+      console.log('Creating relationship:', relationshipData);
+      
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/relationships`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(relationshipData)
+      });
+      
+      if (!response.ok) {
+        console.error('Error creating relationship:', await response.json());
+      }
+    } catch (error) {
+      console.error('Error creating relationship:', error);
+    }
+  };
+  
   const loadPeopleFromSupabase = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -107,6 +156,11 @@ const TreeView = () => {
         throw new Error(result.message || result.error || 'Error al crear persona');
       }
       
+      // Crear relación si es necesario
+      if (relationshipMode && selectedParent) {
+        await createRelationship(result.data.id, selectedParent.id, relationshipMode);
+      }
+      
       // Actualizar lista local con la persona creada
       console.log('=== UPDATING LOCAL STATE ===');
       console.log('Current people:', people.length);
@@ -115,9 +169,12 @@ const TreeView = () => {
       const newPeople = [...people, result.data];
       setPeople(newPeople);
       setShowPersonModal(false);
+      setRelationshipMode(null);
+      setSelectedParent(null);
       
       console.log('Updated people count:', newPeople.length);
-      alert('Persona agregada exitosamente!');
+      const relationText = relationshipMode ? ` como ${relationshipMode === 'child' ? 'hijo' : 'cónyuge'} de ${selectedParent?.first_name}` : '';
+      alert(`Persona agregada exitosamente${relationText}!`);
       
     } catch (error) {
       console.error('=== ERROR ADDING PERSON ===');

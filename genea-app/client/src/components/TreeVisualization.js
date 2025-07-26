@@ -87,6 +87,37 @@ const TreeVisualization = ({ people, viewType }) => {
               {person.birthDate ? new Date(person.birthDate).getFullYear() : '?'} - {person.isAlive ? 'Presente' : (person.deathDate ? new Date(person.deathDate).getFullYear() : '?')}
             </p>
             {person.birthPlace && <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>📍 {person.birthPlace}</p>}
+            
+            <div style={{ marginTop: '12px', display: 'flex', gap: '4px', justifyContent: 'center' }}>
+              <button
+                onClick={() => window.addChild && window.addChild(person)}
+                style={{
+                  padding: '4px 8px',
+                  fontSize: '10px',
+                  backgroundColor: '#4caf50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer'
+                }}
+              >
+                + Hijo
+              </button>
+              <button
+                onClick={() => window.addSpouse && window.addSpouse(person)}
+                style={{
+                  padding: '4px 8px',
+                  fontSize: '10px',
+                  backgroundColor: '#e91e63',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer'
+                }}
+              >
+                + Cónyuge
+              </button>
+            </div>
           </div>
         ))}
       </div>
