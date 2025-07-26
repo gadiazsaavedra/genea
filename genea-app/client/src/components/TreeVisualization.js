@@ -143,9 +143,9 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               
               if (person1PosInGen0 === -1 || person2PosInGen0 === -1) return null;
               
-              // Calcular posiciones basadas en el gap de 120px entre cónyuges
+              // Calcular posiciones basadas en el gap de 200px entre cónyuges
               const cardWidth = 200;
-              const gap = 120;
+              const gap = 200;
               const containerWidth = 1200;
               const totalWidth = foundersInGen0.length * cardWidth + (foundersInGen0.length - 1) * gap;
               const startX = (containerWidth - totalWidth) / 2 + cardWidth / 2;
@@ -204,8 +204,8 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               
               // Calcular posición del padre
               const cardWidth = 200;
-              const gap0 = 120; // Gap entre cónyuges
-              const gap1 = 80;  // Gap entre hijos
+              const gap0 = 200; // Gap entre cónyuges (aumentado)
+              const gap1 = 60;  // Gap entre hijos
               const containerWidth = 1200;
               
               const totalWidth0 = foundersInGen0.length * cardWidth + (foundersInGen0.length - 1) * gap0;
@@ -217,65 +217,46 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               const startX1 = (containerWidth - totalWidth1) / 2 + cardWidth / 2;
               const centerX = startX1 + (childrenInGen1.length - 1) * (cardWidth + gap1) / 2;
               
+              // Crear líneas desde ambos padres hacia todos los hijos
+              const spouseRel = relationships.find(r => 
+                r.relationship_type === 'spouse' && 
+                (r.person1_id === person1.id || r.person2_id === person1.id)
+              );
+              
+              if (!spouseRel) return null;
+              
+              const spouseId = spouseRel.person1_id === person1.id ? spouseRel.person2_id : spouseRel.person1_id;
+              const spouse = people.find(p => p.id === spouseId);
+              const spousePosInGen0 = foundersInGen0.findIndex(p => p.id === spouseId);
+              const spouseX = startX0 + spousePosInGen0 * (cardWidth + gap0);
+              
               return (
                 <g key={index}>
-                  {/* Línea vertical desde padre/madre */}
-                  <line
-                    x1={parentX}
-                    y1="240"
-                    x2={parentX}
-                    y2="300"
-                    stroke="#4caf50"
-                    strokeWidth="3"
-                    opacity="0.8"
-                  />
-                  {/* Línea horizontal hacia el centro */}
-                  <line
-                    x1={parentX}
-                    y1="300"
-                    x2={centerX}
-                    y2="300"
-                    stroke="#4caf50"
-                    strokeWidth="3"
-                    opacity="0.8"
-                  />
-                  {/* Línea vertical hacia el hijo */}
-                  <line
-                    x1={centerX}
-                    y1="300"
-                    x2={centerX}
-                    y2="360"
-                    stroke="#4caf50"
-                    strokeWidth="3"
-                    opacity="0.8"
-                  />
-                  {/* Flecha */}
-                  <polygon
-                    points={`${centerX-5},355 ${centerX},365 ${centerX+5},355`}
-                    fill="#4caf50"
-                  />
+                  {/* Líneas desde ambos padres */}
+                  <line x1={parentX} y1="240" x2={parentX} y2="300" stroke="#4caf50" strokeWidth="3" opacity="0.8" />
+                  <line x1={spouseX} y1="240" x2={spouseX} y2="300" stroke="#4caf50" strokeWidth="3" opacity="0.8" />
+                  
+                  {/* Línea horizontal conectando ambos padres */}
+                  <line x1={parentX} y1="300" x2={spouseX} y2="300" stroke="#4caf50" strokeWidth="3" opacity="0.8" />
+                  
+                  {/* Líneas hacia cada hijo */}
+                  {childrenInGen1.map((child, childIdx) => {
+                    const childX = startX1 + childIdx * (cardWidth + gap1);
+                    return (
+                      <g key={child.id}>
+                        <line x1={centerX} y1="300" x2={childX} y2="300" stroke="#4caf50" strokeWidth="2" opacity="0.6" />
+                        <line x1={childX} y1="300" x2={childX} y2="360" stroke="#4caf50" strokeWidth="3" opacity="0.8" />
+                        <polygon points={`${childX-4},356 ${childX},364 ${childX+4},356`} fill="#4caf50" />
+                      </g>
+                    );
+                  })}
+                  
                   {/* Etiqueta solo para la primera relación padre-hijo */}
                   {relationships.filter(r => r.relationship_type === 'parent').indexOf(rel) === 0 && (
                     <g>
-                      <rect 
-                        x={centerX - 50} 
-                        y="285" 
-                        width="100" 
-                        height="20" 
-                        fill="white" 
-                        stroke="#4caf50" 
-                        strokeWidth="1" 
-                        rx="3"
-                      />
-                      <text
-                        x={centerX}
-                        y="298"
-                        fill="#4caf50"
-                        fontSize="11"
-                        fontWeight="bold"
-                        textAnchor="middle"
-                      >
-                        HIJO DE AMBOS
+                      <rect x={centerX - 60} y="285" width="120" height="20" fill="white" stroke="#4caf50" strokeWidth="1" rx="3" />
+                      <text x={centerX} y="298" fill="#4caf50" fontSize="11" fontWeight="bold" textAnchor="middle">
+                        HIJOS DE AMBOS
                       </text>
                     </g>
                   )}
@@ -336,7 +317,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
             <div key={genKey} style={{ 
               display: 'flex', 
               justifyContent: 'center', 
-              gap: genKey === '0' ? '120px' : '80px', // Más separación para cónyuges
+              gap: genKey === '0' ? '200px' : '60px', // Mucha más separación para cónyuges
               marginBottom: genKey === '0' ? '120px' : '80px', // Más espacio para líneas
               flexWrap: 'wrap',
               position: 'relative'
