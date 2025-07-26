@@ -569,174 +569,140 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
   };
 
   const renderCircular = () => {
-    const centerX = 350;
-    const centerY = 350;
-    const baseRadius = 150;
+    const centerX = 300;
+    const centerY = 300;
+    const radius = 180;
 
     return (
       <div style={{ padding: '20px' }}>
         <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#1976d2' }}>⭕ Vista Circular Familiar</h3>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <svg width="700" height="700" style={{ border: '2px solid #1976d2', borderRadius: '12px', backgroundColor: '#f8f9fa' }}>
-            {/* Círculo central */}
-            <circle cx={centerX} cy={centerY} r="15" fill="#1976d2" stroke="white" strokeWidth="3" />
-            <text x={centerX} y={centerY + 5} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">🏠</text>
+          <svg width="600" height="600" style={{ border: '2px solid #1976d2', borderRadius: '12px', backgroundColor: '#f8f9fa' }}>
+            {/* Círculo central decorativo */}
+            <circle cx={centerX} cy={centerY} r="20" fill="#1976d2" stroke="white" strokeWidth="4" />
+            <text x={centerX} y={centerY + 6} textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">🏠</text>
             
-            {/* Organizar por generaciones en círculos concéntricos */}
-            {(() => {
-              const generations = {};
-              const safeRelationships = relationships || [];
+            {/* Personas en círculo simple */}
+            {people.map((person, index) => {
+              const angle = (index / people.length) * 2 * Math.PI - Math.PI/2;
+              const x = centerX + radius * Math.cos(angle);
+              const y = centerY + radius * Math.sin(angle);
               
-              // Encontrar fundadores
-              const founders = people.filter(person => {
-                const hasParents = safeRelationships.some(rel => 
-                  rel.relationship_type === 'parent' && rel.person2_id === person.id
-                );
-                return !hasParents;
-              });
-              
-              if (founders.length === 0) {
-                generations[0] = people;
-              } else {
-                generations[0] = founders;
-                
-                // Agregar hijos en generaciones siguientes
-                let currentGen = 0;
-                const visited = new Set();
-                while (generations[currentGen] && generations[currentGen].length > 0) {
-                  const children = [];
-                  generations[currentGen].forEach(parent => {
-                    const parentChildren = safeRelationships
-                      .filter(rel => rel.relationship_type === 'parent' && rel.person1_id === parent.id)
-                      .map(rel => people.find(p => p.id === rel.person2_id))
-                      .filter(child => child && !visited.has(child.id));
-                    
-                    parentChildren.forEach(child => {
-                      visited.add(child.id);
-                      children.push(child);
-                    });
-                  });
+              return (
+                <g key={person.id}>
+                  {/* Línea desde el centro */}
+                  <line 
+                    x1={centerX} 
+                    y1={centerY} 
+                    x2={x} 
+                    y2={y} 
+                    stroke="#ddd" 
+                    strokeWidth="2" 
+                    opacity="0.5"
+                  />
                   
-                  if (children.length > 0) {
-                    generations[currentGen + 1] = children;
-                  }
-                  currentGen++;
-                }
-              }
-              
-              return Object.keys(generations).map(genKey => {
-                const generation = generations[genKey];
-                const genRadius = baseRadius + (parseInt(genKey) * 80);
-                
-                return generation.map((person, index) => {
-                  const angle = (index / generation.length) * 2 * Math.PI - Math.PI/2;
-                  const x = centerX + genRadius * Math.cos(angle);
-                  const y = centerY + genRadius * Math.sin(angle);
+                  {/* Círculo de persona */}
+                  <circle 
+                    cx={x} 
+                    cy={y} 
+                    r="40" 
+                    fill={person.gender === 'male' ? '#2196f3' : '#e91e63'} 
+                    stroke="white" 
+                    strokeWidth="4"
+                  />
                   
-                  return (
-                    <g key={person.id}>
-                      {/* Línea desde el centro */}
-                      <line 
-                        x1={centerX} 
-                        y1={centerY} 
-                        x2={x} 
-                        y2={y} 
-                        stroke={parseInt(genKey) === 0 ? '#1976d2' : '#4caf50'} 
-                        strokeWidth="2" 
-                        opacity="0.6"
-                        strokeDasharray={parseInt(genKey) > 0 ? '5,3' : 'none'}
-                      />
+                  {/* Iniciales */}
+                  <text 
+                    x={x} 
+                    y={y + 5} 
+                    textAnchor="middle" 
+                    fill="white" 
+                    fontSize="18" 
+                    fontWeight="bold"
+                  >
+                    {(person.first_name || '?').charAt(0)}
+                  </text>
+                  
+                  {/* Nombre */}
+                  <text 
+                    x={x} 
+                    y={y + 65} 
+                    textAnchor="middle" 
+                    fontSize="14" 
+                    fontWeight="bold"
+                    fill="#333"
+                  >
+                    {person.first_name || 'Sin nombre'}
+                  </text>
+                  
+                  {/* Badges de relaciones */}
+                  <g>
+                    {(relationships || []).filter(rel => rel.person1_id === person.id || rel.person2_id === person.id).map((rel, idx) => {
+                      const isParent = rel.relationship_type === 'parent' && rel.person1_id === person.id;
+                      const isChild = rel.relationship_type === 'parent' && rel.person2_id === person.id;
+                      const isSpouse = rel.relationship_type === 'spouse';
                       
-                      {/* Círculo de persona */}
-                      <circle 
-                        cx={x} 
-                        cy={y} 
-                        r="35" 
-                        fill={person.gender === 'male' ? '#2196f3' : '#e91e63'} 
-                        stroke="white" 
-                        strokeWidth="3"
-                        opacity="0.9"
-                      />
+                      let badgeColor = '#666';
+                      let badgeText = '';
                       
-                      {/* Iniciales */}
-                      <text 
-                        x={x} 
-                        y={y} 
-                        textAnchor="middle" 
-                        dy="5" 
-                        fill="white" 
-                        fontSize="16" 
-                        fontWeight="bold"
-                      >
-                        {(person.first_name || '?').charAt(0)}{(person.last_name || '').charAt(0)}
-                      </text>
+                      if (isParent) {
+                        badgeColor = '#4caf50';
+                        badgeText = 'P';
+                      } else if (isChild) {
+                        badgeColor = '#2196f3';
+                        badgeText = 'H';
+                      } else if (isSpouse) {
+                        badgeColor = '#e91e63';
+                        badgeText = 'C';
+                      }
                       
-                      {/* Nombre completo */}
-                      <text 
-                        x={x} 
-                        y={y + 55} 
-                        textAnchor="middle" 
-                        fontSize="12" 
-                        fontWeight="bold"
-                        fill="#333"
-                      >
-                        {person.first_name || 'Sin nombre'}
-                      </text>
-                      
-                      {/* Año de nacimiento */}
-                      {person.birth_date && (
-                        <text 
-                          x={x} 
-                          y={y + 70} 
-                          textAnchor="middle" 
-                          fontSize="10" 
-                          fill="#666"
-                        >
-                          {new Date(person.birth_date).getFullYear()}
-                        </text>
-                      )}
-                      
-                      {/* Badge de generación */}
-                      <circle 
-                        cx={x + 25} 
-                        cy={y - 25} 
-                        r="12" 
-                        fill={parseInt(genKey) === 0 ? '#ff9800' : '#4caf50'} 
-                        stroke="white" 
-                        strokeWidth="2"
-                      />
-                      <text 
-                        x={x + 25} 
-                        y={y - 20} 
-                        textAnchor="middle" 
-                        fontSize="10" 
-                        fontWeight="bold" 
-                        fill="white"
-                      >
-                        G{parseInt(genKey) + 1}
-                      </text>
-                    </g>
-                  );
-                });
-              });
-            })()}
+                      if (badgeText) {
+                        return (
+                          <g key={idx}>
+                            <circle 
+                              cx={x + (idx * 20) - 10} 
+                              cy={y - 50} 
+                              r="10" 
+                              fill={badgeColor} 
+                              stroke="white" 
+                              strokeWidth="2"
+                            />
+                            <text 
+                              x={x + (idx * 20) - 10} 
+                              y={y - 45} 
+                              textAnchor="middle" 
+                              fontSize="10" 
+                              fontWeight="bold" 
+                              fill="white"
+                            >
+                              {badgeText}
+                            </text>
+                          </g>
+                        );
+                      }
+                      return null;
+                    })}
+                  </g>
+                </g>
+              );
+            })}
             
-            {/* Líneas de relaciones matrimoniales */}
+            {/* Líneas de matrimonio */}
             {(relationships || []).filter(rel => rel.relationship_type === 'spouse').map((rel, index) => {
               const person1 = people.find(p => p.id === rel.person1_id);
               const person2 = people.find(p => p.id === rel.person2_id);
               
-              if (!person1 || person2) {
+              if (person1 && person2) {
                 const person1Index = people.indexOf(person1);
                 const person2Index = people.indexOf(person2);
                 
                 const angle1 = (person1Index / people.length) * 2 * Math.PI - Math.PI/2;
                 const angle2 = (person2Index / people.length) * 2 * Math.PI - Math.PI/2;
                 
-                const x1 = centerX + baseRadius * Math.cos(angle1);
-                const y1 = centerY + baseRadius * Math.sin(angle1);
-                const x2 = centerX + baseRadius * Math.cos(angle2);
-                const y2 = centerY + baseRadius * Math.sin(angle2);
+                const x1 = centerX + radius * Math.cos(angle1);
+                const y1 = centerY + radius * Math.sin(angle1);
+                const x2 = centerX + radius * Math.cos(angle2);
+                const y2 = centerY + radius * Math.sin(angle2);
                 
                 return (
                   <line 
@@ -746,8 +712,8 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                     x2={x2} 
                     y2={y2} 
                     stroke="#e91e63" 
-                    strokeWidth="3" 
-                    strokeDasharray="8,4" 
+                    strokeWidth="4" 
+                    strokeDasharray="10,5" 
                     opacity="0.8"
                   />
                 );
@@ -757,11 +723,15 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
           </svg>
         </div>
         
-        {/* Leyenda */}
+        {/* Leyenda simplificada */}
         <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: '#666' }}>
-          <span style={{ marginRight: '20px' }}>🟠 Centro familiar</span>
-          <span style={{ marginRight: '20px' }}>🔵 Línea sólida: Fundadores</span>
-          <span>🟢 Línea punteada: Descendientes</span>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <span>🔵 Hombre</span>
+            <span>🔴 Mujer</span>
+            <span style={{ color: '#4caf50' }}>P = Padre/Madre</span>
+            <span style={{ color: '#2196f3' }}>H = Hijo/Hija</span>
+            <span style={{ color: '#e91e63' }}>C = Cónyuge</span>
+          </div>
         </div>
       </div>
     );
