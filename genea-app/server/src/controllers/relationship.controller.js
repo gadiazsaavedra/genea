@@ -59,15 +59,36 @@ exports.getRelationshipsByFamily = async (req, res) => {
       });
     }
     
-    // Obtener todas las relaciones de personas de esta familia
+    // Obtener IDs de personas de esta familia primero
+    const { data: familyPeople, error: peopleError } = await supabaseClient
+      .from('people')
+      .select('id')
+      .eq('family_id', familyId);
+    
+    if (peopleError) {
+      console.error('Error getting family people:', peopleError);
+      return res.status(400).json({
+        success: false,
+        message: 'Error obteniendo personas de la familia',
+        error: peopleError.message
+      });
+    }
+    
+    const personIds = (familyPeople || []).map(p => p.id);
+    
+    if (personIds.length === 0) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+    
+    // Obtener relaciones donde ambas personas pertenecen a la familia
     const { data, error } = await supabaseClient
       .from('relationships')
-      .select(`
-        *,
-        person1:people!relationships_person1_id_fkey(id, first_name, last_name, family_id),
-        person2:people!relationships_person2_id_fkey(id, first_name, last_name, family_id)
-      `)
-      .or(`person1.family_id.eq.${familyId},person2.family_id.eq.${familyId}`);
+      .select('*')
+      .in('person1_id', personIds)
+      .in('person2_id', personIds);
     
     if (error) {
       console.error('Error getting relationships:', error);
@@ -78,10 +99,7 @@ exports.getRelationshipsByFamily = async (req, res) => {
       });
     }
     
-    // Filtrar solo relaciones donde ambas personas pertenecen a la familia
-    const familyRelationships = (data || []).filter(rel => 
-      rel.person1?.family_id === familyId && rel.person2?.family_id === familyId
-    );
+    const familyRelationships = data || [];
     
     res.json({
       success: true,

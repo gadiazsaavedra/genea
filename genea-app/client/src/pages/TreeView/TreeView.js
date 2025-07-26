@@ -74,14 +74,10 @@ const TreeView = () => {
       });
       
       if (response.ok) {
-        // Actualizar lista local y recargar relaciones
-        const updatedPeople = people.filter(p => p.id !== personId);
-        setPeople(updatedPeople);
-        
-        // Recargar relaciones después de eliminar
+        // Recargar tanto personas como relaciones desde el servidor
+        await loadPeopleFromSupabase();
         await loadRelationships();
         
-        console.log('Person deleted, remaining people:', updatedPeople.length);
         alert('Persona eliminada correctamente');
       } else {
         const result = await response.json();
