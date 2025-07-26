@@ -90,51 +90,54 @@ const FamilyManagement = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       if (editingFamily) {
         // Actualizar familia existente
-        const { data, error } = await supabase
-          .from('families')
-          .update({
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/families/${editingFamily.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
             name: formData.name,
             description: formData.description
           })
-          .eq('id', editingFamily.id)
-          .select();
+        });
         
-        if (error) throw error;
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.message || 'Error al actualizar familia');
+        }
         
         const updatedFamilies = families.map(f => 
-          f.id === editingFamily.id ? data[0] : f
+          f.id === editingFamily.id ? result.data : f
         );
         setFamilies(updatedFamilies);
       } else {
         // Crear nueva familia
-        const { data: { user } } = await supabase.auth.getUser();
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/families`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            description: formData.description
+          })
+        });
         
-        if (!user) {
-          alert('Debes estar logueado para crear una familia');
-          return;
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.message || 'Error al crear familia');
         }
         
-        const familyData = {
-          name: formData.name,
-          description: formData.description,
-          user_id: user.id,
-          created_at: new Date().toISOString()
-        };
-        
-        const { data, error } = await supabase
-          .from('families')
-          .insert([familyData])
-          .select();
-        
-        if (error) {
-          console.error('Supabase error:', error);
-          alert(`Error al crear familia: ${error.message}`);
-          return;
-        }
-        
-        setFamilies([...families, data[0]]);
+        setFamilies([...families, result.data]);
       }
       setShowForm(false);
       setFormData({ name: '', description: '' });

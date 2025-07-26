@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Limpiar puertos ocupados
+echo "🧹 Limpiando puertos..."
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+lsof -ti:5000 | xargs kill -9 2>/dev/null || true
+
 echo "🚀 Iniciando Genea en modo desarrollo local..."
 echo "📊 Base de datos: Supabase (remoto)"
 echo "🖥️  Backend: http://localhost:5000"
@@ -10,7 +15,8 @@ echo ""
 cleanup() {
     echo ""
     echo "🛑 Deteniendo servidores..."
-    kill $BACKEND_PID $FRONTEND_PID 2>/dev/null
+    lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+    lsof -ti:5000 | xargs kill -9 2>/dev/null || true
     exit 0
 }
 
@@ -25,14 +31,14 @@ npm run dev &
 BACKEND_PID=$!
 
 # Esperar a que el backend inicie
-sleep 3
+sleep 5
 
 # Iniciar frontend
 echo "🎨 Iniciando frontend..."
 cd ../client
 cp .env.local .env
 npm install
-npm start &
+PORT=3000 npm start &
 FRONTEND_PID=$!
 
 echo ""
