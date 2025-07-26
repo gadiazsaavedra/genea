@@ -119,7 +119,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
 
     return (
       <div style={{ position: 'relative', padding: '40px' }}>
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10, border: '2px solid red' }}>
+        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {/* Renderizar líneas de conexión */}
           {(relationships || []).map((rel, index) => {
             console.log('=== RENDERING LINES ===');
@@ -187,7 +187,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
           fontSize: '10px',
           zIndex: 3
         }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Relaciones: {(relationships || []).length}</div>
+          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Leyenda ({(relationships || []).length} relaciones):</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
             <div style={{ width: '20px', height: '2px', backgroundColor: '#4caf50' }}></div>
             <span>Padre → Hijo</span>
