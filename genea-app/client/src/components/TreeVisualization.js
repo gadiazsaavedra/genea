@@ -122,27 +122,74 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {/* Renderizar líneas de conexión */}
           {(relationships || []).map((rel, index) => {
-            if (rel.relationship_type !== 'parent') return null;
+            const person1 = people.find(p => p.id === rel.person1_id);
+            const person2 = people.find(p => p.id === rel.person2_id);
             
-            const parent = people.find(p => p.id === rel.person1_id);
-            const child = people.find(p => p.id === rel.person2_id);
+            if (!person1 || !person2) return null;
             
-            if (!parent || !child) return null;
+            // Diferentes estilos según el tipo de relación
+            let strokeColor = '#1976d2';
+            let strokeWidth = 2;
+            let strokeDasharray = 'none';
+            
+            if (rel.relationship_type === 'parent') {
+              strokeColor = '#4caf50'; // Verde para padre-hijo
+              strokeWidth = 3;
+            } else if (rel.relationship_type === 'spouse') {
+              strokeColor = '#e91e63'; // Rosa para cónyuges
+              strokeWidth = 2;
+              strokeDasharray = '5,5'; // Línea punteada
+            }
             
             return (
-              <line
-                key={index}
-                x1="50%"
-                y1="100"
-                x2="50%"
-                y2="200"
-                stroke="#1976d2"
-                strokeWidth="2"
-                opacity="0.6"
-              />
+              <g key={index}>
+                <line
+                  x1="50%"
+                  y1="100"
+                  x2="50%"
+                  y2="200"
+                  stroke={strokeColor}
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={strokeDasharray}
+                  opacity="0.8"
+                />
+                {/* Etiqueta de relación */}
+                <text
+                  x="52%"
+                  y="150"
+                  fill={strokeColor}
+                  fontSize="10"
+                  fontWeight="bold"
+                >
+                  {rel.relationship_type === 'parent' ? 'hijo' : 'cónyuge'}
+                </text>
+              </g>
             );
           })}
         </svg>
+        
+        {/* Leyenda de relaciones */}
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          backgroundColor: 'white',
+          padding: '8px',
+          borderRadius: '4px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          fontSize: '10px',
+          zIndex: 3
+        }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Leyenda:</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+            <div style={{ width: '20px', height: '2px', backgroundColor: '#4caf50' }}></div>
+            <span>Padre → Hijo</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ width: '20px', height: '2px', backgroundColor: '#e91e63', borderTop: '2px dashed #e91e63' }}></div>
+            <span>Cónyuges</span>
+          </div>
+        </div>
         
         <div style={{ position: 'relative', zIndex: 2 }}>
           {Object.keys(generations).map(genKey => (
@@ -180,13 +227,51 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   <h4 style={{ margin: '0 0 8px 0' }}>
                     {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
                   </h4>
-                  {person.isFounder && <span style={{ 
-                    backgroundColor: '#ff9800', 
-                    color: 'white', 
-                    padding: '2px 8px', 
-                    borderRadius: '12px', 
-                    fontSize: '12px' 
-                  }}>Fundador</span>}
+                  <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
+                    {person.isFounder && <span style={{ 
+                      backgroundColor: '#ff9800', 
+                      color: 'white', 
+                      padding: '2px 8px', 
+                      borderRadius: '12px', 
+                      fontSize: '10px' 
+                    }}>Fundador</span>}
+                    
+                    {/* Mostrar relaciones */}
+                    {(relationships || []).filter(rel => rel.person1_id === person.id || rel.person2_id === person.id).map((rel, idx) => {
+                      const isParent = rel.relationship_type === 'parent' && rel.person1_id === person.id;
+                      const isChild = rel.relationship_type === 'parent' && rel.person2_id === person.id;
+                      const isSpouse = rel.relationship_type === 'spouse';
+                      
+                      if (isParent) {
+                        return <span key={idx} style={{ 
+                          backgroundColor: '#4caf50', 
+                          color: 'white', 
+                          padding: '1px 6px', 
+                          borderRadius: '8px', 
+                          fontSize: '9px' 
+                        }}>Padre/Madre</span>;
+                      }
+                      if (isChild) {
+                        return <span key={idx} style={{ 
+                          backgroundColor: '#2196f3', 
+                          color: 'white', 
+                          padding: '1px 6px', 
+                          borderRadius: '8px', 
+                          fontSize: '9px' 
+                        }}>Hijo/Hija</span>;
+                      }
+                      if (isSpouse) {
+                        return <span key={idx} style={{ 
+                          backgroundColor: '#e91e63', 
+                          color: 'white', 
+                          padding: '1px 6px', 
+                          borderRadius: '8px', 
+                          fontSize: '9px' 
+                        }}>Cónyuge</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
                   <p style={{ margin: '8px 0 4px 0', fontSize: '14px', color: '#666' }}>
                     {person.birthDate ? new Date(person.birthDate).getFullYear() : '?'} - {person.isAlive ? 'Presente' : (person.deathDate ? new Date(person.deathDate).getFullYear() : '?')}
                   </p>
