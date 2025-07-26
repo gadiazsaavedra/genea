@@ -154,11 +154,20 @@ const PersonManagement = () => {
         
         const result = await response.json();
         
-        console.log('Create person response:', response.status, result);
+        console.log('=== CREATE PERSON RESPONSE ===');
+        console.log('Status:', response.status);
+        console.log('Status text:', response.statusText);
+        console.log('Result:', result);
+        console.log('Response headers:', response.headers);
         
         if (!response.ok) {
-          console.error('Create person error:', result);
-          throw new Error(result.message || result.error || 'Error al crear persona');
+          console.error('=== CREATE PERSON ERROR ===');
+          console.error('Status:', response.status);
+          console.error('Result:', result);
+          console.error('Error message:', result.message);
+          console.error('Error details:', result.error);
+          console.error('Full result:', JSON.stringify(result, null, 2));
+          throw new Error(result.message || result.error || `HTTP ${response.status}: ${response.statusText}`);
         }
         
         setPersons([...persons, result.data]);
@@ -166,8 +175,17 @@ const PersonManagement = () => {
       }
       setShowForm(false);
     } catch (error) {
-      console.error('Error al guardar persona:', error);
-      alert(`Error al agregar persona: ${error.message}`);
+      console.error('=== CATCH ERROR ===');
+      console.error('Error type:', error.constructor.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Full error:', error);
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        alert('Error de conexión: No se puede conectar al servidor');
+      } else {
+        alert(`Error al agregar persona: ${error.message}`);
+      }
     }
   };
 
