@@ -107,12 +107,21 @@ const TreeView = () => {
         throw new Error(result.message || result.error || 'Error al crear persona');
       }
       
-      // Actualizar lista local
-      setPeople([...people, result.data]);
+      // Actualizar lista local con la persona creada
+      console.log('=== UPDATING LOCAL STATE ===');
+      console.log('Current people:', people.length);
+      console.log('Adding person:', result.data);
+      
+      const newPeople = [...people, result.data];
+      setPeople(newPeople);
       setShowPersonModal(false);
       
+      console.log('Updated people count:', newPeople.length);
+      alert('Persona agregada exitosamente!');
+      
     } catch (error) {
-      console.error('Error adding person:', error);
+      console.error('=== ERROR ADDING PERSON ===');
+      console.error('Error:', error);
       alert(`Error al agregar persona: ${error.message}`);
     }
   };
