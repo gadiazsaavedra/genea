@@ -132,22 +132,34 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
             if (!person1 || !person2) return null;
             
             if (rel.relationship_type === 'spouse') {
-              // Línea horizontal punteada para cónyuges
+              // Calcular posiciones dinámicas para cónyuges
+              const person1Index = people.findIndex(p => p.id === person1.id);
+              const person2Index = people.findIndex(p => p.id === person2.id);
+              
+              // Coordenadas basadas en posición de tarjetas (320px ancho + 120px gap)
+              const cardWidth = 320;
+              const gap = 120;
+              const startX = 100;
+              
+              const x1 = startX + (person1Index * (cardWidth + gap)) + (cardWidth / 2);
+              const x2 = startX + (person2Index * (cardWidth + gap)) + (cardWidth / 2);
+              const y = 180; // Altura fija para cónyuges
+              
               return (
                 <g key={index}>
                   <line
-                    x1="420"
-                    y1="180"
-                    x2="680"
-                    y2="180"
+                    x1={x1}
+                    y1={y}
+                    x2={x2}
+                    y2={y}
                     stroke="#e91e63"
                     strokeWidth="3"
                     strokeDasharray="8,4"
                     opacity="0.8"
                   />
                   <rect 
-                    x="520" 
-                    y="165" 
+                    x={(x1 + x2) / 2 - 40} 
+                    y={y - 15} 
                     width="80" 
                     height="20" 
                     fill="white" 
@@ -156,8 +168,8 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                     rx="3"
                   />
                   <text
-                    x="560"
-                    y="178"
+                    x={(x1 + x2) / 2}
+                    y={y - 2}
                     fill="#e91e63"
                     fontSize="11"
                     fontWeight="bold"
@@ -168,18 +180,39 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                 </g>
               );
             } else if (rel.relationship_type === 'parent') {
-              // Líneas desde ambos padres hacia el hijo
-              const isFromMother = person1.gender === 'female' || person1.first_name?.toLowerCase().includes('maria');
-              const xStart = isFromMother ? 680 : 420; // Posición de madre o padre
-              const xEnd = 550; // Centro del hijo
+              // Calcular posiciones dinámicas para padre-hijo
+              const parentIndex = people.findIndex(p => p.id === person1.id);
+              const childIndex = people.findIndex(p => p.id === person2.id);
+              
+              // Coordenadas basadas en posición de tarjetas
+              const cardWidth = 320;
+              const gap = 120;
+              const startX = 100;
+              
+              const parentX = startX + (parentIndex * (cardWidth + gap)) + (cardWidth / 2);
+              const childX = startX + (childIndex * (cardWidth + gap)) + (cardWidth / 2);
+              
+              // Encontrar el centro entre ambos padres para el hijo
+              const spouseRel = relationships.find(r => 
+                r.relationship_type === 'spouse' && 
+                (r.person1_id === person1.id || r.person2_id === person1.id)
+              );
+              
+              let centerX = childX;
+              if (spouseRel) {
+                const spouseId = spouseRel.person1_id === person1.id ? spouseRel.person2_id : spouseRel.person1_id;
+                const spouseIndex = people.findIndex(p => p.id === spouseId);
+                const spouseX = startX + (spouseIndex * (cardWidth + gap)) + (cardWidth / 2);
+                centerX = (parentX + spouseX) / 2; // Centro entre ambos padres
+              }
               
               return (
                 <g key={index}>
                   {/* Línea vertical desde padre/madre */}
                   <line
-                    x1={xStart}
+                    x1={parentX}
                     y1="240"
-                    x2={xStart}
+                    x2={parentX}
                     y2="300"
                     stroke="#4caf50"
                     strokeWidth="3"
@@ -187,9 +220,9 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   />
                   {/* Línea horizontal hacia el centro */}
                   <line
-                    x1={xStart}
+                    x1={parentX}
                     y1="300"
-                    x2={xEnd}
+                    x2={centerX}
                     y2="300"
                     stroke="#4caf50"
                     strokeWidth="3"
@@ -197,9 +230,9 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   />
                   {/* Línea vertical hacia el hijo */}
                   <line
-                    x1={xEnd}
+                    x1={centerX}
                     y1="300"
-                    x2={xEnd}
+                    x2={centerX}
                     y2="360"
                     stroke="#4caf50"
                     strokeWidth="3"
@@ -207,14 +240,14 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   />
                   {/* Flecha */}
                   <polygon
-                    points={`${xEnd-5},355 ${xEnd},365 ${xEnd+5},355`}
+                    points={`${centerX-5},355 ${centerX},365 ${centerX+5},355`}
                     fill="#4caf50"
                   />
-                  {/* Etiqueta solo en la primera línea */}
-                  {index === 1 && (
+                  {/* Etiqueta solo en la primera línea padre-hijo */}
+                  {index === (relationships.findIndex(r => r.relationship_type === 'parent')) && (
                     <g>
                       <rect 
-                        x="500" 
+                        x={centerX - 50} 
                         y="285" 
                         width="100" 
                         height="20" 
@@ -224,7 +257,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                         rx="3"
                       />
                       <text
-                        x="550"
+                        x={centerX}
                         y="298"
                         fill="#4caf50"
                         fontSize="11"
