@@ -74,8 +74,9 @@ const TreeView = () => {
       });
       
       if (response.ok) {
-        // Actualizar lista local
+        // Actualizar lista local y recargar relaciones
         setPeople(people.filter(p => p.id !== personId));
+        loadRelationships(); // Recargar relaciones después de eliminar
         alert('Persona eliminada correctamente');
       } else {
         const result = await response.json();

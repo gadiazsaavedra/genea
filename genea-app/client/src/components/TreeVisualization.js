@@ -51,10 +51,11 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
     const organizeByGenerations = () => {
       const generations = {};
       const visited = new Set();
+      const safeRelationships = relationships || [];
       
       // Encontrar personas sin padres (fundadores)
       const founders = people.filter(person => {
-        const hasParents = relationships.some(rel => 
+        const hasParents = safeRelationships.some(rel => 
           rel.relationship_type === 'parent' && rel.person2_id === person.id
         );
         return !hasParents;
@@ -71,7 +72,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
         while (generations[currentGen] && generations[currentGen].length > 0) {
           const children = [];
           generations[currentGen].forEach(parent => {
-            const parentChildren = relationships
+            const parentChildren = safeRelationships
               .filter(rel => rel.relationship_type === 'parent' && rel.person1_id === parent.id)
               .map(rel => people.find(p => p.id === rel.person2_id))
               .filter(child => child && !visited.has(child.id));
@@ -98,7 +99,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
       <div style={{ position: 'relative', padding: '40px' }}>
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {/* Renderizar líneas de conexión */}
-          {relationships.map((rel, index) => {
+          {(relationships || []).map((rel, index) => {
             if (rel.relationship_type !== 'parent') return null;
             
             const parent = people.find(p => p.id === rel.person1_id);
