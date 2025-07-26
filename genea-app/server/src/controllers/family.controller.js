@@ -249,11 +249,16 @@ exports.updateFamily = async (req, res) => {
       .select()
       .single();
     
-    console.log('Update result:', { updatedFamily, updateError });
+    console.log('=== UPDATE OPERATION ===');
+    console.log('Update result:', updatedFamily);
+    console.log('Update error:', updateError);
+    console.log('Update error details:', updateError?.details);
+    console.log('Update error hint:', updateError?.hint);
+    console.log('Update error code:', updateError?.code);
     
     if (updateError) {
-      console.error('Update error:', updateError);
-      throw new Error(updateError.message);
+      console.error('FULL UPDATE ERROR:', JSON.stringify(updateError, null, 2));
+      throw new Error(`Database error: ${updateError.message} (Code: ${updateError.code})`);
     }
     
     if (!updatedFamily) {
@@ -269,10 +274,15 @@ exports.updateFamily = async (req, res) => {
       data: updatedFamily
     });
   } catch (error) {
+    console.error('=== CONTROLLER ERROR ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
     res.status(400).json({
       success: false,
       message: 'Error al actualizar la familia',
-      error: error.message
+      error: error.message,
+      details: error.stack
     });
   }
 };
