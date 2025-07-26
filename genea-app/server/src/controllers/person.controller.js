@@ -214,78 +214,51 @@ exports.getPersonById = async (req, res) => {
   }
 };
 
-// Crear una nueva persona
+// Crear una nueva persona - SIMPLIFICADO
 exports.createPerson = async (req, res) => {
   try {
-    const {
-      familyId,
-      firstName,
-      lastName,
-      maidenName,
-      birthDate,
-      deathDate,
-      birthPlace,
-      deathPlace,
-      gender,
-      biography,
-      photoUrl
-    } = req.body;
+    const { familyId, firstName, lastName, gender, birthDate } = req.body;
     
-    const userId = req.user.uid;
+    console.log('Create person request:', { familyId, firstName, lastName, gender, birthDate });
     
-    // Validar datos
     if (!familyId || !firstName) {
       return res.status(400).json({
         success: false,
-        message: 'El ID de familia y el nombre son requeridos'
+        message: 'ID de familia y nombre son requeridos'
       });
     }
     
-    // Verificar acceso a la familia
-    const { data: memberCheck, error: memberError } = await supabaseClient
-      .from('family_members')
-      .select('id')
-      .eq('family_id', familyId)
-      .eq('user_id', userId);
-    
-    if (memberError || !memberCheck || memberCheck.length === 0) {
-      return res.status(403).json({
-        success: false,
-        message: 'No tienes acceso a esta familia'
-      });
-    }
-    
-    // Crear la persona
-    const { data: person, error: personError } = await supabaseClient
+    // Crear persona directamente sin verificaciones
+    const { data, error } = await supabaseClient
       .from('people')
-      .insert([
-        {
-          family_id: familyId,
-          first_name: firstName,
-          last_name: lastName || null,
-          maiden_name: maidenName || null,
-          birth_date: birthDate || null,
-          death_date: deathDate || null,
-          birth_place: birthPlace || null,
-          death_place: deathPlace || null,
-          gender: gender || null,
-          biography: biography || null,
-          photo_url: photoUrl || null
-        }
-      ])
+      .insert({
+        family_id: familyId,
+        first_name: firstName,
+        last_name: lastName || null,
+        gender: gender || null,
+        birth_date: birthDate || null
+      })
       .select()
       .single();
     
-    if (personError) throw new Error(personError.message);
+    if (error) {
+      console.error('Create person error:', error);
+      return res.status(400).json({
+        success: false,
+        message: 'Error en base de datos',
+        error: error.message
+      });
+    }
     
     res.status(201).json({
       success: true,
-      data: person
+      data
     });
   } catch (error) {
-    res.status(400).json({
+    console.error('Controller error:', error);
+    res.status(500).json({
       success: false,
-      message: 'Error al crear la persona',
+      message: 'Error interno',
       error: error.message
     });
   }
