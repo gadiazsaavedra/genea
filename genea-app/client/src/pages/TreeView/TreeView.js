@@ -70,17 +70,19 @@ const TreeView = () => {
         return;
       }
       
-      // Mapear datos al formato de la API
-      const nameParts = person.fullName?.split(' ') || [''];
+      // Mapear datos del PersonModal al formato de la API
       const apiData = {
         familyId: familyId,
-        firstName: nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' ') || null,
+        firstName: person.firstName || '',
+        lastName: person.lastName || null,
         gender: person.gender || null,
         birthDate: person.birthDate || null
       };
       
-      console.log('Adding person via API:', apiData);
+      console.log('=== ADDING PERSON ===');
+      console.log('Original person data:', person);
+      console.log('Mapped API data:', apiData);
+      console.log('Family ID:', familyId);
       
       const response = await fetch(`${process.env.REACT_APP_API_URL}/persons`, {
         method: 'POST',
