@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const relationshipController = require('../controllers/relationship.controller');
-const { authenticateToken } = require('../middleware/auth.middleware');
+// const { authenticateToken } = require('../middleware/auth.middleware');
 
-// Aplicar middleware de autenticación a todas las rutas
-router.use(authenticateToken);
+// TEMPORAL: Sin autenticación para debug
+// router.use(authenticateToken);
 
 // Rutas de relaciones
 router.post('/', relationshipController.createRelationship);

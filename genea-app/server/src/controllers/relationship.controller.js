@@ -1,6 +1,6 @@
 const { supabaseClient } = require('../config/supabase.config');
 
-// Crear una relación
+// Crear una relación - SIMPLIFICADO
 exports.createRelationship = async (req, res) => {
   try {
     const { person1_id, person2_id, relationship_type } = req.body;
@@ -8,9 +8,10 @@ exports.createRelationship = async (req, res) => {
     console.log('Creating relationship:', { person1_id, person2_id, relationship_type });
     
     if (!person1_id || !person2_id || !relationship_type) {
+      console.log('Missing required data');
       return res.status(400).json({
         success: false,
-        message: 'Faltan datos requeridos'
+        message: 'Faltan datos requeridos: person1_id, person2_id, relationship_type'
       });
     }
     
