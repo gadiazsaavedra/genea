@@ -136,10 +136,23 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               const person1Index = people.findIndex(p => p.id === person1.id);
               const person2Index = people.findIndex(p => p.id === person2.id);
               
-              // Coordenadas fijas basadas en el layout visible
-              const x1 = 250; // Centro de Juan
-              const x2 = 625; // Centro de Maria  
-              const y = 175; // Altura entre las tarjetas
+              // Calcular posiciones dinámicas basadas en el layout real
+              const foundersInGen0 = generations[0] || [];
+              const person1PosInGen0 = foundersInGen0.findIndex(p => p.id === person1.id);
+              const person2PosInGen0 = foundersInGen0.findIndex(p => p.id === person2.id);
+              
+              if (person1PosInGen0 === -1 || person2PosInGen0 === -1) return null;
+              
+              // Calcular posiciones basadas en el gap de 120px entre cónyuges
+              const cardWidth = 200;
+              const gap = 120;
+              const containerWidth = 1200;
+              const totalWidth = foundersInGen0.length * cardWidth + (foundersInGen0.length - 1) * gap;
+              const startX = (containerWidth - totalWidth) / 2 + cardWidth / 2;
+              
+              const x1 = startX + person1PosInGen0 * (cardWidth + gap);
+              const x2 = startX + person2PosInGen0 * (cardWidth + gap);
+              const y = 175;
               
               return (
                 <g key={index}>
@@ -180,15 +193,29 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               const parentIndex = people.findIndex(p => p.id === person1.id);
               const childIndex = people.findIndex(p => p.id === person2.id);
               
-              // Coordenadas fijas para padre-hijo
-              const juanX = 250;
-              const mariaX = 625;
-              const pedritoX = 437; // Centro entre Juan y Maria
+              // Calcular posiciones dinámicas para padre-hijo
+              const foundersInGen0 = generations[0] || [];
+              const childrenInGen1 = generations[1] || [];
               
-              // Determinar si es Juan o Maria el padre
-              const isJuan = person1.first_name?.toLowerCase().includes('juan');
-              const parentX = isJuan ? juanX : mariaX;
-              const centerX = pedritoX; // Siempre al centro
+              const parentPosInGen0 = foundersInGen0.findIndex(p => p.id === person1.id);
+              const childPosInGen1 = childrenInGen1.findIndex(p => p.id === person2.id);
+              
+              if (parentPosInGen0 === -1 || childPosInGen1 === -1) return null;
+              
+              // Calcular posición del padre
+              const cardWidth = 200;
+              const gap0 = 120; // Gap entre cónyuges
+              const gap1 = 80;  // Gap entre hijos
+              const containerWidth = 1200;
+              
+              const totalWidth0 = foundersInGen0.length * cardWidth + (foundersInGen0.length - 1) * gap0;
+              const startX0 = (containerWidth - totalWidth0) / 2 + cardWidth / 2;
+              const parentX = startX0 + parentPosInGen0 * (cardWidth + gap0);
+              
+              // Calcular centro de todos los hijos (no solo uno)
+              const totalWidth1 = childrenInGen1.length * cardWidth + (childrenInGen1.length - 1) * gap1;
+              const startX1 = (containerWidth - totalWidth1) / 2 + cardWidth / 2;
+              const centerX = startX1 + (childrenInGen1.length - 1) * (cardWidth + gap1) / 2;
               
               return (
                 <g key={index}>
@@ -350,41 +377,53 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                       fontSize: '10px' 
                     }}>Fundador</span>}
                     
-                    {/* Mostrar relaciones */}
-                    {(relationships || []).filter(rel => rel.person1_id === person.id || rel.person2_id === person.id).map((rel, idx) => {
-                      const isParent = rel.relationship_type === 'parent' && rel.person1_id === person.id;
-                      const isChild = rel.relationship_type === 'parent' && rel.person2_id === person.id;
-                      const isSpouse = rel.relationship_type === 'spouse';
+                    {/* Mostrar relaciones sin duplicados */}
+                    {(() => {
+                      const personRels = (relationships || []).filter(rel => rel.person1_id === person.id || rel.person2_id === person.id);
+                      const hasParentRel = personRels.some(rel => rel.relationship_type === 'parent' && rel.person1_id === person.id);
+                      const hasChildRel = personRels.some(rel => rel.relationship_type === 'parent' && rel.person2_id === person.id);
+                      const hasSpouseRel = personRels.some(rel => rel.relationship_type === 'spouse');
                       
-                      if (isParent) {
-                        return <span key={idx} style={{ 
-                          backgroundColor: '#4caf50', 
-                          color: 'white', 
-                          padding: '1px 6px', 
-                          borderRadius: '8px', 
-                          fontSize: '9px' 
-                        }}>Padre/Madre</span>;
+                      const badges = [];
+                      
+                      if (hasParentRel) {
+                        badges.push(
+                          <span key="parent" style={{ 
+                            backgroundColor: '#4caf50', 
+                            color: 'white', 
+                            padding: '1px 6px', 
+                            borderRadius: '8px', 
+                            fontSize: '9px' 
+                          }}>Padre/Madre</span>
+                        );
                       }
-                      if (isChild) {
-                        return <span key={idx} style={{ 
-                          backgroundColor: '#2196f3', 
-                          color: 'white', 
-                          padding: '1px 6px', 
-                          borderRadius: '8px', 
-                          fontSize: '9px' 
-                        }}>Hijo/Hija</span>;
+                      
+                      if (hasChildRel) {
+                        badges.push(
+                          <span key="child" style={{ 
+                            backgroundColor: '#2196f3', 
+                            color: 'white', 
+                            padding: '1px 6px', 
+                            borderRadius: '8px', 
+                            fontSize: '9px' 
+                          }}>Hijo/Hija</span>
+                        );
                       }
-                      if (isSpouse) {
-                        return <span key={idx} style={{ 
-                          backgroundColor: '#e91e63', 
-                          color: 'white', 
-                          padding: '1px 6px', 
-                          borderRadius: '8px', 
-                          fontSize: '9px' 
-                        }}>Cónyuge</span>;
+                      
+                      if (hasSpouseRel) {
+                        badges.push(
+                          <span key="spouse" style={{ 
+                            backgroundColor: '#e91e63', 
+                            color: 'white', 
+                            padding: '1px 6px', 
+                            borderRadius: '8px', 
+                            fontSize: '9px' 
+                          }}>Cónyuge</span>
+                        );
                       }
-                      return null;
-                    })}
+                      
+                      return badges;
+                    })()}
                   </div>
                   <p style={{ margin: '8px 0 4px 0', fontSize: '14px', color: '#666' }}>
                     {person.birth_date ? new Date(person.birth_date).getFullYear() : 'Nacimiento desconocido'} - {person.death_date ? new Date(person.death_date).getFullYear() : 'Presente'}
