@@ -31,6 +31,12 @@ const TreeView = () => {
       setShowPersonModal(true);
     };
     
+    window.deletePerson = (person) => {
+      if (window.confirm(`¿Estás seguro de eliminar a ${person.first_name} ${person.last_name || ''}?`)) {
+        handleDeletePerson(person.id);
+      }
+    };
+    
     const savedFamilies = JSON.parse(localStorage.getItem('families') || '[]');
     const currentFamily = savedFamilies.find(f => f._id === familyId);
     
@@ -48,6 +54,37 @@ const TreeView = () => {
     }, 500);
   }, [familyId]);
 
+  const handleDeletePerson = async (personId) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        alert('No hay sesión activa');
+        return;
+      }
+      
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/persons/${personId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        // Actualizar lista local
+        setPeople(people.filter(p => p.id !== personId));
+        alert('Persona eliminada correctamente');
+      } else {
+        const result = await response.json();
+        alert(`Error: ${result.message || 'No se pudo eliminar la persona'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting person:', error);
+      alert('Error al eliminar persona');
+    }
+  };
+  
   const createRelationship = async (childId, parentId, type) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();

@@ -88,7 +88,7 @@ const TreeVisualization = ({ people, viewType }) => {
             </p>
             {person.birthPlace && <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>📍 {person.birthPlace}</p>}
             
-            <div style={{ marginTop: '12px', display: 'flex', gap: '4px', justifyContent: 'center' }}>
+            <div style={{ marginTop: '12px', display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
                 onClick={() => window.addChild && window.addChild(person)}
                 style={{
@@ -116,6 +116,20 @@ const TreeVisualization = ({ people, viewType }) => {
                 }}
               >
                 + Cónyuge
+              </button>
+              <button
+                onClick={() => window.deletePerson && window.deletePerson(person)}
+                style={{
+                  padding: '4px 8px',
+                  fontSize: '10px',
+                  backgroundColor: '#f44336',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer'
+                }}
+              >
+                🗑️
               </button>
             </div>
           </div>
