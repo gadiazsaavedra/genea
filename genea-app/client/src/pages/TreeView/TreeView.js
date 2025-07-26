@@ -80,9 +80,10 @@ const TreeView = () => {
       };
       
       console.log('=== ADDING PERSON ===');
-      console.log('Original person data:', person);
-      console.log('Mapped API data:', apiData);
+      console.log('Original person data:', JSON.stringify(person, null, 2));
+      console.log('Mapped API data:', JSON.stringify(apiData, null, 2));
       console.log('Family ID:', familyId);
+      console.log('API URL:', `${process.env.REACT_APP_API_URL}/persons`);
       
       const response = await fetch(`${process.env.REACT_APP_API_URL}/persons`, {
         method: 'POST',
@@ -95,9 +96,15 @@ const TreeView = () => {
       
       const result = await response.json();
       
+      console.log('=== API RESPONSE ===');
+      console.log('Status:', response.status);
+      console.log('Result:', JSON.stringify(result, null, 2));
+      
       if (!response.ok) {
-        console.error('API Error:', result);
-        throw new Error(result.message || 'Error al crear persona');
+        console.error('=== API ERROR ===');
+        console.error('Status:', response.status);
+        console.error('Result:', result);
+        throw new Error(result.message || result.error || 'Error al crear persona');
       }
       
       // Actualizar lista local
