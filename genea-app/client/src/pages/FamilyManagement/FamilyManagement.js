@@ -147,7 +147,8 @@ const FamilyManagement = () => {
       setFormData({ name: '', description: '' });
     } catch (error) {
       console.error('Error al guardar familia:', error);
-      alert('Error al guardar familia. Inténtalo de nuevo.');
+      console.error('Error details:', error.message);
+      alert(`Error al guardar familia: ${error.message}`);
     }
   };
 

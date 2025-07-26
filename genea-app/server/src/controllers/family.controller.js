@@ -224,6 +224,8 @@ exports.updateFamily = async (req, res) => {
     const { name, description } = req.body;
     const userId = req.user.uid;
     
+    console.log('Update family request:', { familyId, name, description, userId });
+    
     // Verificar si el usuario es administrador de la familia
     const { data: memberCheck, error: memberError } = await supabaseClient
       .from('family_members')
@@ -232,7 +234,10 @@ exports.updateFamily = async (req, res) => {
       .eq('user_id', userId)
       .single();
     
+    console.log('Member check result:', { memberCheck, memberError });
+    
     if (memberError || !memberCheck || memberCheck.role !== 'admin') {
+      console.log('Permission denied:', { memberError, memberCheck });
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para actualizar esta familia'
@@ -251,9 +256,15 @@ exports.updateFamily = async (req, res) => {
       .select()
       .single();
     
-    if (updateError) throw new Error(updateError.message);
+    console.log('Update result:', { updatedFamily, updateError });
+    
+    if (updateError) {
+      console.error('Update error:', updateError);
+      throw new Error(updateError.message);
+    }
     
     if (!updatedFamily) {
+      console.log('No family found after update');
       return res.status(404).json({
         success: false,
         message: 'Familia no encontrada'
