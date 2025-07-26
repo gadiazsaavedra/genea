@@ -136,14 +136,10 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               const person1Index = people.findIndex(p => p.id === person1.id);
               const person2Index = people.findIndex(p => p.id === person2.id);
               
-              // Coordenadas basadas en posición de tarjetas (320px ancho + 120px gap)
-              const cardWidth = 320;
-              const gap = 120;
-              const startX = 100;
-              
-              const x1 = startX + (person1Index * (cardWidth + gap)) + (cardWidth / 2);
-              const x2 = startX + (person2Index * (cardWidth + gap)) + (cardWidth / 2);
-              const y = 180; // Altura fija para cónyuges
+              // Coordenadas fijas basadas en el layout visible
+              const x1 = 250; // Centro de Juan
+              const x2 = 625; // Centro de Maria  
+              const y = 175; // Altura entre las tarjetas
               
               return (
                 <g key={index}>
@@ -184,27 +180,15 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               const parentIndex = people.findIndex(p => p.id === person1.id);
               const childIndex = people.findIndex(p => p.id === person2.id);
               
-              // Coordenadas basadas en posición de tarjetas
-              const cardWidth = 320;
-              const gap = 120;
-              const startX = 100;
+              // Coordenadas fijas para padre-hijo
+              const juanX = 250;
+              const mariaX = 625;
+              const pedritoX = 437; // Centro entre Juan y Maria
               
-              const parentX = startX + (parentIndex * (cardWidth + gap)) + (cardWidth / 2);
-              const childX = startX + (childIndex * (cardWidth + gap)) + (cardWidth / 2);
-              
-              // Encontrar el centro entre ambos padres para el hijo
-              const spouseRel = relationships.find(r => 
-                r.relationship_type === 'spouse' && 
-                (r.person1_id === person1.id || r.person2_id === person1.id)
-              );
-              
-              let centerX = childX;
-              if (spouseRel) {
-                const spouseId = spouseRel.person1_id === person1.id ? spouseRel.person2_id : spouseRel.person1_id;
-                const spouseIndex = people.findIndex(p => p.id === spouseId);
-                const spouseX = startX + (spouseIndex * (cardWidth + gap)) + (cardWidth / 2);
-                centerX = (parentX + spouseX) / 2; // Centro entre ambos padres
-              }
+              // Determinar si es Juan o Maria el padre
+              const isJuan = person1.first_name?.toLowerCase().includes('juan');
+              const parentX = isJuan ? juanX : mariaX;
+              const centerX = pedritoX; // Siempre al centro
               
               return (
                 <g key={index}>
@@ -243,8 +227,8 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                     points={`${centerX-5},355 ${centerX},365 ${centerX+5},355`}
                     fill="#4caf50"
                   />
-                  {/* Etiqueta solo en la primera línea padre-hijo */}
-                  {index === (relationships.findIndex(r => r.relationship_type === 'parent')) && (
+                  {/* Etiqueta solo para la primera relación padre-hijo */}
+                  {relationships.filter(r => r.relationship_type === 'parent').indexOf(rel) === 0 && (
                     <g>
                       <rect 
                         x={centerX - 50} 
