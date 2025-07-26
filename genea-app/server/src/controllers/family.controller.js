@@ -182,6 +182,7 @@ exports.createFamily = async (req, res) => {
           name, 
           description, 
           created_by: userId,
+          user_id: userId,
           ...licenseData
         }
       ])
