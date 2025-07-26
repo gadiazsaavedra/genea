@@ -33,13 +33,27 @@ const TreeView = () => {
 
   const loadPeopleFromSupabase = async () => {
     try {
-      const { data, error } = await supabase
-        .from('persons')
-        .select('*')
-        .eq('family_id', familyId);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       
-      if (error) throw error;
-      setPeople(data || []);
+      if (!token) {
+        setPeople([]);
+        return;
+      }
+      
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/persons?familyId=${familyId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setPeople(result.data || []);
+      } else {
+        console.error('Error loading people:', response.status);
+        setPeople([]);
+      }
     } catch (error) {
       console.error('Error loading people:', error);
       setPeople([]);
@@ -48,37 +62,49 @@ const TreeView = () => {
 
   const handleAddPerson = async (person) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       
-      const personData = {
-        ...person,
-        family_id: familyId,
-        user_id: user?.id,
-        full_name: person.fullName,
-        first_name: person.firstName,
-        last_name: person.lastName,
-        birth_date: person.birthDate || null,
-        birth_place: person.birthPlace || null,
-        death_date: person.deathDate || null,
-        death_place: person.deathPlace || null,
-        is_alive: person.isAlive,
-        is_founder: person.isFounder,
-        created_at: new Date().toISOString()
+      if (!token) {
+        alert('No hay sesión activa');
+        return;
+      }
+      
+      // Mapear datos al formato de la API
+      const nameParts = person.fullName?.split(' ') || [''];
+      const apiData = {
+        familyId: familyId,
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || null,
+        gender: person.gender || null,
+        birthDate: person.birthDate || null
       };
       
-      const { data, error } = await supabase
-        .from('persons')
-        .insert([personData])
-        .select();
+      console.log('Adding person via API:', apiData);
       
-      if (error) throw error;
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/persons`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(apiData)
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        console.error('API Error:', result);
+        throw new Error(result.message || 'Error al crear persona');
+      }
       
       // Actualizar lista local
-      setPeople([...people, data[0]]);
+      setPeople([...people, result.data]);
+      setShowPersonModal(false);
       
     } catch (error) {
       console.error('Error adding person:', error);
-      alert('Error al agregar persona. Inténtalo de nuevo.');
+      alert(`Error al agregar persona: ${error.message}`);
     }
   };
 
