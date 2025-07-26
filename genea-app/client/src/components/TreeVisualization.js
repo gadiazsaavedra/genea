@@ -53,18 +53,30 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
       const visited = new Set();
       const safeRelationships = relationships || [];
       
+      console.log('=== ORGANIZING GENERATIONS ===');
+      console.log('People:', people.length);
+      console.log('Relationships:', safeRelationships.length);
+      console.log('Relationships data:', safeRelationships);
+      
       // Encontrar personas sin padres (fundadores)
       const founders = people.filter(person => {
         const hasParents = safeRelationships.some(rel => 
           rel.relationship_type === 'parent' && rel.person2_id === person.id
         );
+        console.log(`Person ${person.first_name} has parents:`, hasParents);
         return !hasParents;
       });
       
+      console.log('Founders found:', founders.length, founders.map(f => f.first_name));
+      
+      // TEMPORAL: Mostrar todas las personas en generación 0 hasta que funcionen las relaciones
+      console.log('Using all people in generation 0 for now');
+      generations[0] = people;
+      
       // Si no hay fundadores, usar todas las personas en generación 0
-      if (founders.length === 0) {
+      if (false && founders.length === 0) {
         generations[0] = people;
-      } else {
+      } else if (false) {
         generations[0] = founders;
         
         // Agregar hijos en generaciones siguientes
@@ -90,6 +102,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
         }
       }
       
+      console.log('Final generations:', generations);
       return generations;
     };
     
