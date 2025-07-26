@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const TreeVisualization = ({ people, viewType }) => {
+const TreeVisualization = ({ people, relationships, viewType }) => {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -47,9 +47,90 @@ const TreeVisualization = ({ people, viewType }) => {
       );
     }
 
+    // Organizar personas por generaciones
+    const organizeByGenerations = () => {
+      const generations = {};
+      const visited = new Set();
+      
+      // Encontrar personas sin padres (fundadores)
+      const founders = people.filter(person => {
+        const hasParents = relationships.some(rel => 
+          rel.relationship_type === 'parent' && rel.person2_id === person.id
+        );
+        return !hasParents;
+      });
+      
+      // Si no hay fundadores, usar todas las personas en generación 0
+      if (founders.length === 0) {
+        generations[0] = people;
+      } else {
+        generations[0] = founders;
+        
+        // Agregar hijos en generaciones siguientes
+        let currentGen = 0;
+        while (generations[currentGen] && generations[currentGen].length > 0) {
+          const children = [];
+          generations[currentGen].forEach(parent => {
+            const parentChildren = relationships
+              .filter(rel => rel.relationship_type === 'parent' && rel.person1_id === parent.id)
+              .map(rel => people.find(p => p.id === rel.person2_id))
+              .filter(child => child && !visited.has(child.id));
+            
+            parentChildren.forEach(child => {
+              visited.add(child.id);
+              children.push(child);
+            });
+          });
+          
+          if (children.length > 0) {
+            generations[currentGen + 1] = children;
+          }
+          currentGen++;
+        }
+      }
+      
+      return generations;
+    };
+    
+    const generations = organizeByGenerations();
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px', padding: '40px' }}>
-        {people.map((person, index) => (
+      <div style={{ position: 'relative', padding: '40px' }}>
+        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+          {/* Renderizar líneas de conexión */}
+          {relationships.map((rel, index) => {
+            if (rel.relationship_type !== 'parent') return null;
+            
+            const parent = people.find(p => p.id === rel.person1_id);
+            const child = people.find(p => p.id === rel.person2_id);
+            
+            if (!parent || !child) return null;
+            
+            return (
+              <line
+                key={index}
+                x1="50%"
+                y1="100"
+                x2="50%"
+                y2="200"
+                stroke="#1976d2"
+                strokeWidth="2"
+                opacity="0.6"
+              />
+            );
+          })}
+        </svg>
+        
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          {Object.keys(generations).map(genKey => (
+            <div key={genKey} style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: '40px', 
+              marginBottom: '60px',
+              flexWrap: 'wrap'
+            }}>
+              {generations[genKey].map((person, index) => (
           <div key={person.id} style={{
             border: '2px solid #1976d2',
             borderRadius: '8px',
@@ -132,8 +213,10 @@ const TreeVisualization = ({ people, viewType }) => {
                 🗑️
               </button>
             </div>
-          </div>
-        ))}
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
   };

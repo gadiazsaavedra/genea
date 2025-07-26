@@ -9,6 +9,7 @@ const TreeView = () => {
   const [family, setFamily] = useState(null);
   const [loading, setLoading] = useState(true);
   const [people, setPeople] = useState([]);
+  const [relationships, setRelationships] = useState([]);
   const [showPersonModal, setShowPersonModal] = useState(false);
   const [isFounderMode, setIsFounderMode] = useState(false);
   const [viewType, setViewType] = useState('traditional');
@@ -47,8 +48,9 @@ const TreeView = () => {
         description: 'Tu árbol genealógico'
       });
       
-      // Cargar personas de la familia desde Supabase
+      // Cargar personas y relaciones de la familia
       loadPeopleFromSupabase();
+      loadRelationships();
       
       setLoading(false);
     }, 500);
@@ -111,6 +113,9 @@ const TreeView = () => {
       
       if (!response.ok) {
         console.error('Error creating relationship:', await response.json());
+      } else {
+        // Recargar relaciones después de crear una nueva
+        loadRelationships();
       }
     } catch (error) {
       console.error('Error creating relationship:', error);
@@ -143,6 +148,36 @@ const TreeView = () => {
     } catch (error) {
       console.error('Error loading people:', error);
       setPeople([]);
+    }
+  };
+  
+  const loadRelationships = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        setRelationships([]);
+        return;
+      }
+      
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/relationships?familyId=${familyId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setRelationships(result.data || []);
+        console.log('Loaded relationships:', result.data);
+      } else {
+        console.error('Error loading relationships:', response.status);
+        setRelationships([]);
+      }
+    } catch (error) {
+      console.error('Error loading relationships:', error);
+      setRelationships([]);
     }
   };
 
@@ -325,7 +360,7 @@ const TreeView = () => {
           </div>
         </div>
         
-        <TreeVisualization people={people} viewType={viewType} />
+        <TreeVisualization people={people} relationships={relationships} viewType={viewType} />
       </div>
 
       <div style={{ 
