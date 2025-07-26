@@ -182,26 +182,20 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   </text>
                 </g>
               );
-            } else if (rel.relationship_type === 'parent') {
-              // Calcular posiciones dinámicas para padre-hijo
-              const parentIndex = people.findIndex(p => p.id === person1.id);
-              const childIndex = people.findIndex(p => p.id === person2.id);
-              
-              // Usar coordenadas relativas para padre-hijo
+            } else if (rel.relationship_type === 'parent' && index === relationships.findIndex(r => r.relationship_type === 'parent')) {
+              // Solo renderizar una vez todas las líneas padre-hijo
               const foundersInGen0 = generations[0] || [];
               const childrenInGen1 = generations[1] || [];
               
-              const parentPosInGen0 = foundersInGen0.findIndex(p => p.id === person1.id);
+              if (foundersInGen0.length < 2 || childrenInGen1.length === 0) return null;
               
-              if (parentPosInGen0 === -1) return null;
-              
-              // Coordenadas relativas en viewBox
-              const parentX = parentPosInGen0 === 0 ? 300 : 900; // Padre izquierda o derecha
-              const spouseX = parentPosInGen0 === 0 ? 900 : 300; // Cónyuge opuesto
-              const centerX = 600; // Centro entre ambos padres
+              // Coordenadas fijas
+              const parentX = 300;
+              const spouseX = 900;
+              const childPositions = [200, 350, 500, 650, 800, 950]; // Para hasta 6 hijos
               
               return (
-                <g key={index}>
+                <g key={`all-parent-child-${index}`}>
                   {/* Líneas desde ambos padres */}
                   <line x1={parentX} y1="250" x2={parentX} y2="320" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
                   <line x1={spouseX} y1="250" x2={spouseX} y2="320" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
@@ -209,49 +203,22 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   {/* Línea horizontal conectando ambos padres */}
                   <line x1={parentX} y1="320" x2={spouseX} y2="320" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
                   
-                  {/* Líneas hacia cada hijo desde la línea horizontal */}
-                  {(() => {
-                    const totalChildren = childrenInGen1.length;
-                    const childPositions = [];
-                    
-                    // Calcular posiciones de los hijos basadas en su distribución real
-                    for (let i = 0; i < totalChildren; i++) {
-                      if (totalChildren === 1) {
-                        childPositions.push(600); // Centro si hay un solo hijo
-                      } else if (totalChildren === 2) {
-                        childPositions.push(i === 0 ? 400 : 800); // Dos posiciones
-                      } else if (totalChildren === 3) {
-                        childPositions.push([300, 600, 900][i]); // Tres posiciones
-                      } else if (totalChildren === 4) {
-                        childPositions.push([250, 450, 650, 850][i]); // Cuatro posiciones
-                      } else if (totalChildren === 5) {
-                        childPositions.push([200, 350, 500, 650, 800][i]); // Cinco posiciones
-                      } else {
-                        // Para más de 5 hijos, distribuir uniformemente
-                        childPositions.push(200 + (i * (600 / Math.max(totalChildren - 1, 1))));
-                      }
-                    }
-                    
-                    return childrenInGen1.map((child, childIdx) => {
-                      const childX = childPositions[childIdx];
-                      return (
-                        <g key={child.id}>
-                          <line x1={childX} y1="320" x2={childX} y2="420" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
-                          <polygon points={`${childX-5},415 ${childX},425 ${childX+5},415`} fill="#4caf50" />
-                        </g>
-                      );
-                    });
-                  })()}
+                  {/* Líneas hacia TODOS los hijos */}
+                  {childrenInGen1.map((child, childIdx) => {
+                    const childX = childPositions[childIdx] || (200 + childIdx * 120);
+                    return (
+                      <g key={child.id}>
+                        <line x1={childX} y1="320" x2={childX} y2="420" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
+                        <polygon points={`${childX-5},415 ${childX},425 ${childX+5},415`} fill="#4caf50" />
+                      </g>
+                    );
+                  })}
                   
-                  {/* Etiqueta solo para la primera relación padre-hijo */}
-                  {relationships.filter(r => r.relationship_type === 'parent').indexOf(rel) === 0 && (
-                    <g>
-                      <rect x="540" y="305" width="120" height="20" fill="white" stroke="#4caf50" strokeWidth="1" rx="3" />
-                      <text x="600" y="318" fill="#4caf50" fontSize="14" fontWeight="bold" textAnchor="middle">
-                        HIJOS DE AMBOS
-                      </text>
-                    </g>
-                  )}
+                  {/* Etiqueta */}
+                  <rect x="540" y="305" width="120" height="20" fill="white" stroke="#4caf50" strokeWidth="1" rx="3" />
+                  <text x="600" y="318" fill="#4caf50" fontSize="14" fontWeight="bold" textAnchor="middle">
+                    HIJOS DE AMBOS
+                  </text>
                 </g>
               );
             }
