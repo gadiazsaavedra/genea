@@ -119,7 +119,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
 
     return (
       <div style={{ position: 'relative', padding: '40px' }}>
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1, border: '1px solid blue' }}>
           {/* Renderizar líneas de conexión */}
           {(relationships || []).map((rel, index) => {
             console.log('=== RENDERING LINES ===');
@@ -144,28 +144,36 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               strokeDasharray = '5,5';
             }
             
-            // Mostrar indicadores simples de relaciones
+            // Líneas simples y visibles
+            const yOffset = index * 40;
+            
             return (
               <g key={index}>
                 {rel.relationship_type === 'spouse' ? (
-                  // Indicador de cónyuges
+                  // Línea horizontal para cónyuges
                   <g>
                     <line
-                      x1="450"
-                      y1="230"
-                      x2="650"
-                      y2="230"
+                      x1="200"
+                      y1={150 + yOffset}
+                      x2="400"
+                      y2={150 + yOffset}
                       stroke="#e91e63"
-                      strokeWidth="4"
-                      strokeDasharray="10,5"
-                      opacity="0.8"
+                      strokeWidth="3"
+                      strokeDasharray="8,4"
                     />
-                    <rect x="520" y="215" width="80" height="18" fill="white" stroke="#e91e63" strokeWidth="1" rx="3" />
+                    <rect 
+                      x="270" 
+                      y={140 + yOffset} 
+                      width="60" 
+                      height="16" 
+                      fill="white" 
+                      stroke="#e91e63" 
+                    />
                     <text
-                      x="560"
-                      y="227"
+                      x="300"
+                      y={150 + yOffset}
                       fill="#e91e63"
-                      fontSize="11"
+                      fontSize="10"
                       fontWeight="bold"
                       textAnchor="middle"
                     >
@@ -173,30 +181,36 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                     </text>
                   </g>
                 ) : (
-                  // Indicador de padre-hijo
+                  // Línea vertical para padre-hijo
                   <g>
                     <line
-                      x1="550"
-                      y1="400"
-                      x2="550"
-                      y2="480"
+                      x1="300"
+                      y1={200 + yOffset}
+                      x2="300"
+                      y2={280 + yOffset}
                       stroke="#4caf50"
-                      strokeWidth="4"
-                      opacity="0.8"
+                      strokeWidth="3"
                     />
-                    <rect x="480" y="425" width="90" height="18" fill="white" stroke="#4caf50" strokeWidth="1" rx="3" />
+                    <rect 
+                      x="250" 
+                      y={235 + yOffset} 
+                      width="70" 
+                      height="16" 
+                      fill="white" 
+                      stroke="#4caf50" 
+                    />
                     <text
-                      x="525"
-                      y="437"
+                      x="285"
+                      y={245 + yOffset}
                       fill="#4caf50"
-                      fontSize="11"
+                      fontSize="10"
                       fontWeight="bold"
                       textAnchor="middle"
                     >
-                      MADRE → HIJO
+                      PADRE→HIJO
                     </text>
                     <polygon
-                      points="545,475 550,485 555,475"
+                      points={`295,${275 + yOffset} 300,${285 + yOffset} 305,${275 + yOffset}`}
                       fill="#4caf50"
                     />
                   </g>
