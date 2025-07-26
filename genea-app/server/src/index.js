@@ -22,6 +22,7 @@ const initializeSupabase = require('./utils/supabase-init');
 // Importar rutas
 const personRoutes = require('./routes/person.routes');
 const familyRoutes = require('./routes/family.routes');
+const relationshipRoutes = require('./routes/relationship.routes');
 const mediaRoutes = require('./routes/media.routes');
 const authRoutes = require('./routes/auth.routes');
 // const treeRoutes = require('./routes/tree.routes'); // Comentado temporalmente
@@ -76,6 +77,7 @@ initializeSupabase()
     // Rutas
     app.use('/api/persons', personRoutes);
     app.use('/api/families', familyRoutes);
+    app.use('/api/relationships', relationshipRoutes);
     app.use('/api/media', mediaRoutes);
     app.use('/api/auth', authRoutes);
     // app.use('/api/tree', treeRoutes); // Comentado temporalmente
