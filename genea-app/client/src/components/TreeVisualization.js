@@ -124,7 +124,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
           height: '100%', 
           pointerEvents: 'none', 
           zIndex: 1 
-        }}>
+        }} viewBox="0 0 1200 800" preserveAspectRatio="none">
           {(relationships || []).map((rel, index) => {
             const person1 = people.find(p => p.id === rel.person1_id);
             const person2 = people.find(p => p.id === rel.person2_id);
@@ -136,23 +136,17 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               const person1Index = people.findIndex(p => p.id === person1.id);
               const person2Index = people.findIndex(p => p.id === person2.id);
               
-              // Calcular posiciones dinámicas basadas en el layout real
+              // Usar coordenadas relativas para responsividad
               const foundersInGen0 = generations[0] || [];
               const person1PosInGen0 = foundersInGen0.findIndex(p => p.id === person1.id);
               const person2PosInGen0 = foundersInGen0.findIndex(p => p.id === person2.id);
               
               if (person1PosInGen0 === -1 || person2PosInGen0 === -1) return null;
               
-              // Calcular posiciones basadas en el gap de 200px entre cónyuges
-              const cardWidth = 200;
-              const gap = 200;
-              const containerWidth = 1200;
-              const totalWidth = foundersInGen0.length * cardWidth + (foundersInGen0.length - 1) * gap;
-              const startX = (containerWidth - totalWidth) / 2 + cardWidth / 2;
-              
-              const x1 = startX + person1PosInGen0 * (cardWidth + gap);
-              const x2 = startX + person2PosInGen0 * (cardWidth + gap);
-              const y = 175;
+              // Coordenadas relativas en el viewBox (1200x800)
+              const x1 = person1PosInGen0 === 0 ? 300 : 900; // Izquierda o derecha
+              const x2 = person2PosInGen0 === 0 ? 300 : 900;
+              const y = 180;
               
               return (
                 <g key={index}>
@@ -193,60 +187,37 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               const parentIndex = people.findIndex(p => p.id === person1.id);
               const childIndex = people.findIndex(p => p.id === person2.id);
               
-              // Calcular posiciones dinámicas para padre-hijo
+              // Usar coordenadas relativas para padre-hijo
               const foundersInGen0 = generations[0] || [];
               const childrenInGen1 = generations[1] || [];
               
               const parentPosInGen0 = foundersInGen0.findIndex(p => p.id === person1.id);
-              const childPosInGen1 = childrenInGen1.findIndex(p => p.id === person2.id);
               
-              if (parentPosInGen0 === -1 || childPosInGen1 === -1) return null;
+              if (parentPosInGen0 === -1) return null;
               
-              // Calcular posición del padre
-              const cardWidth = 200;
-              const gap0 = 200; // Gap entre cónyuges (aumentado)
-              const gap1 = 60;  // Gap entre hijos
-              const containerWidth = 1200;
-              
-              const totalWidth0 = foundersInGen0.length * cardWidth + (foundersInGen0.length - 1) * gap0;
-              const startX0 = (containerWidth - totalWidth0) / 2 + cardWidth / 2;
-              const parentX = startX0 + parentPosInGen0 * (cardWidth + gap0);
-              
-              // Calcular centro de todos los hijos (no solo uno)
-              const totalWidth1 = childrenInGen1.length * cardWidth + (childrenInGen1.length - 1) * gap1;
-              const startX1 = (containerWidth - totalWidth1) / 2 + cardWidth / 2;
-              const centerX = startX1 + (childrenInGen1.length - 1) * (cardWidth + gap1) / 2;
-              
-              // Crear líneas desde ambos padres hacia todos los hijos
-              const spouseRel = relationships.find(r => 
-                r.relationship_type === 'spouse' && 
-                (r.person1_id === person1.id || r.person2_id === person1.id)
-              );
-              
-              if (!spouseRel) return null;
-              
-              const spouseId = spouseRel.person1_id === person1.id ? spouseRel.person2_id : spouseRel.person1_id;
-              const spouse = people.find(p => p.id === spouseId);
-              const spousePosInGen0 = foundersInGen0.findIndex(p => p.id === spouseId);
-              const spouseX = startX0 + spousePosInGen0 * (cardWidth + gap0);
+              // Coordenadas relativas en viewBox
+              const parentX = parentPosInGen0 === 0 ? 300 : 900; // Padre izquierda o derecha
+              const spouseX = parentPosInGen0 === 0 ? 900 : 300; // Cónyuge opuesto
+              const centerX = 600; // Centro entre ambos padres
               
               return (
                 <g key={index}>
                   {/* Líneas desde ambos padres */}
-                  <line x1={parentX} y1="240" x2={parentX} y2="300" stroke="#4caf50" strokeWidth="3" opacity="0.8" />
-                  <line x1={spouseX} y1="240" x2={spouseX} y2="300" stroke="#4caf50" strokeWidth="3" opacity="0.8" />
+                  <line x1={parentX} y1="250" x2={parentX} y2="320" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
+                  <line x1={spouseX} y1="250" x2={spouseX} y2="320" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
                   
                   {/* Línea horizontal conectando ambos padres */}
-                  <line x1={parentX} y1="300" x2={spouseX} y2="300" stroke="#4caf50" strokeWidth="3" opacity="0.8" />
+                  <line x1={parentX} y1="320" x2={spouseX} y2="320" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
                   
-                  {/* Líneas hacia cada hijo */}
+                  {/* Líneas hacia los hijos distribuidas uniformemente */}
                   {childrenInGen1.map((child, childIdx) => {
-                    const childX = startX1 + childIdx * (cardWidth + gap1);
+                    const totalChildren = childrenInGen1.length;
+                    const childX = 200 + (childIdx * (800 / Math.max(totalChildren - 1, 1)));
                     return (
                       <g key={child.id}>
-                        <line x1={centerX} y1="300" x2={childX} y2="300" stroke="#4caf50" strokeWidth="2" opacity="0.6" />
-                        <line x1={childX} y1="300" x2={childX} y2="360" stroke="#4caf50" strokeWidth="3" opacity="0.8" />
-                        <polygon points={`${childX-4},356 ${childX},364 ${childX+4},356`} fill="#4caf50" />
+                        <line x1={centerX} y1="320" x2={childX} y2="320" stroke="#4caf50" strokeWidth="3" opacity="0.6" />
+                        <line x1={childX} y1="320" x2={childX} y2="400" stroke="#4caf50" strokeWidth="4" opacity="0.8" />
+                        <polygon points={`${childX-5},395 ${childX},405 ${childX+5},395`} fill="#4caf50" />
                       </g>
                     );
                   })}
@@ -254,8 +225,8 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   {/* Etiqueta solo para la primera relación padre-hijo */}
                   {relationships.filter(r => r.relationship_type === 'parent').indexOf(rel) === 0 && (
                     <g>
-                      <rect x={centerX - 60} y="285" width="120" height="20" fill="white" stroke="#4caf50" strokeWidth="1" rx="3" />
-                      <text x={centerX} y="298" fill="#4caf50" fontSize="11" fontWeight="bold" textAnchor="middle">
+                      <rect x="540" y="305" width="120" height="20" fill="white" stroke="#4caf50" strokeWidth="1" rx="3" />
+                      <text x="600" y="318" fill="#4caf50" fontSize="14" fontWeight="bold" textAnchor="middle">
                         HIJOS DE AMBOS
                       </text>
                     </g>
