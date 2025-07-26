@@ -738,33 +738,185 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
   };
 
   const renderFan = () => {
-    const centerX = 300;
-    const centerY = 500;
-    const maxRadius = 400;
+    const centerX = 400;
+    const centerY = 450;
+    const baseRadius = 120;
 
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
-        <svg width="600" height="500" style={{ border: '1px solid #ddd', borderRadius: '8px' }}>
-          {people.map((person, index) => {
-            const angle = (index / Math.max(people.length - 1, 1)) * Math.PI - Math.PI/2;
-            const radius = 100 + (index * 50);
-            const x = centerX + radius * Math.cos(angle);
-            const y = centerY + radius * Math.sin(angle);
+      <div style={{ padding: '20px' }}>
+        <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#1976d2' }}>🌟 Vista Abanico Generacional</h3>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <svg width="800" height="500" style={{ border: '2px solid #1976d2', borderRadius: '12px', backgroundColor: '#f8f9fa' }}>
+            {/* Organizar por generaciones en abanico */}
+            {(() => {
+              const generations = {};
+              const safeRelationships = relationships || [];
+              
+              // Encontrar fundadores (primera generación)
+              const founders = people.filter(person => {
+                const hasParents = safeRelationships.some(rel => 
+                  rel.relationship_type === 'parent' && rel.person2_id === person.id
+                );
+                return !hasParents;
+              });
+              
+              if (founders.length === 0) {
+                generations[0] = people;
+              } else {
+                generations[0] = founders;
+                
+                // Agregar hijos en generaciones siguientes
+                let currentGen = 0;
+                const visited = new Set();
+                while (generations[currentGen] && generations[currentGen].length > 0) {
+                  const children = [];
+                  generations[currentGen].forEach(parent => {
+                    const parentChildren = safeRelationships
+                      .filter(rel => rel.relationship_type === 'parent' && rel.person1_id === parent.id)
+                      .map(rel => people.find(p => p.id === rel.person2_id))
+                      .filter(child => child && !visited.has(child.id));
+                    
+                    parentChildren.forEach(child => {
+                      visited.add(child.id);
+                      children.push(child);
+                    });
+                  });
+                  
+                  if (children.length > 0) {
+                    generations[currentGen + 1] = children;
+                  }
+                  currentGen++;
+                }
+              }
+              
+              return Object.keys(generations).map(genKey => {
+                const generation = generations[genKey];
+                const genLevel = parseInt(genKey);
+                const radius = baseRadius + (genLevel * 80);
+                
+                // Ángulo total del abanico (180 grados = Math.PI radianes)
+                const totalAngle = Math.PI;
+                const startAngle = -Math.PI / 2 - totalAngle / 2; // Empezar desde arriba-izquierda
+                
+                return generation.map((person, index) => {
+                  // Distribuir personas uniformemente en el arco
+                  const angle = startAngle + (index / Math.max(generation.length - 1, 1)) * totalAngle;
+                  const x = centerX + radius * Math.cos(angle);
+                  const y = centerY + radius * Math.sin(angle);
+                  
+                  return (
+                    <g key={person.id}>
+                      {/* Línea desde el centro */}
+                      <line 
+                        x1={centerX} 
+                        y1={centerY} 
+                        x2={x} 
+                        y2={y} 
+                        stroke={genLevel === 0 ? '#1976d2' : '#4caf50'} 
+                        strokeWidth="3" 
+                        opacity="0.6"
+                        strokeDasharray={genLevel > 0 ? '8,4' : 'none'}
+                      />
+                      
+                      {/* Círculo de persona */}
+                      <circle 
+                        cx={x} 
+                        cy={y} 
+                        r="35" 
+                        fill={person.gender === 'male' ? '#2196f3' : '#e91e63'} 
+                        stroke="white" 
+                        strokeWidth="4"
+                      />
+                      
+                      {/* Iniciales */}
+                      <text 
+                        x={x} 
+                        y={y + 5} 
+                        textAnchor="middle" 
+                        fill="white" 
+                        fontSize="16" 
+                        fontWeight="bold"
+                      >
+                        {(person.first_name || '?').charAt(0)}
+                      </text>
+                      
+                      {/* Nombre */}
+                      <text 
+                        x={x} 
+                        y={y + 55} 
+                        textAnchor="middle" 
+                        fontSize="12" 
+                        fontWeight="bold"
+                        fill="#333"
+                      >
+                        {person.first_name || 'Sin nombre'}
+                      </text>
+                      
+                      {/* Badge de generación */}
+                      <rect 
+                        x={x - 15} 
+                        y={y - 50} 
+                        width="30" 
+                        height="16" 
+                        fill={genLevel === 0 ? '#ff9800' : '#4caf50'} 
+                        stroke="white" 
+                        strokeWidth="2" 
+                        rx="8"
+                      />
+                      <text 
+                        x={x} 
+                        y={y - 38} 
+                        textAnchor="middle" 
+                        fontSize="10" 
+                        fontWeight="bold" 
+                        fill="white"
+                      >
+                        GEN {genLevel + 1}
+                      </text>
+                    </g>
+                  );
+                });
+              });
+            })()}
             
-            return (
-              <g key={person.id}>
-                <line x1={centerX} y1={centerY} x2={x} y2={y} stroke="#ddd" strokeWidth="1" />
-                <circle cx={x} cy={y} r="25" fill={person.gender === 'male' ? '#2196f3' : '#e91e63'} />
-                <text x={x} y={y} textAnchor="middle" dy="5" fill="white" fontSize="10">
-                  {(person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || '?').split(' ').map(n => n.charAt(0)).join('')}
-                </text>
-                <text x={x} y={y + 40} textAnchor="middle" fontSize="10" fill="#333">
-                  {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+            {/* Punto central */}
+            <circle cx={centerX} cy={centerY} r="20" fill="#1976d2" stroke="white" strokeWidth="4" />
+            <text x={centerX} y={centerY + 6} textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">🏠</text>
+            
+            {/* Líneas de matrimonio */}
+            {(relationships || []).filter(rel => rel.relationship_type === 'spouse').map((rel, index) => {
+              const person1 = people.find(p => p.id === rel.person1_id);
+              const person2 = people.find(p => p.id === rel.person2_id);
+              
+              if (person1 && person2) {
+                // Encontrar posiciones de ambas personas en el abanico
+                // (Cálculo simplificado - usar posiciones aproximadas)
+                return (
+                  <path 
+                    key={index}
+                    d={`M ${centerX - 60} ${centerY - 80} Q ${centerX} ${centerY - 120} ${centerX + 60} ${centerY - 80}`}
+                    stroke="#e91e63" 
+                    strokeWidth="4" 
+                    strokeDasharray="10,5" 
+                    fill="none"
+                    opacity="0.8"
+                  />
+                );
+              }
+              return null;
+            })}
+          </svg>
+        </div>
+        
+        {/* Leyenda */}
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: '#666' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <span>🏠 Centro familiar</span>
+            <span style={{ color: '#ff9800' }}>GEN 1 = Fundadores</span>
+            <span style={{ color: '#4caf50' }}>GEN 2+ = Descendientes</span>
+            <span style={{ color: '#e91e63' }}>Línea curva = Matrimonio</span>
+          </div>
+        </div>
       </div>
     );
   };
