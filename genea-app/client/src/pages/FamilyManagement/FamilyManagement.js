@@ -109,8 +109,12 @@ const FamilyManagement = () => {
         
         const result = await response.json();
         
+        console.log('Response status:', response.status);
+        console.log('Response data:', result);
+        
         if (!response.ok) {
-          throw new Error(result.message || 'Error al actualizar familia');
+          console.error('API Error:', result);
+          throw new Error(result.message || result.error || 'Error al actualizar familia');
         }
         
         const updatedFamilies = families.map(f => 

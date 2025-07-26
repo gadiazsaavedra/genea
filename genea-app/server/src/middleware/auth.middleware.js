@@ -14,24 +14,15 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
 
-    // Verificar el token JWT
-    let decodedToken;
-    try {
-      decodedToken = authService.verifyToken(token);
-    } catch (error) {
-      return res.status(401).json({
-        success: false,
-        message: 'No autorizado, token inválido'
-      });
-    }
-
-    // Verificar que el usuario existe en Supabase
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(decodedToken.uid);
+    // Verificar el token con Supabase directamente
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     
-    if (userError || !userData) {
+    if (userError || !userData.user) {
+      console.error('Auth error:', userError);
       return res.status(401).json({
         success: false,
-        message: 'No autorizado, usuario no encontrado'
+        message: 'No autorizado, token inválido',
+        error: userError?.message
       });
     }
 
