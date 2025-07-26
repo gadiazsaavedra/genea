@@ -121,8 +121,12 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
       <div style={{ position: 'relative', padding: '40px' }}>
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {/* Renderizar líneas de conexión */}
-          {(relationships || []).map((rel, index) => {
-            console.log('Rendering lines for relationships:', relationships?.length || 0);
+          {(() => {
+            console.log('=== RENDERING LINES ===');
+            console.log('Total relationships:', (relationships || []).length);
+            console.log('Relationships:', relationships);
+            return (relationships || []).map((rel, index) => {
+            console.log(`Rendering line ${index}:`, rel);
             const person1 = people.find(p => p.id === rel.person1_id);
             const person2 = people.find(p => p.id === rel.person2_id);
             
@@ -171,7 +175,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                 </text>
               </g>
             );
-          })}
+          })()}
         </svg>
         
         {/* Leyenda de relaciones */}
