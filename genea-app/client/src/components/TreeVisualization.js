@@ -65,7 +65,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
       console.log('=== ORGANIZING GENERATIONS ===');
       console.log('People:', people.length);
       console.log('Relationships:', safeRelationships.length);
-      console.log('Relationships data:', safeRelationships);
+      console.log('Relationships data:', JSON.stringify(safeRelationships, null, 2));
       
       // Encontrar personas sin padres (fundadores)
       const founders = people.filter(person => {
@@ -122,10 +122,16 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {/* Renderizar líneas de conexión */}
           {(relationships || []).map((rel, index) => {
+            console.log('Rendering lines for relationships:', relationships?.length || 0);
             const person1 = people.find(p => p.id === rel.person1_id);
             const person2 = people.find(p => p.id === rel.person2_id);
             
-            if (!person1 || !person2) return null;
+            console.log(`Relationship ${index}:`, rel.relationship_type, person1?.first_name, '->', person2?.first_name);
+            
+            if (!person1 || !person2) {
+              console.log('Missing person for relationship:', rel);
+              return null;
+            }
             
             // Diferentes estilos según el tipo de relación
             let strokeColor = '#1976d2';
