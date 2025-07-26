@@ -119,7 +119,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
 
     return (
       <div style={{ position: 'relative', padding: '40px' }}>
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10, border: '2px solid red' }}>
           {/* Renderizar líneas de conexión */}
           {(relationships || []).map((rel, index) => {
             console.log('=== RENDERING LINES ===');
@@ -144,29 +144,32 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               strokeDasharray = '5,5';
             }
             
-            // Por ahora mostrar líneas simples - las coordenadas exactas requieren refs
+            // Líneas visibles para debug
             return (
               <g key={index}>
                 <line
-                  x1="200"
-                  y1="150"
-                  x2="400"
-                  y2="150"
+                  x1="100"
+                  y1={100 + (index * 50)}
+                  x2="500"
+                  y2={100 + (index * 50)}
                   stroke={strokeColor}
-                  strokeWidth={strokeWidth}
+                  strokeWidth={strokeWidth + 2}
                   strokeDasharray={strokeDasharray}
-                  opacity="0.8"
+                  opacity="1"
                 />
                 <text
                   x="300"
-                  y="140"
+                  y={95 + (index * 50)}
                   fill={strokeColor}
-                  fontSize="12"
+                  fontSize="14"
                   fontWeight="bold"
                   textAnchor="middle"
+                  style={{ backgroundColor: 'white' }}
                 >
                   {rel.relationship_type === 'parent' ? 'PADRE → HIJO' : 'CÓNYUGES'}
                 </text>
+                <circle cx="100" cy={100 + (index * 50)} r="5" fill={strokeColor} />
+                <circle cx="500" cy={100 + (index * 50)} r="5" fill={strokeColor} />
               </g>
             );
           })}
@@ -184,7 +187,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
           fontSize: '10px',
           zIndex: 3
         }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Leyenda:</div>
+          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Relaciones: {(relationships || []).length}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
             <div style={{ width: '20px', height: '2px', backgroundColor: '#4caf50' }}></div>
             <span>Padre → Hijo</span>
