@@ -263,42 +263,39 @@ exports.updateFamily = async (req, res) => {
   }
 };
 
-// Eliminar una familia
+// Eliminar una familia - SIMPLIFICADO
 exports.deleteFamily = async (req, res) => {
   try {
     const familyId = req.params.id;
-    const userId = req.user.uid;
     
-    // Verificar si el usuario es administrador de la familia
-    const { data: memberCheck, error: memberError } = await supabaseClient
-      .from('family_members')
-      .select('role')
-      .eq('family_id', familyId)
-      .eq('user_id', userId)
-      .single();
+    console.log('Delete family request:', familyId);
     
-    if (memberError || !memberCheck || memberCheck.role !== 'admin') {
-      return res.status(403).json({
+    if (!familyId) {
+      return res.status(400).json({
         success: false,
-        message: 'No tienes permisos para eliminar esta familia'
+        message: 'ID de familia requerido'
       });
     }
     
-    // Eliminar todos los miembros de la familia
-    const { error: deleteMembersError } = await supabaseClient
-      .from('family_members')
-      .delete()
-      .eq('family_id', familyId);
-    
-    if (deleteMembersError) throw new Error(deleteMembersError.message);
-    
-    // Eliminar todas las personas de la familia
+    // Eliminar personas de la familia
     const { error: deletePeopleError } = await supabaseClient
       .from('people')
       .delete()
       .eq('family_id', familyId);
     
-    if (deletePeopleError) throw new Error(deletePeopleError.message);
+    if (deletePeopleError) {
+      console.error('Error deleting people:', deletePeopleError);
+    }
+    
+    // Eliminar miembros de la familia
+    const { error: deleteMembersError } = await supabaseClient
+      .from('family_members')
+      .delete()
+      .eq('family_id', familyId);
+    
+    if (deleteMembersError) {
+      console.error('Error deleting members:', deleteMembersError);
+    }
     
     // Eliminar la familia
     const { error: deleteFamilyError } = await supabaseClient
@@ -306,16 +303,24 @@ exports.deleteFamily = async (req, res) => {
       .delete()
       .eq('id', familyId);
     
-    if (deleteFamilyError) throw new Error(deleteFamilyError.message);
+    if (deleteFamilyError) {
+      console.error('Error deleting family:', deleteFamilyError);
+      return res.status(400).json({
+        success: false,
+        message: 'Error en base de datos',
+        error: deleteFamilyError.message
+      });
+    }
     
-    res.status(200).json({
+    res.json({
       success: true,
       message: 'Familia eliminada correctamente'
     });
   } catch (error) {
+    console.error('Controller error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar la familia',
+      message: 'Error interno',
       error: error.message
     });
   }
