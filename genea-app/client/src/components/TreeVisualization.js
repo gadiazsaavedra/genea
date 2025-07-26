@@ -446,88 +446,323 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
 
   const renderTimeline = () => {
     const sortedPeople = [...people].sort((a, b) => {
-      const dateA = a.birthDate ? new Date(a.birthDate) : new Date('1900-01-01');
-      const dateB = b.birthDate ? new Date(b.birthDate) : new Date('1900-01-01');
+      const dateA = a.birth_date ? new Date(a.birth_date) : new Date('1900-01-01');
+      const dateB = b.birth_date ? new Date(b.birth_date) : new Date('1900-01-01');
       return dateA - dateB;
     });
 
     return (
-      <div style={{ padding: '40px' }}>
-        <div style={{ position: 'relative', paddingLeft: '40px' }}>
+      <div style={{ padding: '20px' }}>
+        <h3 style={{ textAlign: 'center', marginBottom: '30px', color: '#1976d2' }}>📅 Línea de Tiempo Familiar</h3>
+        <div style={{ position: 'relative', paddingLeft: '60px', maxWidth: '800px', margin: '0 auto' }}>
+          {/* Línea principal */}
           <div style={{
             position: 'absolute',
-            left: '20px',
+            left: '30px',
             top: '0',
             bottom: '0',
-            width: '2px',
-            backgroundColor: '#1976d2'
+            width: '4px',
+            background: 'linear-gradient(to bottom, #1976d2, #4caf50)',
+            borderRadius: '2px'
           }}></div>
-          {sortedPeople.map((person, index) => (
-            <div key={person.id} style={{ 
-              position: 'relative', 
-              marginBottom: '40px',
-              paddingLeft: '40px'
-            }}>
-              <div style={{
-                position: 'absolute',
-                left: '-40px',
-                top: '20px',
-                width: '12px',
-                height: '12px',
-                borderRadius: '50%',
-                backgroundColor: '#1976d2'
-              }}></div>
-              <div style={{
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                padding: '16px',
-                backgroundColor: 'white',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          
+          {sortedPeople.map((person, index) => {
+            const birthYear = person.birth_date ? new Date(person.birth_date).getFullYear() : '?';
+            const deathYear = person.death_date ? new Date(person.death_date).getFullYear() : null;
+            
+            return (
+              <div key={person.id} style={{ 
+                position: 'relative', 
+                marginBottom: '30px',
+                paddingLeft: '50px'
               }}>
-                <h4 style={{ margin: '0 0 8px 0' }}>
-                  {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
-                </h4>
-                <p style={{ margin: '4px 0', color: '#666' }}>
-                  Nacimiento: {person.birthDate ? new Date(person.birthDate).toLocaleDateString() : 'Desconocido'}
-                </p>
-                {person.birthPlace && <p style={{ margin: '4px 0', color: '#666' }}>📍 {person.birthPlace}</p>}
-                {person.biography && <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>{person.biography}</p>}
+                {/* Punto en la línea */}
+                <div style={{
+                  position: 'absolute',
+                  left: '-50px',
+                  top: '15px',
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  backgroundColor: person.gender === 'male' ? '#2196f3' : '#e91e63',
+                  border: '4px solid white',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '10px',
+                  fontWeight: 'bold'
+                }}>
+                  {(person.first_name || '?').charAt(0)}
+                </div>
+                
+                {/* Tarjeta de persona */}
+                <div style={{
+                  border: '2px solid #1976d2',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  backgroundColor: 'white',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  position: 'relative'
+                }}>
+                  {/* Año prominente */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '-10px',
+                    right: '15px',
+                    backgroundColor: '#1976d2',
+                    color: 'white',
+                    padding: '4px 12px',
+                    borderRadius: '15px',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}>
+                    {birthYear}{deathYear ? ` - ${deathYear}` : ''}
+                  </div>
+                  
+                  <h4 style={{ margin: '0 0 8px 0', color: '#1976d2' }}>
+                    {person.first_name || ''} {person.last_name || ''}
+                  </h4>
+                  
+                  {/* Badges de relaciones */}
+                  <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                    {(relationships || []).filter(rel => rel.person1_id === person.id || rel.person2_id === person.id).map((rel, idx) => {
+                      const isParent = rel.relationship_type === 'parent' && rel.person1_id === person.id;
+                      const isChild = rel.relationship_type === 'parent' && rel.person2_id === person.id;
+                      const isSpouse = rel.relationship_type === 'spouse';
+                      
+                      if (isParent) {
+                        return <span key={idx} style={{ 
+                          backgroundColor: '#4caf50', color: 'white', padding: '2px 6px', 
+                          borderRadius: '8px', fontSize: '9px' 
+                        }}>Padre/Madre</span>;
+                      }
+                      if (isChild) {
+                        return <span key={idx} style={{ 
+                          backgroundColor: '#2196f3', color: 'white', padding: '2px 6px', 
+                          borderRadius: '8px', fontSize: '9px' 
+                        }}>Hijo/Hija</span>;
+                      }
+                      if (isSpouse) {
+                        return <span key={idx} style={{ 
+                          backgroundColor: '#e91e63', color: 'white', padding: '2px 6px', 
+                          borderRadius: '8px', fontSize: '9px' 
+                        }}>Cónyuge</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
+                  
+                  <p style={{ margin: '4px 0', fontSize: '14px', color: '#666' }}>
+                    📅 {person.birth_date ? new Date(person.birth_date).toLocaleDateString() : 'Fecha desconocida'}
+                  </p>
+                  {person.birth_place && <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>📍 {person.birth_place}</p>}
+                  {person.biography && <p style={{ margin: '8px 0 0 0', fontSize: '13px', fontStyle: 'italic' }}>{person.biography}</p>}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
   };
 
   const renderCircular = () => {
-    const centerX = 300;
-    const centerY = 300;
-    const radius = 200;
+    const centerX = 350;
+    const centerY = 350;
+    const baseRadius = 150;
 
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
-        <svg width="600" height="600" style={{ border: '1px solid #ddd', borderRadius: '8px' }}>
-          <circle cx={centerX} cy={centerY} r="5" fill="#1976d2" />
-          {people.map((person, index) => {
-            const angle = (index / people.length) * 2 * Math.PI;
-            const x = centerX + radius * Math.cos(angle);
-            const y = centerY + radius * Math.sin(angle);
+      <div style={{ padding: '20px' }}>
+        <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#1976d2' }}>⭕ Vista Circular Familiar</h3>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <svg width="700" height="700" style={{ border: '2px solid #1976d2', borderRadius: '12px', backgroundColor: '#f8f9fa' }}>
+            {/* Círculo central */}
+            <circle cx={centerX} cy={centerY} r="15" fill="#1976d2" stroke="white" strokeWidth="3" />
+            <text x={centerX} y={centerY + 5} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">🏠</text>
             
-            return (
-              <g key={person.id}>
-                <line x1={centerX} y1={centerY} x2={x} y2={y} stroke="#ddd" strokeWidth="1" />
-                <circle cx={x} cy={y} r="30" fill={person.gender === 'male' ? '#2196f3' : '#e91e63'} />
-                <text x={x} y={y} textAnchor="middle" dy="5" fill="white" fontSize="12">
-                  {(person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || '?').split(' ').map(n => n.charAt(0)).join('')}
-                </text>
-                <text x={x} y={y + 50} textAnchor="middle" fontSize="12" fill="#333">
-                  {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+            {/* Organizar por generaciones en círculos concéntricos */}
+            {(() => {
+              const generations = {};
+              const safeRelationships = relationships || [];
+              
+              // Encontrar fundadores
+              const founders = people.filter(person => {
+                const hasParents = safeRelationships.some(rel => 
+                  rel.relationship_type === 'parent' && rel.person2_id === person.id
+                );
+                return !hasParents;
+              });
+              
+              if (founders.length === 0) {
+                generations[0] = people;
+              } else {
+                generations[0] = founders;
+                
+                // Agregar hijos en generaciones siguientes
+                let currentGen = 0;
+                const visited = new Set();
+                while (generations[currentGen] && generations[currentGen].length > 0) {
+                  const children = [];
+                  generations[currentGen].forEach(parent => {
+                    const parentChildren = safeRelationships
+                      .filter(rel => rel.relationship_type === 'parent' && rel.person1_id === parent.id)
+                      .map(rel => people.find(p => p.id === rel.person2_id))
+                      .filter(child => child && !visited.has(child.id));
+                    
+                    parentChildren.forEach(child => {
+                      visited.add(child.id);
+                      children.push(child);
+                    });
+                  });
+                  
+                  if (children.length > 0) {
+                    generations[currentGen + 1] = children;
+                  }
+                  currentGen++;
+                }
+              }
+              
+              return Object.keys(generations).map(genKey => {
+                const generation = generations[genKey];
+                const genRadius = baseRadius + (parseInt(genKey) * 80);
+                
+                return generation.map((person, index) => {
+                  const angle = (index / generation.length) * 2 * Math.PI - Math.PI/2;
+                  const x = centerX + genRadius * Math.cos(angle);
+                  const y = centerY + genRadius * Math.sin(angle);
+                  
+                  return (
+                    <g key={person.id}>
+                      {/* Línea desde el centro */}
+                      <line 
+                        x1={centerX} 
+                        y1={centerY} 
+                        x2={x} 
+                        y2={y} 
+                        stroke={parseInt(genKey) === 0 ? '#1976d2' : '#4caf50'} 
+                        strokeWidth="2" 
+                        opacity="0.6"
+                        strokeDasharray={parseInt(genKey) > 0 ? '5,3' : 'none'}
+                      />
+                      
+                      {/* Círculo de persona */}
+                      <circle 
+                        cx={x} 
+                        cy={y} 
+                        r="35" 
+                        fill={person.gender === 'male' ? '#2196f3' : '#e91e63'} 
+                        stroke="white" 
+                        strokeWidth="3"
+                        opacity="0.9"
+                      />
+                      
+                      {/* Iniciales */}
+                      <text 
+                        x={x} 
+                        y={y} 
+                        textAnchor="middle" 
+                        dy="5" 
+                        fill="white" 
+                        fontSize="16" 
+                        fontWeight="bold"
+                      >
+                        {(person.first_name || '?').charAt(0)}{(person.last_name || '').charAt(0)}
+                      </text>
+                      
+                      {/* Nombre completo */}
+                      <text 
+                        x={x} 
+                        y={y + 55} 
+                        textAnchor="middle" 
+                        fontSize="12" 
+                        fontWeight="bold"
+                        fill="#333"
+                      >
+                        {person.first_name || 'Sin nombre'}
+                      </text>
+                      
+                      {/* Año de nacimiento */}
+                      {person.birth_date && (
+                        <text 
+                          x={x} 
+                          y={y + 70} 
+                          textAnchor="middle" 
+                          fontSize="10" 
+                          fill="#666"
+                        >
+                          {new Date(person.birth_date).getFullYear()}
+                        </text>
+                      )}
+                      
+                      {/* Badge de generación */}
+                      <circle 
+                        cx={x + 25} 
+                        cy={y - 25} 
+                        r="12" 
+                        fill={parseInt(genKey) === 0 ? '#ff9800' : '#4caf50'} 
+                        stroke="white" 
+                        strokeWidth="2"
+                      />
+                      <text 
+                        x={x + 25} 
+                        y={y - 20} 
+                        textAnchor="middle" 
+                        fontSize="10" 
+                        fontWeight="bold" 
+                        fill="white"
+                      >
+                        G{parseInt(genKey) + 1}
+                      </text>
+                    </g>
+                  );
+                });
+              });
+            })()}
+            
+            {/* Líneas de relaciones matrimoniales */}
+            {(relationships || []).filter(rel => rel.relationship_type === 'spouse').map((rel, index) => {
+              const person1 = people.find(p => p.id === rel.person1_id);
+              const person2 = people.find(p => p.id === rel.person2_id);
+              
+              if (!person1 || person2) {
+                const person1Index = people.indexOf(person1);
+                const person2Index = people.indexOf(person2);
+                
+                const angle1 = (person1Index / people.length) * 2 * Math.PI - Math.PI/2;
+                const angle2 = (person2Index / people.length) * 2 * Math.PI - Math.PI/2;
+                
+                const x1 = centerX + baseRadius * Math.cos(angle1);
+                const y1 = centerY + baseRadius * Math.sin(angle1);
+                const x2 = centerX + baseRadius * Math.cos(angle2);
+                const y2 = centerY + baseRadius * Math.sin(angle2);
+                
+                return (
+                  <line 
+                    key={index}
+                    x1={x1} 
+                    y1={y1} 
+                    x2={x2} 
+                    y2={y2} 
+                    stroke="#e91e63" 
+                    strokeWidth="3" 
+                    strokeDasharray="8,4" 
+                    opacity="0.8"
+                  />
+                );
+              }
+              return null;
+            })}
+          </svg>
+        </div>
+        
+        {/* Leyenda */}
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: '#666' }}>
+          <span style={{ marginRight: '20px' }}>🟠 Centro familiar</span>
+          <span style={{ marginRight: '20px' }}>🔵 Línea sólida: Fundadores</span>
+          <span>🟢 Línea punteada: Descendientes</span>
+        </div>
       </div>
     );
   };
