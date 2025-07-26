@@ -94,25 +94,68 @@ const PersonManagement = () => {
 
   const handleFormSubmit = async (formData) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      console.log('Person form data:', formData);
+      console.log('Token:', token);
+      
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
+      
       if (editingPerson) {
         // Actualizar persona existente
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/persons/${editingPerson.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          console.error('Update person error:', result);
+          throw new Error(result.message || 'Error al actualizar persona');
+        }
+        
         const updatedPersons = persons.map(p => 
-          p._id === editingPerson._id ? { ...p, ...formData } : p
+          p.id === editingPerson.id ? result.data : p
         );
         setPersons(updatedPersons);
         setFilteredPersons(updatedPersons);
       } else {
         // Crear nueva persona
-        const newPerson = {
-          _id: Date.now().toString(), // Simulamos un ID
-          ...formData
-        };
-        setPersons([...persons, newPerson]);
-        setFilteredPersons([...filteredPersons, newPerson]);
+        console.log('Creating person with API:', `${process.env.REACT_APP_API_URL}/persons`);
+        
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/persons`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        console.log('Create person response:', response.status, result);
+        
+        if (!response.ok) {
+          console.error('Create person error:', result);
+          throw new Error(result.message || result.error || 'Error al crear persona');
+        }
+        
+        setPersons([...persons, result.data]);
+        setFilteredPersons([...filteredPersons, result.data]);
       }
       setShowForm(false);
     } catch (error) {
       console.error('Error al guardar persona:', error);
+      alert(`Error al agregar persona: ${error.message}`);
     }
   };
 
