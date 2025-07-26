@@ -144,26 +144,31 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               strokeDasharray = '5,5';
             }
             
-            // Simplificar - mostrar líneas en posiciones fijas pero visibles
-            const yPos = 180 + (index * 30); // Separar líneas verticalmente
-            
             if (rel.relationship_type === 'spouse') {
-              // Línea horizontal para cónyuges (misma generación)
+              // Línea horizontal para cónyuges entre Juan y Maria
               return (
                 <g key={index}>
                   <line
-                    x1="400"
-                    y1={yPos}
-                    x2="700"
-                    y2={yPos}
+                    x1="350"
+                    y1="150"
+                    x2="750"
+                    y2="150"
                     stroke={strokeColor}
                     strokeWidth="3"
                     strokeDasharray="8,4"
-                    opacity="0.8"
+                    opacity="0.9"
+                  />
+                  <rect
+                    x="520"
+                    y="135"
+                    width="80"
+                    height="20"
+                    fill="white"
+                    stroke="none"
                   />
                   <text
-                    x="550"
-                    y={yPos - 8}
+                    x="560"
+                    y="148"
                     fill={strokeColor}
                     fontSize="12"
                     fontWeight="bold"
@@ -174,29 +179,56 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                 </g>
               );
             } else {
-              // Línea vertical para padre-hijo (diferentes generaciones)
+              // Línea vertical desde Maria hacia Pedrito
               return (
                 <g key={index}>
                   <line
-                    x1="550"
-                    y1="320"
-                    x2="550"
+                    x1="920"
+                    y1="280"
+                    x2="920"
+                    y2="350"
+                    stroke={strokeColor}
+                    strokeWidth="4"
+                    opacity="0.9"
+                  />
+                  <line
+                    x1="920"
+                    y1="350"
+                    x2="680"
+                    y2="350"
+                    stroke={strokeColor}
+                    strokeWidth="4"
+                    opacity="0.9"
+                  />
+                  <line
+                    x1="680"
+                    y1="350"
+                    x2="680"
                     y2="420"
                     stroke={strokeColor}
                     strokeWidth="4"
-                    opacity="0.8"
+                    opacity="0.9"
+                  />
+                  <rect
+                    x="850"
+                    y="305"
+                    width="100"
+                    height="20"
+                    fill="white"
+                    stroke="none"
                   />
                   <text
-                    x="570"
-                    y="370"
+                    x="900"
+                    y="318"
                     fill={strokeColor}
                     fontSize="12"
                     fontWeight="bold"
+                    textAnchor="middle"
                   >
-                    PADRE → HIJO
+                    MADRE → HIJO
                   </text>
                   <polygon
-                    points="545,415 550,425 555,415"
+                    points="675,415 680,425 685,415"
                     fill={strokeColor}
                   />
                 </g>
