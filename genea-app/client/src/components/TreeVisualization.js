@@ -131,88 +131,89 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               flexWrap: 'wrap'
             }}>
               {generations[genKey].map((person, index) => (
-          <div key={person.id} style={{
-            border: '2px solid #1976d2',
-            borderRadius: '8px',
-            padding: '16px',
-            backgroundColor: 'white',
-            minWidth: '200px',
-            textAlign: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ 
-              width: '60px', 
-              height: '60px', 
-              borderRadius: '50%', 
-              backgroundColor: person.gender === 'male' ? '#2196f3' : '#e91e63',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: '24px',
-              margin: '0 auto 12px'
-            }}>
-              {(person.first_name || person.fullName || '?').charAt(0)}
-            </div>
-            <h4 style={{ margin: '0 0 8px 0' }}>
-              {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
-            </h4>
-            {person.isFounder && <span style={{ 
-              backgroundColor: '#ff9800', 
-              color: 'white', 
-              padding: '2px 8px', 
-              borderRadius: '12px', 
-              fontSize: '12px' 
-            }}>Fundador</span>}
-            <p style={{ margin: '8px 0 4px 0', fontSize: '14px', color: '#666' }}>
-              {person.birthDate ? new Date(person.birthDate).getFullYear() : '?'} - {person.isAlive ? 'Presente' : (person.deathDate ? new Date(person.deathDate).getFullYear() : '?')}
-            </p>
-            {person.birthPlace && <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>📍 {person.birthPlace}</p>}
-            
-            <div style={{ marginTop: '12px', display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => window.addChild && window.addChild(person)}
-                style={{
-                  padding: '4px 8px',
-                  fontSize: '10px',
-                  backgroundColor: '#4caf50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer'
-                }}
-              >
-                + Hijo
-              </button>
-              <button
-                onClick={() => window.addSpouse && window.addSpouse(person)}
-                style={{
-                  padding: '4px 8px',
-                  fontSize: '10px',
-                  backgroundColor: '#e91e63',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer'
-                }}
-              >
-                + Cónyuge
-              </button>
-              <button
-                onClick={() => window.deletePerson && window.deletePerson(person)}
-                style={{
-                  padding: '4px 8px',
-                  fontSize: '10px',
-                  backgroundColor: '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer'
-                }}
-              >
-                🗑️
-              </button>
-            </div>
+                <div key={person.id} style={{
+                  border: '2px solid #1976d2',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  backgroundColor: 'white',
+                  minWidth: '200px',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                  <div style={{ 
+                    width: '60px', 
+                    height: '60px', 
+                    borderRadius: '50%', 
+                    backgroundColor: person.gender === 'male' ? '#2196f3' : '#e91e63',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '24px',
+                    margin: '0 auto 12px'
+                  }}>
+                    {(person.first_name || person.fullName || '?').charAt(0)}
+                  </div>
+                  <h4 style={{ margin: '0 0 8px 0' }}>
+                    {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
+                  </h4>
+                  {person.isFounder && <span style={{ 
+                    backgroundColor: '#ff9800', 
+                    color: 'white', 
+                    padding: '2px 8px', 
+                    borderRadius: '12px', 
+                    fontSize: '12px' 
+                  }}>Fundador</span>}
+                  <p style={{ margin: '8px 0 4px 0', fontSize: '14px', color: '#666' }}>
+                    {person.birthDate ? new Date(person.birthDate).getFullYear() : '?'} - {person.isAlive ? 'Presente' : (person.deathDate ? new Date(person.deathDate).getFullYear() : '?')}
+                  </p>
+                  {person.birthPlace && <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>📍 {person.birthPlace}</p>}
+                  
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => window.addChild && window.addChild(person)}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: '10px',
+                        backgroundColor: '#4caf50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      + Hijo
+                    </button>
+                    <button
+                      onClick={() => window.addSpouse && window.addSpouse(person)}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: '10px',
+                        backgroundColor: '#e91e63',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      + Cónyuge
+                    </button>
+                    <button
+                      onClick={() => window.deletePerson && window.deletePerson(person)}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: '10px',
+                        backgroundColor: '#f44336',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           ))}
