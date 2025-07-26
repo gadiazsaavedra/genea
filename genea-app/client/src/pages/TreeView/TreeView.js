@@ -199,7 +199,8 @@ const TreeView = () => {
         firstName: person.firstName || '',
         lastName: person.lastName || null,
         gender: person.gender || null,
-        birthDate: person.birthDate || null
+        birthDate: person.birthDate || null,
+        isFounder: isFounderMode // Agregar campo isFounder
       };
       
       console.log('=== ADDING PERSON ===');
@@ -379,8 +380,8 @@ const TreeView = () => {
       }}>
         <h4>Personas en el árbol: {people.length}</h4>
         <p style={{ margin: '8px 0', color: '#666' }}>
-          Fundadores: {people.filter(p => p.isFounder).length} | 
-          Otros miembros: {people.filter(p => !p.isFounder).length}
+          Fundadores: {people.filter(p => p.is_founder).length} | 
+          Otros miembros: {people.filter(p => !p.is_founder).length}
         </p>
         <p style={{ margin: '8px 0', fontSize: '14px', color: '#888' }}>
           🔍 Usa la rueda del ratón para hacer zoom y arrastra para navegar

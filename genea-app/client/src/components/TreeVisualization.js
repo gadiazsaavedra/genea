@@ -309,7 +309,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                     {person.fullName || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Sin nombre'}
                   </h4>
                   <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
-                    {person.isFounder && <span style={{ 
+                    {person.is_founder && <span style={{ 
                       backgroundColor: '#ff9800', 
                       color: 'white', 
                       padding: '2px 8px', 

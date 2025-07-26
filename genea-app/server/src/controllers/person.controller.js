@@ -217,9 +217,9 @@ exports.getPersonById = async (req, res) => {
 // Crear una nueva persona - SIMPLIFICADO
 exports.createPerson = async (req, res) => {
   try {
-    const { familyId, firstName, lastName, gender, birthDate } = req.body;
+    const { familyId, firstName, lastName, gender, birthDate, isFounder } = req.body;
     
-    console.log('Create person request:', { familyId, firstName, lastName, gender, birthDate });
+    console.log('Create person request:', { familyId, firstName, lastName, gender, birthDate, isFounder });
     
     if (!familyId || !firstName) {
       return res.status(400).json({
@@ -236,7 +236,8 @@ exports.createPerson = async (req, res) => {
         first_name: firstName,
         last_name: lastName || null,
         gender: gender || null,
-        birth_date: birthDate || null
+        birth_date: birthDate || null,
+        is_founder: isFounder || false
       })
       .select()
       .single();
