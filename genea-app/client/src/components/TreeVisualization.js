@@ -144,26 +144,28 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               strokeDasharray = '5,5';
             }
             
+            // Por ahora mostrar líneas simples - las coordenadas exactas requieren refs
             return (
               <g key={index}>
                 <line
-                  x1="50%"
-                  y1="100"
-                  x2="50%"
-                  y2="200"
+                  x1="200"
+                  y1="150"
+                  x2="400"
+                  y2="150"
                   stroke={strokeColor}
                   strokeWidth={strokeWidth}
                   strokeDasharray={strokeDasharray}
                   opacity="0.8"
                 />
                 <text
-                  x="52%"
-                  y="150"
+                  x="300"
+                  y="140"
                   fill={strokeColor}
-                  fontSize="10"
+                  fontSize="12"
                   fontWeight="bold"
+                  textAnchor="middle"
                 >
-                  {rel.relationship_type === 'parent' ? 'hijo' : 'cónyuge'}
+                  {rel.relationship_type === 'parent' ? 'PADRE → HIJO' : 'CÓNYUGES'}
                 </text>
               </g>
             );
