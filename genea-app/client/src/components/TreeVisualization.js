@@ -121,16 +121,12 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
       <div style={{ position: 'relative', padding: '40px' }}>
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {/* Renderizar líneas de conexión */}
-          {(() => {
+          {(relationships || []).map((rel, index) => {
             console.log('=== RENDERING LINES ===');
-            console.log('Total relationships:', (relationships || []).length);
-            console.log('Relationships:', relationships);
-            return (relationships || []).map((rel, index) => {
             console.log(`Rendering line ${index}:`, rel);
+            
             const person1 = people.find(p => p.id === rel.person1_id);
             const person2 = people.find(p => p.id === rel.person2_id);
-            
-            console.log(`Relationship ${index}:`, rel.relationship_type, person1?.first_name, '->', person2?.first_name);
             
             if (!person1 || !person2) {
               console.log('Missing person for relationship:', rel);
@@ -138,17 +134,14 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
             }
             
             // Diferentes estilos según el tipo de relación
-            let strokeColor = '#1976d2';
-            let strokeWidth = 2;
+            let strokeColor = '#4caf50';
+            let strokeWidth = 3;
             let strokeDasharray = 'none';
             
-            if (rel.relationship_type === 'parent') {
-              strokeColor = '#4caf50'; // Verde para padre-hijo
-              strokeWidth = 3;
-            } else if (rel.relationship_type === 'spouse') {
-              strokeColor = '#e91e63'; // Rosa para cónyuges
+            if (rel.relationship_type === 'spouse') {
+              strokeColor = '#e91e63';
               strokeWidth = 2;
-              strokeDasharray = '5,5'; // Línea punteada
+              strokeDasharray = '5,5';
             }
             
             return (
@@ -163,7 +156,6 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   strokeDasharray={strokeDasharray}
                   opacity="0.8"
                 />
-                {/* Etiqueta de relación */}
                 <text
                   x="52%"
                   y="150"
@@ -175,7 +167,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                 </text>
               </g>
             );
-          })()}
+          })}
         </svg>
         
         {/* Leyenda de relaciones */}
