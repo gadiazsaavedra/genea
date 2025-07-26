@@ -131,13 +131,25 @@ const PersonManagement = () => {
         // Crear nueva persona
         console.log('Creating person with API:', `${process.env.REACT_APP_API_URL}/persons`);
         
+        // Mapear datos del formulario al formato de la API
+        const nameParts = formData.fullName.split(' ');
+        const apiData = {
+          familyId: '638a55dc-0a73-417c-9c80-556ac0028325', // TODO: obtener de contexto
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || null,
+          gender: null,
+          birthDate: formData.birthDate || null
+        };
+        
+        console.log('Mapped API data:', apiData);
+        
         const response = await fetch(`${process.env.REACT_APP_API_URL}/persons`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(formData)
+          body: JSON.stringify(apiData)
         });
         
         const result = await response.json();
