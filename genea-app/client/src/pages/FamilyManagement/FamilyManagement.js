@@ -70,11 +70,32 @@ const FamilyManagement = () => {
   const handleDeleteFamily = async (familyId) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta familia? Esta acción no se puede deshacer.')) {
       try {
-        // Aquí se eliminaría la familia a través de la API
-        // Por ahora simulamos la eliminación
-        setFamilies(families.filter(f => f._id !== familyId));
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        
+        if (!token) {
+          throw new Error('No hay token de autenticación');
+        }
+        
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/families/${familyId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.message || 'Error al eliminar familia');
+        }
+        
+        // Actualizar lista local
+        setFamilies(families.filter(f => f.id !== familyId));
+        
       } catch (error) {
         console.error('Error al eliminar familia:', error);
+        alert(`Error al eliminar familia: ${error.message}`);
       }
     }
   };
