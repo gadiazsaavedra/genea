@@ -121,9 +121,13 @@ const FamilyManagement = () => {
         
         console.log('Response status:', response.status);
         console.log('Response data:', result);
+        console.log('Full response:', response);
         
         if (!response.ok) {
           console.error('API Error:', result);
+          console.error('Error message:', result.message);
+          console.error('Error details:', result.error);
+          console.error('Full error object:', JSON.stringify(result, null, 2));
           throw new Error(result.message || result.error || 'Error al actualizar familia');
         }
         

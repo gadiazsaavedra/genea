@@ -217,89 +217,48 @@ exports.createFamily = async (req, res) => {
   }
 };
 
-// Actualizar una familia
+// Actualizar una familia - VERSIÓN SIMPLIFICADA
 exports.updateFamily = async (req, res) => {
   try {
     const familyId = req.params.id;
     const { name, description } = req.body;
-    const userId = req.user.uid;
     
-    console.log('=== UPDATE FAMILY REQUEST ===');
-    console.log('Family ID:', familyId);
-    console.log('Family ID type:', typeof familyId);
-    console.log('User ID:', userId);
-    console.log('Name:', name);
-    console.log('Description:', description);
+    console.log('Simple update:', { familyId, name, description });
     
-    // Validar que el ID de familia sea válido
-    if (!familyId) {
+    if (!familyId || !name) {
       return res.status(400).json({
         success: false,
-        message: 'ID de familia requerido'
+        message: 'ID de familia y nombre son requeridos'
       });
     }
     
-    // TEMPORAL: Permitir todas las actualizaciones durante desarrollo
-    console.log('=== SKIPPING PERMISSION CHECK FOR DEVELOPMENT ===');
-    console.log('User ID:', userId);
-    console.log('Family ID:', familyId);
-    
-    // TODO: Restaurar verificación de permisos en producción
-    
-    // Actualizar la familia - versión simplificada
-    console.log('=== ATTEMPTING UPDATE ===');
-    console.log('Updating family ID:', familyId);
-    console.log('New name:', name);
-    console.log('New description:', description);
-    
-    const updateData = {
-      name: name,
-      description: description || null
-    };
-    
-    console.log('Update data:', updateData);
-    
-    const { data: updatedFamily, error: updateError } = await supabaseClient
+    // Actualización directa sin verificaciones
+    const { data, error } = await supabaseClient
       .from('families')
-      .update(updateData)
+      .update({ name, description })
       .eq('id', familyId)
       .select()
       .single();
     
-    console.log('=== UPDATE OPERATION ===');
-    console.log('Update result:', updatedFamily);
-    console.log('Update error:', updateError);
-    console.log('Update error details:', updateError?.details);
-    console.log('Update error hint:', updateError?.hint);
-    console.log('Update error code:', updateError?.code);
-    
-    if (updateError) {
-      console.error('FULL UPDATE ERROR:', JSON.stringify(updateError, null, 2));
-      throw new Error(`Database error: ${updateError.message} (Code: ${updateError.code})`);
-    }
-    
-    if (!updatedFamily) {
-      console.log('No family found after update');
-      return res.status(404).json({
+    if (error) {
+      console.error('Update error:', error);
+      return res.status(400).json({
         success: false,
-        message: 'Familia no encontrada'
+        message: 'Error en base de datos',
+        error: error.message
       });
     }
     
-    res.status(200).json({
+    res.json({
       success: true,
-      data: updatedFamily
+      data
     });
   } catch (error) {
-    console.error('=== CONTROLLER ERROR ===');
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
-    
-    res.status(400).json({
+    console.error('Controller error:', error);
+    res.status(500).json({
       success: false,
-      message: 'Error al actualizar la familia',
-      error: error.message,
-      details: error.stack
+      message: 'Error interno',
+      error: error.message
     });
   }
 };
