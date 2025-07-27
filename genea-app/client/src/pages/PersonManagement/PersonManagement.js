@@ -107,6 +107,47 @@ const PersonManagement = () => {
     setShowForm(true);
   };
 
+  const handleToggleFounder = async (person) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        alert('No hay sesión activa');
+        return;
+      }
+      
+      const newFounderStatus = !person.is_founder;
+      
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/persons/${person.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          is_founder: newFounderStatus
+        })
+      });
+      
+      if (response.ok) {
+        const updatedPersons = persons.map(p => 
+          p.id === person.id ? { ...p, is_founder: newFounderStatus } : p
+        );
+        setPersons(updatedPersons);
+        
+        const statusText = newFounderStatus ? 'fundador' : 'descendiente';
+        alert(`${person.first_name} ahora es ${statusText}`);
+      } else {
+        const result = await response.json();
+        alert(`Error: ${result.message || 'No se pudo actualizar'}`);
+      }
+    } catch (error) {
+      console.error('Error updating founder status:', error);
+      alert('Error al actualizar estado de fundador');
+    }
+  };
+
   const handleDeletePerson = async (personId) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta persona?')) {
       try {
@@ -375,15 +416,24 @@ const PersonManagement = () => {
                       </span>
                     </td>
                     <td>
-                      <span style={{
-                        backgroundColor: person.is_founder ? '#ff9800' : '#2196f3',
-                        color: 'white',
-                        padding: '2px 8px',
-                        borderRadius: '12px',
-                        fontSize: '12px'
-                      }}>
+                      <button
+                        onClick={() => handleToggleFounder(person)}
+                        style={{
+                          backgroundColor: person.is_founder ? '#ff9800' : '#2196f3',
+                          color: 'white',
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.2s'
+                        }}
+                        onMouseOver={(e) => e.target.style.opacity = '0.8'}
+                        onMouseOut={(e) => e.target.style.opacity = '1'}
+                        title={`Cambiar a ${person.is_founder ? 'descendiente' : 'fundador'}`}
+                      >
                         {person.is_founder ? '🌟 Fundador' : '🌳 Descendiente'}
-                      </span>
+                      </button>
                     </td>
                     <td className="actions-cell">
                       <button 
