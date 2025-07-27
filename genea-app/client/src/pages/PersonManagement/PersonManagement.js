@@ -12,6 +12,11 @@ const PersonManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPersons, setFilteredPersons] = useState([]);
   const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [filters, setFilters] = useState({
+    gender: '',
+    isAlive: '',
+    isFounder: ''
+  });
 
   useEffect(() => {
     const fetchPersons = async () => {
@@ -64,16 +69,33 @@ const PersonManagement = () => {
   }, []);
 
   useEffect(() => {
+    let filtered = persons;
+    
+    // Filtro por búsqueda de texto
     if (searchTerm) {
-      const filtered = persons.filter(person => {
+      filtered = filtered.filter(person => {
         const fullName = person.full_name || `${person.first_name} ${person.last_name || ''}`.trim();
         return fullName.toLowerCase().includes(searchTerm.toLowerCase());
       });
-      setFilteredPersons(filtered);
-    } else {
-      setFilteredPersons(persons);
     }
-  }, [searchTerm, persons]);
+    
+    // Filtro por género
+    if (filters.gender) {
+      filtered = filtered.filter(person => person.gender === filters.gender);
+    }
+    
+    // Filtro por estado (vivo/fallecido)
+    if (filters.isAlive !== '') {
+      filtered = filtered.filter(person => person.is_alive === (filters.isAlive === 'true'));
+    }
+    
+    // Filtro por fundador
+    if (filters.isFounder !== '') {
+      filtered = filtered.filter(person => person.is_founder === (filters.isFounder === 'true'));
+    }
+    
+    setFilteredPersons(filtered);
+  }, [searchTerm, persons, filters]);
 
   const handleAddPerson = () => {
     setEditingPerson(null);
@@ -251,13 +273,73 @@ const PersonManagement = () => {
         </div>
       </div>
 
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Buscar persona..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="search-and-filters">
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Buscar persona..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: '300px', padding: '8px', marginRight: '16px' }}
+          />
+        </div>
+        
+        <div className="filters-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '20px' }}>
+          <div>
+            <label style={{ marginRight: '8px', fontWeight: 'bold' }}>Género:</label>
+            <select 
+              value={filters.gender} 
+              onChange={(e) => setFilters({...filters, gender: e.target.value})}
+              style={{ padding: '6px' }}
+            >
+              <option value="">Todos</option>
+              <option value="male">Masculino</option>
+              <option value="female">Femenino</option>
+            </select>
+          </div>
+          
+          <div>
+            <label style={{ marginRight: '8px', fontWeight: 'bold' }}>Estado:</label>
+            <select 
+              value={filters.isAlive} 
+              onChange={(e) => setFilters({...filters, isAlive: e.target.value})}
+              style={{ padding: '6px' }}
+            >
+              <option value="">Todos</option>
+              <option value="true">Vivos</option>
+              <option value="false">Fallecidos</option>
+            </select>
+          </div>
+          
+          <div>
+            <label style={{ marginRight: '8px', fontWeight: 'bold' }}>Tipo:</label>
+            <select 
+              value={filters.isFounder} 
+              onChange={(e) => setFilters({...filters, isFounder: e.target.value})}
+              style={{ padding: '6px' }}
+            >
+              <option value="">Todos</option>
+              <option value="true">Fundadores</option>
+              <option value="false">Descendientes</option>
+            </select>
+          </div>
+          
+          <button 
+            onClick={() => {
+              setSearchTerm('');
+              setFilters({ gender: '', isAlive: '', isFounder: '' });
+            }}
+            style={{ 
+              padding: '6px 12px', 
+              backgroundColor: '#f5f5f5', 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Limpiar Filtros
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -268,10 +350,11 @@ const PersonManagement = () => {
             <thead>
               <tr>
                 <th>Nombre</th>
+                <th>Género</th>
                 <th>Fecha de nacimiento</th>
                 <th>Lugar de nacimiento</th>
                 <th>Estado</th>
-                <th>Ocupación</th>
+                <th>Tipo</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -280,10 +363,28 @@ const PersonManagement = () => {
                 filteredPersons.map(person => (
                   <tr key={person.id}>
                     <td>{person.full_name || `${person.first_name} ${person.last_name || ''}`.trim()}</td>
+                    <td>{person.gender === 'male' ? '👨 Masculino' : person.gender === 'female' ? '👩 Femenino' : 'No especificado'}</td>
                     <td>{formatDate(person.birth_date)}</td>
                     <td>{person.birth_place || 'Desconocido'}</td>
-                    <td>{person.is_alive ? 'Vivo' : 'Fallecido'}</td>
-                    <td>{person.occupation || 'Desconocida'}</td>
+                    <td>
+                      <span style={{ 
+                        color: person.is_alive ? '#4caf50' : '#f44336',
+                        fontWeight: 'bold'
+                      }}>
+                        {person.is_alive ? '✓ Vivo' : '✗ Fallecido'}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{
+                        backgroundColor: person.is_founder ? '#ff9800' : '#2196f3',
+                        color: 'white',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        fontSize: '12px'
+                      }}>
+                        {person.is_founder ? '🌟 Fundador' : '🌳 Descendiente'}
+                      </span>
+                    </td>
                     <td className="actions-cell">
                       <button 
                         className="action-btn view-btn" 
@@ -311,8 +412,8 @@ const PersonManagement = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="no-results">
-                    No se encontraron personas
+                  <td colSpan="7" className="no-results">
+                    No se encontraron personas con los filtros aplicados
                   </td>
                 </tr>
               )}
