@@ -22,13 +22,28 @@ const LanguageSelector = ({ variant = 'default' }) => {
     localStorage.setItem('language', newLanguage);
   };
 
+  const getCurrentLanguage = () => {
+    return languages.find(lang => lang.code === i18n.language) || languages[0];
+  };
+
   if (variant === 'compact') {
+    const currentLang = getCurrentLanguage();
+    
     return (
       <FormControl size="small" sx={{ minWidth: 120 }}>
         <Select
           value={i18n.language}
           onChange={handleLanguageChange}
           displayEmpty
+          renderValue={(selected) => {
+            const lang = languages.find(l => l.code === selected);
+            return (
+              <Box display="flex" alignItems="center" gap={1}>
+                <span>{lang?.flag || currentLang.flag}</span>
+                <span>{lang?.name || currentLang.name}</span>
+              </Box>
+            );
+          }}
           sx={{
             '& .MuiSelect-select': {
               display: 'flex',
@@ -60,6 +75,21 @@ const LanguageSelector = ({ variant = 'default' }) => {
           value={i18n.language}
           onChange={handleLanguageChange}
           displayEmpty
+          renderValue={(selected) => {
+            const lang = languages.find(l => l.code === selected);
+            const currentLang = getCurrentLanguage();
+            return (
+              <Box display="flex" alignItems="center" gap={2}>
+                <span style={{ fontSize: '1.5em' }}>{lang?.flag || currentLang.flag}</span>
+                <Box>
+                  <Typography variant="body1">{lang?.name || currentLang.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(lang?.code || currentLang.code) === 'es' ? 'Argentina' : 'Brasil'}
+                  </Typography>
+                </Box>
+              </Box>
+            );
+          }}
         >
           {languages.map((lang) => (
             <MenuItem key={lang.code} value={lang.code}>
