@@ -795,36 +795,60 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               });
             }).flat()}
             
-            {/* Líneas de matrimonio */}
+            {/* Líneas de matrimonio generacionales */}
             {(relationships || []).filter(rel => rel.relationship_type === 'spouse').map((rel, index) => {
               const person1 = people.find(p => p.id === rel.person1_id);
               const person2 = people.find(p => p.id === rel.person2_id);
               
               if (person1 && person2) {
-                const person1Index = people.indexOf(person1);
-                const person2Index = people.indexOf(person2);
+                // Encontrar en qué generación están ambas personas
+                let person1Gen = -1, person1Index = -1;
+                let person2Gen = -1, person2Index = -1;
                 
-                const angle1 = (person1Index / people.length) * 2 * Math.PI - Math.PI/2;
-                const angle2 = (person2Index / people.length) * 2 * Math.PI - Math.PI/2;
+                Object.keys(generations).forEach(genKey => {
+                  const generation = generations[genKey];
+                  const p1Idx = generation.findIndex(p => p.id === person1.id);
+                  const p2Idx = generation.findIndex(p => p.id === person2.id);
+                  
+                  if (p1Idx !== -1) {
+                    person1Gen = parseInt(genKey);
+                    person1Index = p1Idx;
+                  }
+                  if (p2Idx !== -1) {
+                    person2Gen = parseInt(genKey);
+                    person2Index = p2Idx;
+                  }
+                });
                 
-                const x1 = centerX + baseRadius * Math.cos(angle1);
-                const y1 = centerY + baseRadius * Math.sin(angle1);
-                const x2 = centerX + baseRadius * Math.cos(angle2);
-                const y2 = centerY + baseRadius * Math.sin(angle2);
-                
-                return (
-                  <line 
-                    key={index}
-                    x1={x1} 
-                    y1={y1} 
-                    x2={x2} 
-                    y2={y2} 
-                    stroke="#e91e63" 
-                    strokeWidth="4" 
-                    strokeDasharray="10,5" 
-                    opacity="0.8"
-                  />
-                );
+                if (person1Gen !== -1 && person2Gen !== -1) {
+                  const radius1 = baseRadius + (person1Gen * generationGap);
+                  const radius2 = baseRadius + (person2Gen * generationGap);
+                  
+                  const gen1Length = generations[person1Gen].length;
+                  const gen2Length = generations[person2Gen].length;
+                  
+                  const angle1 = (person1Index / gen1Length) * 2 * Math.PI - Math.PI/2;
+                  const angle2 = (person2Index / gen2Length) * 2 * Math.PI - Math.PI/2;
+                  
+                  const x1 = centerX + radius1 * Math.cos(angle1);
+                  const y1 = centerY + radius1 * Math.sin(angle1);
+                  const x2 = centerX + radius2 * Math.cos(angle2);
+                  const y2 = centerY + radius2 * Math.sin(angle2);
+                  
+                  return (
+                    <line 
+                      key={index}
+                      x1={x1} 
+                      y1={y1} 
+                      x2={x2} 
+                      y2={y2} 
+                      stroke="#e91e63" 
+                      strokeWidth="4" 
+                      strokeDasharray="10,5" 
+                      opacity="0.8"
+                    />
+                  );
+                }
               }
               return null;
             })}
