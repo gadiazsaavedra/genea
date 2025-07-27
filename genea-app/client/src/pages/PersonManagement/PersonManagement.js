@@ -16,12 +16,44 @@ const PersonManagement = () => {
   useEffect(() => {
     const fetchPersons = async () => {
       try {
-        setTimeout(() => {
-          const mockPersons = [];
-          setPersons(mockPersons);
-          setFilteredPersons(mockPersons);
-          setLoading(false);
-        }, 600);
+        const loadPersonsFromAPI = async () => {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            
+            if (!token) {
+              setPersons([]);
+              setFilteredPersons([]);
+              setLoading(false);
+              return;
+            }
+            
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/persons`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              const persons = result.data || [];
+              setPersons(persons);
+              setFilteredPersons(persons);
+            } else {
+              console.error('Error loading persons:', response.status);
+              setPersons([]);
+              setFilteredPersons([]);
+            }
+          } catch (error) {
+            console.error('Error loading persons:', error);
+            setPersons([]);
+            setFilteredPersons([]);
+          } finally {
+            setLoading(false);
+          }
+        };
+        
+        loadPersonsFromAPI();
       } catch (error) {
         console.error('Error al cargar personas:', error);
         setLoading(false);
@@ -33,9 +65,10 @@ const PersonManagement = () => {
 
   useEffect(() => {
     if (searchTerm) {
-      const filtered = persons.filter(person => 
-        person.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const filtered = persons.filter(person => {
+        const fullName = person.full_name || `${person.first_name} ${person.last_name || ''}`.trim();
+        return fullName.toLowerCase().includes(searchTerm.toLowerCase());
+      });
       setFilteredPersons(filtered);
     } else {
       setFilteredPersons(persons);
@@ -246,10 +279,10 @@ const PersonManagement = () => {
               {filteredPersons.length > 0 ? (
                 filteredPersons.map(person => (
                   <tr key={person.id}>
-                    <td>{person.fullName}</td>
-                    <td>{formatDate(person.birthDate)}</td>
-                    <td>{person.birthPlace || 'Desconocido'}</td>
-                    <td>{person.isAlive ? 'Vivo' : 'Fallecido'}</td>
+                    <td>{person.full_name || `${person.first_name} ${person.last_name || ''}`.trim()}</td>
+                    <td>{formatDate(person.birth_date)}</td>
+                    <td>{person.birth_place || 'Desconocido'}</td>
+                    <td>{person.is_alive ? 'Vivo' : 'Fallecido'}</td>
                     <td>{person.occupation || 'Desconocida'}</td>
                     <td className="actions-cell">
                       <button 
