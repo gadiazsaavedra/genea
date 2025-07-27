@@ -807,10 +807,10 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                 const angle1 = (person1Index / people.length) * 2 * Math.PI - Math.PI/2;
                 const angle2 = (person2Index / people.length) * 2 * Math.PI - Math.PI/2;
                 
-                const x1 = centerX + radius * Math.cos(angle1);
-                const y1 = centerY + radius * Math.sin(angle1);
-                const x2 = centerX + radius * Math.cos(angle2);
-                const y2 = centerY + radius * Math.sin(angle2);
+                const x1 = centerX + baseRadius * Math.cos(angle1);
+                const y1 = centerY + baseRadius * Math.sin(angle1);
+                const x2 = centerX + baseRadius * Math.cos(angle2);
+                const y2 = centerY + baseRadius * Math.sin(angle2);
                 
                 return (
                   <line 
