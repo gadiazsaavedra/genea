@@ -504,33 +504,45 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                     {person.first_name || ''} {person.last_name || ''}
                   </h4>
                   
-                  {/* Badges de relaciones */}
+                  {/* Badges de relaciones sin duplicados */}
                   <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                    {(relationships || []).filter(rel => rel.person1_id === person.id || rel.person2_id === person.id).map((rel, idx) => {
-                      const isParent = rel.relationship_type === 'parent' && rel.person1_id === person.id;
-                      const isChild = rel.relationship_type === 'parent' && rel.person2_id === person.id;
-                      const isSpouse = rel.relationship_type === 'spouse';
+                    {(() => {
+                      const personRels = (relationships || []).filter(rel => rel.person1_id === person.id || rel.person2_id === person.id);
+                      const hasParentRel = personRels.some(rel => rel.relationship_type === 'parent' && rel.person1_id === person.id);
+                      const hasChildRel = personRels.some(rel => rel.relationship_type === 'parent' && rel.person2_id === person.id);
+                      const hasSpouseRel = personRels.some(rel => rel.relationship_type === 'spouse');
                       
-                      if (isParent) {
-                        return <span key={idx} style={{ 
-                          backgroundColor: '#4caf50', color: 'white', padding: '2px 6px', 
-                          borderRadius: '8px', fontSize: '9px' 
-                        }}>Padre/Madre</span>;
+                      const badges = [];
+                      
+                      if (hasParentRel) {
+                        badges.push(
+                          <span key="parent" style={{ 
+                            backgroundColor: '#4caf50', color: 'white', padding: '2px 6px', 
+                            borderRadius: '8px', fontSize: '9px' 
+                          }}>Padre/Madre</span>
+                        );
                       }
-                      if (isChild) {
-                        return <span key={idx} style={{ 
-                          backgroundColor: '#2196f3', color: 'white', padding: '2px 6px', 
-                          borderRadius: '8px', fontSize: '9px' 
-                        }}>Hijo/Hija</span>;
+                      
+                      if (hasChildRel) {
+                        badges.push(
+                          <span key="child" style={{ 
+                            backgroundColor: '#2196f3', color: 'white', padding: '2px 6px', 
+                            borderRadius: '8px', fontSize: '9px' 
+                          }}>Hijo/Hija</span>
+                        );
                       }
-                      if (isSpouse) {
-                        return <span key={idx} style={{ 
-                          backgroundColor: '#e91e63', color: 'white', padding: '2px 6px', 
-                          borderRadius: '8px', fontSize: '9px' 
-                        }}>Cónyuge</span>;
+                      
+                      if (hasSpouseRel) {
+                        badges.push(
+                          <span key="spouse" style={{ 
+                            backgroundColor: '#e91e63', color: 'white', padding: '2px 6px', 
+                            borderRadius: '8px', fontSize: '9px' 
+                          }}>Cónyuge</span>
+                        );
                       }
-                      return null;
-                    })}
+                      
+                      return badges;
+                    })()}
                   </div>
                   
                   <p style={{ margin: '4px 0', fontSize: '14px', color: '#666' }}>
