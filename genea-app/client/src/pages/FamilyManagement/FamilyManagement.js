@@ -116,6 +116,7 @@ const FamilyManagement = () => {
       
       console.log('Session:', session);
       console.log('Token:', token);
+      console.log('API URL:', process.env.REACT_APP_API_URL);
       
       if (!token) {
         throw new Error('No hay token de autenticación');
