@@ -562,25 +562,97 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
   const renderCircular = () => {
     const centerX = 300;
     const centerY = 300;
-    const radius = 180;
+    const baseRadius = 120;
+    const generationGap = 80;
+
+    // Organizar por generaciones
+    const organizeByGenerations = () => {
+      const generations = {};
+      const safeRelationships = relationships || [];
+      
+      // Encontrar fundadores (primera generación)
+      const founders = people.filter(person => {
+        const hasParents = safeRelationships.some(rel => 
+          rel.relationship_type === 'parent' && rel.person2_id === person.id
+        );
+        return !hasParents;
+      });
+      
+      if (founders.length === 0) {
+        generations[0] = people;
+      } else {
+        generations[0] = founders;
+        
+        // Agregar hijos en generaciones siguientes
+        let currentGen = 0;
+        const visited = new Set();
+        while (generations[currentGen] && generations[currentGen].length > 0) {
+          const children = [];
+          generations[currentGen].forEach(parent => {
+            const parentChildren = safeRelationships
+              .filter(rel => rel.relationship_type === 'parent' && rel.person1_id === parent.id)
+              .map(rel => people.find(p => p.id === rel.person2_id))
+              .filter(child => child && !visited.has(child.id));
+            
+            parentChildren.forEach(child => {
+              visited.add(child.id);
+              children.push(child);
+            });
+          });
+          
+          if (children.length > 0) {
+            generations[currentGen + 1] = children;
+          }
+          currentGen++;
+        }
+      }
+      
+      return generations;
+    };
+    
+    const generations = organizeByGenerations();
 
     return (
       <div style={{ padding: '20px' }}>
-        <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#1976d2' }}>⭕ Vista Circular Familiar</h3>
+        <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#1976d2' }}>⭕ Vista Circular Generacional</h3>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <svg width="600" height="600" style={{ border: '2px solid #1976d2', borderRadius: '12px', backgroundColor: '#f8f9fa' }}>
             {/* Círculo central decorativo */}
             <circle cx={centerX} cy={centerY} r="20" fill="#1976d2" stroke="white" strokeWidth="4" />
             <text x={centerX} y={centerY + 6} textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">🏠</text>
             
-            {/* Personas en círculo simple */}
-            {people.map((person, index) => {
-              const angle = (index / people.length) * 2 * Math.PI - Math.PI/2;
-              const x = centerX + radius * Math.cos(angle);
-              const y = centerY + radius * Math.sin(angle);
-              
+            {/* Círculos de generación */}
+            {Object.keys(generations).map(genKey => {
+              const genLevel = parseInt(genKey);
+              const radius = baseRadius + (genLevel * generationGap);
               return (
-                <g key={person.id}>
+                <circle 
+                  key={`gen-${genKey}`}
+                  cx={centerX} 
+                  cy={centerY} 
+                  r={radius} 
+                  fill="none" 
+                  stroke={genLevel === 0 ? '#ff9800' : '#4caf50'} 
+                  strokeWidth="2" 
+                  strokeDasharray="5,5" 
+                  opacity="0.3"
+                />
+              );
+            })}
+            
+            {/* Personas organizadas por generaciones */}
+            {Object.keys(generations).map(genKey => {
+              const generation = generations[genKey];
+              const genLevel = parseInt(genKey);
+              const radius = baseRadius + (genLevel * generationGap);
+              
+              return generation.map((person, index) => {
+                const angle = (index / generation.length) * 2 * Math.PI - Math.PI/2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+              
+                return (
+                  <g key={person.id}>
                   {/* Línea desde el centro */}
                   <line 
                     x1={centerX} 
@@ -718,9 +790,10 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                       return badges;
                     })()}
                   </g>
-                </g>
-              );
-            })}
+                  </g>
+                );
+              });
+            }).flat()}
             
             {/* Líneas de matrimonio */}
             {(relationships || []).filter(rel => rel.relationship_type === 'spouse').map((rel, index) => {
@@ -763,8 +836,8 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
           <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
             <span>🔵 Hombre</span>
             <span>🔴 Mujer</span>
-            <span style={{ color: '#4caf50' }}>P = Padre/Madre</span>
-            <span style={{ color: '#2196f3' }}>H = Hijo/Hija</span>
+            <span style={{ color: '#ff9800' }}>Gen 1 = Fundadores</span>
+            <span style={{ color: '#4caf50' }}>Gen 2+ = Descendientes</span>
             <span style={{ color: '#e91e63' }}>C = Cónyuge</span>
           </div>
         </div>
