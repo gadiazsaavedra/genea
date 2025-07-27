@@ -140,7 +140,8 @@ const PersonManagement = () => {
         alert(`${person.first_name} ahora es ${statusText}`);
       } else {
         const result = await response.json();
-        alert(`Error: ${result.message || 'No se pudo actualizar'}`);
+        console.error('Toggle founder error:', result);
+        alert(`Error: ${result.message || result.error || 'No se pudo actualizar'}`);
       }
     } catch (error) {
       console.error('Error updating founder status:', error);
