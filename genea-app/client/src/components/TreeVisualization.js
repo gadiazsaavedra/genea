@@ -626,53 +626,97 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                     {person.first_name || 'Sin nombre'}
                   </text>
                   
-                  {/* Badges de relaciones */}
+                  {/* Badges de relaciones sin duplicados */}
                   <g>
-                    {(relationships || []).filter(rel => rel.person1_id === person.id || rel.person2_id === person.id).map((rel, idx) => {
-                      const isParent = rel.relationship_type === 'parent' && rel.person1_id === person.id;
-                      const isChild = rel.relationship_type === 'parent' && rel.person2_id === person.id;
-                      const isSpouse = rel.relationship_type === 'spouse';
+                    {(() => {
+                      const personRels = (relationships || []).filter(rel => rel.person1_id === person.id || rel.person2_id === person.id);
+                      const hasParentRel = personRels.some(rel => rel.relationship_type === 'parent' && rel.person1_id === person.id);
+                      const hasChildRel = personRels.some(rel => rel.relationship_type === 'parent' && rel.person2_id === person.id);
+                      const hasSpouseRel = personRels.some(rel => rel.relationship_type === 'spouse');
                       
-                      let badgeColor = '#666';
-                      let badgeText = '';
+                      const badges = [];
+                      let badgeIndex = 0;
                       
-                      if (isParent) {
-                        badgeColor = '#4caf50';
-                        badgeText = 'P';
-                      } else if (isChild) {
-                        badgeColor = '#2196f3';
-                        badgeText = 'H';
-                      } else if (isSpouse) {
-                        badgeColor = '#e91e63';
-                        badgeText = 'C';
-                      }
-                      
-                      if (badgeText) {
-                        return (
-                          <g key={idx}>
+                      if (hasParentRel) {
+                        badges.push(
+                          <g key="parent">
                             <circle 
-                              cx={x + (idx * 20) - 10} 
+                              cx={x + (badgeIndex * 20) - 10} 
                               cy={y - 50} 
                               r="10" 
-                              fill={badgeColor} 
+                              fill="#4caf50" 
                               stroke="white" 
                               strokeWidth="2"
                             />
                             <text 
-                              x={x + (idx * 20) - 10} 
+                              x={x + (badgeIndex * 20) - 10} 
                               y={y - 45} 
                               textAnchor="middle" 
                               fontSize="10" 
                               fontWeight="bold" 
                               fill="white"
                             >
-                              {badgeText}
+                              P
                             </text>
                           </g>
                         );
+                        badgeIndex++;
                       }
-                      return null;
-                    })}
+                      
+                      if (hasChildRel) {
+                        badges.push(
+                          <g key="child">
+                            <circle 
+                              cx={x + (badgeIndex * 20) - 10} 
+                              cy={y - 50} 
+                              r="10" 
+                              fill="#2196f3" 
+                              stroke="white" 
+                              strokeWidth="2"
+                            />
+                            <text 
+                              x={x + (badgeIndex * 20) - 10} 
+                              y={y - 45} 
+                              textAnchor="middle" 
+                              fontSize="10" 
+                              fontWeight="bold" 
+                              fill="white"
+                            >
+                              H
+                            </text>
+                          </g>
+                        );
+                        badgeIndex++;
+                      }
+                      
+                      if (hasSpouseRel) {
+                        badges.push(
+                          <g key="spouse">
+                            <circle 
+                              cx={x + (badgeIndex * 20) - 10} 
+                              cy={y - 50} 
+                              r="10" 
+                              fill="#e91e63" 
+                              stroke="white" 
+                              strokeWidth="2"
+                            />
+                            <text 
+                              x={x + (badgeIndex * 20) - 10} 
+                              y={y - 45} 
+                              textAnchor="middle" 
+                              fontSize="10" 
+                              fontWeight="bold" 
+                              fill="white"
+                            >
+                              C
+                            </text>
+                          </g>
+                        );
+                        badgeIndex++;
+                      }
+                      
+                      return badges;
+                    })()}
                   </g>
                 </g>
               );
