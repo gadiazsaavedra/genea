@@ -279,7 +279,8 @@ exports.updatePerson = async (req, res) => {
       deathPlace,
       gender,
       biography,
-      photoUrl
+      photoUrl,
+      is_founder
     } = req.body;
     
     const userId = req.user.uid;
@@ -313,21 +314,28 @@ exports.updatePerson = async (req, res) => {
     }
     
     // Actualizar la persona
+    const updateData = {
+      first_name: firstName,
+      last_name: lastName,
+      maiden_name: maidenName,
+      birth_date: birthDate,
+      death_date: deathDate,
+      birth_place: birthPlace,
+      death_place: deathPlace,
+      gender,
+      biography,
+      photo_url: photoUrl,
+      updated_at: new Date().toISOString()
+    };
+    
+    // Solo actualizar is_founder si se proporciona
+    if (is_founder !== undefined) {
+      updateData.is_founder = is_founder;
+    }
+    
     const { data: updatedPerson, error: updateError } = await supabaseClient
       .from('people')
-      .update({
-        first_name: firstName,
-        last_name: lastName,
-        maiden_name: maidenName,
-        birth_date: birthDate,
-        death_date: deathDate,
-        birth_place: birthPlace,
-        death_place: deathPlace,
-        gender,
-        biography,
-        photo_url: photoUrl,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', personId)
       .select()
       .single();
