@@ -55,7 +55,7 @@ const Events = () => {
       if (response.ok) {
         const result = await response.json();
         
-        // Crear notificación
+        // Crear notificación familiar
         try {
           await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
             method: 'POST',
@@ -66,8 +66,9 @@ const Events = () => {
             body: JSON.stringify({
               type: 'event_created',
               title: '🎉 Nuevo evento familiar',
-              message: `Se creó el evento "${newEvent.title}"`,
-              link: `/events`
+              message: `Se creó un nuevo evento familiar`,
+              link: `/events`,
+              personName: newEvent.title
             })
           });
         } catch (notifError) {
@@ -131,7 +132,7 @@ const Events = () => {
       if (response.ok) {
         fetchEvents();
         
-        // Crear notificación
+        // Crear notificación familiar
         try {
           await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
             method: 'POST',
@@ -142,8 +143,9 @@ const Events = () => {
             body: JSON.stringify({
               type: 'photo_uploaded',
               title: '📸 Nuevas fotos subidas',
-              message: `Se subieron ${files.length} foto(s) al evento`,
-              link: `/events`
+              message: `Se subieron fotos a un evento`,
+              link: `/events`,
+              personName: files.length.toString()
             })
           });
         } catch (notifError) {

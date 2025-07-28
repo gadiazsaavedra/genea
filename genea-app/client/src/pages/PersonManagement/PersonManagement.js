@@ -196,8 +196,30 @@ const PersonManagement = () => {
         
         if (error) throw error;
         
+        const deletedPerson = persons.find(p => p.id === personId);
         setPersons(persons.filter(p => p.id !== personId));
         setFilteredPersons(filteredPersons.filter(p => p.id !== personId));
+        
+        // Crear notificación familiar de eliminación
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`
+            },
+            body: JSON.stringify({
+              type: 'person_deleted',
+              title: '🗑️ Persona eliminada',
+              message: `Se eliminó una persona del árbol familiar`,
+              link: `/persons`,
+              personName: deletedPerson ? (deletedPerson.full_name || deletedPerson.first_name) : 'persona'
+            })
+          });
+        } catch (notifError) {
+          console.log('Error creating notification:', notifError);
+        }
       } catch (error) {
         console.error('Error al eliminar persona:', error);
         alert('Error al eliminar persona');
@@ -276,7 +298,7 @@ const PersonManagement = () => {
         setPersons(updatedPersons);
         setFilteredPersons(updatedPersons);
         
-        // Crear notificación
+        // Crear notificación familiar
         try {
           const { data: { session } } = await supabase.auth.getSession();
           await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
@@ -288,8 +310,9 @@ const PersonManagement = () => {
             body: JSON.stringify({
               type: 'person_updated',
               title: '✏️ Persona actualizada',
-              message: `Se actualizó la información de ${result.data.first_name}`,
-              link: `/persons/${result.data.id}`
+              message: `Se actualizó información de una persona`,
+              link: `/persons/${result.data.id}`,
+              personName: result.data.first_name
             })
           });
         } catch (notifError) {
@@ -341,7 +364,7 @@ const PersonManagement = () => {
         setPersons([...persons, result.data]);
         setFilteredPersons([...filteredPersons, result.data]);
         
-        // Crear notificación
+        // Crear notificación familiar
         try {
           const { data: { session } } = await supabase.auth.getSession();
           await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
@@ -353,8 +376,9 @@ const PersonManagement = () => {
             body: JSON.stringify({
               type: 'person_added',
               title: '👤 Nueva persona agregada',
-              message: `Se agregó a ${result.data.first_name} al árbol familiar`,
-              link: `/persons`
+              message: `Se agregó una nueva persona al árbol familiar`,
+              link: `/persons`,
+              personName: result.data.first_name
             })
           });
         } catch (notifError) {

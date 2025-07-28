@@ -58,29 +58,45 @@ router.put('/:id/read', async (req, res) => {
   }
 });
 
-// Crear notificación desde frontend
+// Crear notificación familiar desde frontend
 router.post('/', async (req, res) => {
   try {
-    const { type, title, message, link } = req.body;
+    const { type, title, message, link, personName } = req.body;
     const userId = req.user.uid;
+    const { notifyFamilyMembers, getUserName } = require('../utils/familyNotifications');
     
-    const { data, error } = await supabaseClient
-      .from('notifications')
-      .insert([{
-        user_id: userId,
-        type,
-        title,
-        message,
-        link
-      }])
-      .select()
-      .single();
+    // Obtener nombre del usuario que hace la acción
+    const userName = await getUserName(userId);
     
-    if (error) throw error;
+    // Crear mensaje personalizado con el nombre del usuario
+    let familyMessage = message;
+    if (personName) {
+      switch(type) {
+        case 'person_added':
+          familyMessage = `${userName} agregó a ${personName} al árbol familiar`;
+          break;
+        case 'person_updated':
+          familyMessage = `${userName} actualizó la información de ${personName}`;
+          break;
+        case 'person_deleted':
+          familyMessage = `${userName} eliminó a ${personName} del árbol familiar`;
+          break;
+        case 'event_created':
+          familyMessage = `${userName} creó el evento "${personName}"`;
+          break;
+        case 'photo_uploaded':
+          familyMessage = `${userName} subió ${personName} foto(s) a un evento`;
+          break;
+      }
+    }
+    
+    // Notificar a todos los miembros de la familia (familia por defecto)
+    const familyId = '638a55dc-0a73-417c-9c80-556ac0028325';
+    await notifyFamilyMembers(familyId, userId, type, title, familyMessage, link);
     
     res.json({
       success: true,
-      data
+      message: 'Notificaciones enviadas a la familia'
     });
   } catch (error) {
     res.status(500).json({
