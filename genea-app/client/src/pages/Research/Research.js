@@ -25,6 +25,12 @@ const Research = () => {
       if (response.ok) {
         const result = await response.json();
         setResults(Array.isArray(result.data) ? result.data : []);
+        
+        if (result.data.length === 0) {
+          alert('No se encontraron resultados para tu búsqueda');
+        }
+      } else {
+        alert('Error en la búsqueda');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -64,9 +70,19 @@ const Research = () => {
       </form>
 
       <div>
-        <h2>📋 Resultados de Investigación</h2>
+        <h2>📋 Resultados de Investigación ({results.length})</h2>
         {!Array.isArray(results) || results.length === 0 ? (
-          <p>No hay resultados. Realiza una búsqueda para encontrar información genealógica.</p>
+          <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+            <p style={{ fontSize: '18px', color: '#666' }}>No hay resultados.</p>
+            <p style={{ color: '#888' }}>Busca nombres, lugares o fechas para encontrar información en tu árbol familiar.</p>
+            <div style={{ marginTop: '20px', fontSize: '14px', color: '#999' }}>
+              <strong>Ejemplos de búsqueda:</strong><br/>
+              • "María" - Buscar por nombre<br/>
+              • "Buenos Aires" - Buscar por lugar<br/>
+              • "1950" - Buscar por año<br/>
+              • "Reunión" - Buscar eventos
+            </div>
+          </div>
         ) : (
           <div>
             {results.map((result, index) => (
@@ -77,12 +93,18 @@ const Research = () => {
                 marginBottom: '15px',
                 backgroundColor: '#f9f9f9'
               }}>
-                <h3 style={{ color: '#007bff', marginBottom: '10px' }}>{result.title}</h3>
+                <h3 style={{ 
+                  color: result.type === 'person' ? '#28a745' : '#007bff', 
+                  marginBottom: '10px' 
+                }}>
+                  {result.title}
+                </h3>
                 <p style={{ marginBottom: '10px' }}>{result.description}</p>
                 <div style={{ fontSize: '14px', color: '#666' }}>
-                  <span>📅 {result.date}</span>
-                  {result.source && <span style={{ marginLeft: '15px' }}>📚 Fuente: {result.source}</span>}
-                  {result.location && <span style={{ marginLeft: '15px' }}>📍 {result.location}</span>}
+                  <span>📅 {result.date !== 'Fecha desconocida' ? new Date(result.date).toLocaleDateString() : result.date}</span>
+                  {result.source && <span style={{ marginLeft: '15px' }}>📚 {result.source}</span>}
+                  {result.location && result.location !== 'Lugar desconocido' && <span style={{ marginLeft: '15px' }}>📍 {result.location}</span>}
+                  <span style={{ marginLeft: '15px' }}>🎯 Tipo: {result.type === 'person' ? 'Persona' : 'Evento'}</span>
                 </div>
                 {result.confidence && (
                   <div style={{ marginTop: '10px' }}>
