@@ -179,7 +179,6 @@ const Comments = () => {
         ) : (
           <div>
             {comments.map(comment => {
-              // Buscar la foto asociada al comentario
               const photo = events.flatMap(event => event.media || []).find(p => p.id === comment.media_id);
               const event = events.find(e => e.media && e.media.some(p => p.id === comment.media_id));
               
@@ -217,7 +216,7 @@ const Comments = () => {
                   </div>
                 </div>
               );
-            })
+            })}
           </div>
         )}
       </div>
