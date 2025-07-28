@@ -20,7 +20,26 @@ const DragDropTreeBuilder = ({ familyId }) => {
       });
       if (response.ok) {
         const result = await response.json();
+        console.log('Loaded people for drag drop:', result.data);
         setPeople(result.data || []);
+        
+        // Establecer posiciones iniciales si no existen
+        if (result.data && result.data.length > 0) {
+          const initialPositions = {};
+          result.data.forEach((person, index) => {
+            if (!positions[person.id]) {
+              initialPositions[person.id] = {
+                x: 50 + (index % 4) * 200,
+                y: 100 + Math.floor(index / 4) * 150
+              };
+            }
+          });
+          if (Object.keys(initialPositions).length > 0) {
+            setPositions(prev => ({ ...prev, ...initialPositions }));
+          }
+        }
+      } else {
+        console.error('Error response:', response.status);
       }
     } catch (error) {
       console.error('Error loading people:', error);
@@ -244,12 +263,27 @@ const DragDropTreeBuilder = ({ familyId }) => {
           </button>
         </div>
 
+        {/* Debug info */}
+        {people.length === 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            textAlign: 'center',
+            color: '#666'
+          }}>
+            <h3>🔄 Cargando personas...</h3>
+            <p>Si no aparecen tarjetas, verifica que hay personas en la familia.</p>
+          </div>
+        )}
+
         {/* Renderizar personas */}
         {people.map(person => (
           <PersonCard key={person.id} person={person} />
         ))}
 
-        {/* Estadísticas */}
+        {/* Estadísticas y debug */}
         <div style={{
           position: 'absolute',
           bottom: '20px',
@@ -261,6 +295,9 @@ const DragDropTreeBuilder = ({ familyId }) => {
         }}>
           <div style={{ fontSize: '12px', color: '#666' }}>
             👥 {people.length} personas | 📍 {Object.keys(positions).length} posicionadas
+          </div>
+          <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
+            Family ID: {familyId}
           </div>
         </div>
       </div>
