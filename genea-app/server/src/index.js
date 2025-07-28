@@ -27,6 +27,7 @@ const mediaRoutes = require('./routes/media.routes');
 const authRoutes = require('./routes/auth.routes');
 // const treeRoutes = require('./routes/tree.routes'); // Comentado temporalmente
 const invitationRoutes = require('./routes/invitation.routes');
+const invitationsRoutes = require('./routes/invitations.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const commentRoutes = require('./routes/comment.routes');
 const gedcomRoutes = require('./routes/gedcom.routes');
@@ -95,6 +96,7 @@ initializeSupabase()
     app.use('/api/social', socialRoutes);
     app.use('/api/ai', aiRoutes);
     app.use('/api/events', eventsRoutes);
+    app.use('/api/invitations', invitationsRoutes);
 
     // Ruta de prueba
     app.get('/', (req, res) => {

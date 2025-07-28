@@ -30,6 +30,17 @@ const Invitations = () => {
 
   const sendInvitation = async (e) => {
     e.preventDefault();
+    
+    if (!email.trim()) {
+      alert('Por favor ingresa un email válido');
+      return;
+    }
+    
+    if (!email.includes('@')) {
+      alert('Por favor ingresa un email válido');
+      return;
+    }
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch(`${process.env.REACT_APP_API_URL}/invitations`, {
@@ -38,16 +49,21 @@ const Invitations = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`
         },
-        body: JSON.stringify({ email, role })
+        body: JSON.stringify({ email: email.trim(), role })
       });
+      
+      const result = await response.json();
       
       if (response.ok) {
         setEmail('');
         fetchInvitations();
-        alert('Invitación enviada');
+        alert('✅ Invitación enviada correctamente');
+      } else {
+        alert(`❌ Error: ${result.message}`);
       }
     } catch (error) {
       console.error('Error:', error);
+      alert('❌ Error al enviar invitación');
     }
   };
 
@@ -87,10 +103,19 @@ const Invitations = () => {
           <div>
             {invitations.map(inv => (
               <div key={inv.id} style={{ padding: '15px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '10px' }}>
-                <div><strong>Email:</strong> {inv.email}</div>
+                <div><strong>Email:</strong> {inv.invited_email}</div>
                 <div><strong>Rol:</strong> {inv.role}</div>
-                <div><strong>Estado:</strong> {inv.status}</div>
+                <div><strong>Estado:</strong> 
+                  <span style={{
+                    color: inv.status === 'accepted' ? '#4caf50' : inv.status === 'pending' ? '#ff9800' : '#f44336',
+                    fontWeight: 'bold'
+                  }}>
+                    {inv.status === 'accepted' ? '✅ Aceptada' : 
+                     inv.status === 'pending' ? '⏳ Pendiente' : '❌ Rechazada'}
+                  </span>
+                </div>
                 <div><strong>Enviado:</strong> {new Date(inv.created_at).toLocaleDateString()}</div>
+                <div><strong>Expira:</strong> {new Date(inv.expires_at).toLocaleDateString()}</div>
               </div>
             ))}
           </div>

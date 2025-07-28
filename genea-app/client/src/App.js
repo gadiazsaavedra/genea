@@ -36,6 +36,7 @@ const Timeline = lazy(() => import('./pages/Timeline/Timeline'));
 const Research = lazy(() => import('./pages/Research/Research'));
 const AI = lazy(() => import('./pages/AI/AI'));
 const Events = lazy(() => import('./pages/Events/Events'));
+const InvitationAccept = lazy(() => import('./pages/InvitationAccept'));
 
 // Componente para mostrar durante la carga
 const LoadingFallback = () => (
@@ -208,6 +209,10 @@ function App() {
                         <Events />
                       </PrivateRoute>
                     } 
+                  />
+                  <Route 
+                    path="/invitation/accept/:token" 
+                    element={<InvitationAccept />}
                   />
                   
                   {/* Ruta para manejar páginas no encontradas */}
