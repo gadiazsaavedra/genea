@@ -7,6 +7,9 @@ import PrivateRoute from './components/PrivateRoute';
 import authService from './services/authService';
 import DeveloperInfo from './components/DeveloperInfo';
 import MobileNavigation from './components/Mobile/MobileNavigation';
+import PWAInstall from './components/PWAInstall';
+import OfflineIndicator from './components/OfflineIndicator';
+import { registerServiceWorker } from './utils/pwa';
 import './i18n';
 import './App.css';
 import './styles/mobile-optimizations.css';
@@ -42,12 +45,13 @@ const LoadingFallback = () => (
 );
 
 function App() {
-  // Inicializar Firebase al cargar la aplicación
+  // Inicializar Firebase y PWA al cargar la aplicación
   useEffect(() => {
     try {
       authService.initFirebase();
+      registerServiceWorker();
     } catch (error) {
-      console.error('Error initializing Firebase:', error);
+      console.error('Error initializing app:', error);
     }
   }, []);
 
@@ -56,6 +60,7 @@ function App() {
       <ConnectionProvider>
         <Router>
           <div className="app">
+            <OfflineIndicator />
             <Navbar />
             <main className="main-content">
               <Suspense fallback={<LoadingFallback />}>
@@ -202,6 +207,7 @@ function App() {
               </Suspense>
             </main>
             <MobileNavigation />
+            <PWAInstall />
             <DeveloperInfo variant="footer" />
           </div>
         </Router>

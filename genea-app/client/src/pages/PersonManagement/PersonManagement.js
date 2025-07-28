@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase.config';
 import PersonForm from '../../components/PersonForm/PersonForm';
 import BulkDeleteModal from '../../components/BulkDeleteModal';
+import { saveOfflineData, getOfflineData } from '../../utils/pwa';
 import './PersonManagement.css';
 
 const PersonManagement = () => {
   const [persons, setPersons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showForm, setShowForm] = useState(false);
   const [editingPerson, setEditingPerson] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,7 +21,24 @@ const PersonManagement = () => {
   });
 
   useEffect(() => {
+    // Listener para cambios de conexión
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
     const fetchPersons = async () => {
+      // Si está offline, cargar datos guardados
+      if (!navigator.onLine) {
+        const offlineData = getOfflineData('persons');
+        if (offlineData) {
+          setPersons(offlineData);
+          setFilteredPersons(offlineData);
+          setLoading(false);
+          return;
+        }
+      }
       try {
         const loadPersonsFromAPI = async () => {
           try {
@@ -44,6 +63,8 @@ const PersonManagement = () => {
               const persons = result.data || [];
               setPersons(persons);
               setFilteredPersons(persons);
+              // Guardar datos para uso offline
+              saveOfflineData('persons', persons);
             } else {
               console.error('Error loading persons:', response.status);
               setPersons([]);
@@ -66,6 +87,11 @@ const PersonManagement = () => {
     };
 
     fetchPersons();
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   useEffect(() => {
@@ -298,7 +324,7 @@ const PersonManagement = () => {
   return (
     <div className="person-management-container">
       <div className="person-management-header">
-        <h1>Gestión de Personas</h1>
+        <h1>Gestión de Personas {!isOnline && <span style={{color: '#f44336', fontSize: '14px'}}>(📵 Offline)</span>}</h1>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="btn btn-primary" onClick={handleAddPerson}>
             Añadir Persona
