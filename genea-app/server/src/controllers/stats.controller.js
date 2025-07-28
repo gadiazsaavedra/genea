@@ -4,35 +4,43 @@ const statsController = {
   // Obtener estadísticas generales del usuario
   getGeneralStats: async (req, res) => {
     try {
-      const userId = req.user.uid;
+      console.log('Getting general stats for user:', req.user.uid);
       
-      // Obtener todas las personas del usuario
+      // Obtener todas las personas
       const { data: persons, error: personsError } = await supabaseClient
         .from('people')
-        .select('*')
-        .eq('created_by', userId);
+        .select('*');
       
-      if (personsError) throw new Error(personsError.message);
+      console.log('Query result:', { persons: persons?.length, error: personsError });
+      
+      if (personsError) {
+        console.error('Supabase error:', personsError);
+        throw new Error(personsError.message);
+      }
       
       // Estadísticas básicas
-      const totalPersons = persons.length;
-      const maleCount = persons.filter(p => p.gender === 'male').length;
-      const femaleCount = persons.filter(p => p.gender === 'female').length;
-      const aliveCount = persons.filter(p => p.is_alive !== false).length;
-      const foundersCount = persons.filter(p => p.is_founder === true).length;
+      const totalPersons = persons ? persons.length : 0;
+      const maleCount = persons ? persons.filter(p => p.gender === 'male').length : 0;
+      const femaleCount = persons ? persons.filter(p => p.gender === 'female').length : 0;
+      const aliveCount = persons ? persons.filter(p => p.is_alive !== false).length : 0;
+      const foundersCount = persons ? persons.filter(p => p.is_founder === true).length : 0;
+      
+      const result = {
+        totalPersons,
+        maleCount,
+        femaleCount,
+        aliveCount,
+        foundersCount
+      };
+      
+      console.log('Sending stats:', result);
       
       res.json({
         success: true,
-        data: {
-          totalPersons,
-          maleCount,
-          femaleCount,
-          aliveCount,
-          foundersCount
-        }
+        data: result
       });
     } catch (error) {
-      console.error('Error al obtener estadísticas:', error);
+      console.error('Stats error:', error);
       res.status(500).json({ 
         success: false,
         message: 'Error al obtener estadísticas', 
