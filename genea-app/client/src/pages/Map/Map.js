@@ -85,6 +85,7 @@ const Map = () => {
       'La Plata': { lat: -34.9215, lng: -57.9545 },
       'Chaco': { lat: -27.4511, lng: -58.9867 },
       'Corrientes': { lat: -27.4692, lng: -58.8306 },
+      'Brasil': { lat: -14.2350, lng: -51.9253 },
       'Madrid': { lat: 40.4168, lng: -3.7038 },
       'Barcelona': { lat: 41.3851, lng: 2.1734 },
       'Valencia': { lat: 39.4699, lng: -0.3763 },
