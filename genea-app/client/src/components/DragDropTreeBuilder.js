@@ -15,7 +15,7 @@ const DragDropTreeBuilder = ({ familyId }) => {
   const loadPeople = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/people?familyId=${familyId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/persons?familyId=${familyId}`, {
         headers: { 'Authorization': `Bearer ${session?.access_token}` }
       });
       if (response.ok) {
