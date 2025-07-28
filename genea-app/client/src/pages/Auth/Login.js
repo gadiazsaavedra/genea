@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import GoogleLoginButton from '../../components/Auth/GoogleLoginButton';
+
 import './Auth.css';
 
 const Login = () => {
@@ -12,7 +12,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,23 +22,7 @@ const Login = () => {
     });
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      const { error: googleError } = await signInWithGoogle();
-      
-      if (googleError) {
-        setError(googleError.message);
-        setLoading(false);
-      }
-      // Si no hay error, Supabase redirigirá automáticamente
-    } catch (err) {
-      setError('Error al iniciar sesión con Google. Por favor, inténtalo de nuevo.');
-      setLoading(false);
-    }
-  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -110,14 +94,7 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="auth-separator">
-          <span>O</span>
-        </div>
 
-        <GoogleLoginButton 
-          onSuccess={() => navigate('/dashboard')}
-          onError={(error) => setError(error.message)}
-        />
 
         <div className="auth-footer">
           ¿No tienes una cuenta? <Link to="/auth/register">Regístrate</Link>
