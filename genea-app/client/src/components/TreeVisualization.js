@@ -1016,61 +1016,103 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
             <text x={centerX} y={centerY + 6} textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">🏠</text>
             
             {/* Líneas de matrimonio */}
-            {(relationships || []).filter(rel => rel.relationship_type === 'spouse').map((rel, index) => {
-              const person1 = people.find(p => p.id === rel.person1_id);
-              const person2 = people.find(p => p.id === rel.person2_id);
+            {(() => {
+              const generations = {};
+              const safeRelationships = relationships || [];
               
-              if (person1 && person2) {
-                // Encontrar posiciones reales de ambas personas en el abanico
-                let person1Pos = null, person2Pos = null;
+              // Encontrar fundadores (primera generación)
+              const founders = people.filter(person => {
+                const hasParents = safeRelationships.some(rel => 
+                  rel.relationship_type === 'parent' && rel.person2_id === person.id
+                );
+                return !hasParents;
+              });
+              
+              if (founders.length === 0) {
+                generations[0] = people;
+              } else {
+                generations[0] = founders;
                 
-                Object.keys(generations).forEach(genKey => {
-                  const generation = generations[genKey];
-                  const genLevel = parseInt(genKey);
-                  const radius = baseRadius + (genLevel * 80);
+                // Agregar hijos en generaciones siguientes
+                let currentGen = 0;
+                const visited = new Set();
+                while (generations[currentGen] && generations[currentGen].length > 0) {
+                  const children = [];
+                  generations[currentGen].forEach(parent => {
+                    const parentChildren = safeRelationships
+                      .filter(rel => rel.relationship_type === 'parent' && rel.person1_id === parent.id)
+                      .map(rel => people.find(p => p.id === rel.person2_id))
+                      .filter(child => child && !visited.has(child.id));
+                    
+                    parentChildren.forEach(child => {
+                      visited.add(child.id);
+                      children.push(child);
+                    });
+                  });
                   
-                  const p1Index = generation.findIndex(p => p.id === person1.id);
-                  const p2Index = generation.findIndex(p => p.id === person2.id);
-                  
-                  if (p1Index !== -1) {
-                    const totalAngle = Math.PI;
-                    const startAngle = -Math.PI / 2 - totalAngle / 2;
-                    const angle = startAngle + (p1Index / Math.max(generation.length - 1, 1)) * totalAngle;
-                    person1Pos = {
-                      x: centerX + radius * Math.cos(angle),
-                      y: centerY + radius * Math.sin(angle)
-                    };
+                  if (children.length > 0) {
+                    generations[currentGen + 1] = children;
                   }
-                  
-                  if (p2Index !== -1) {
-                    const totalAngle = Math.PI;
-                    const startAngle = -Math.PI / 2 - totalAngle / 2;
-                    const angle = startAngle + (p2Index / Math.max(generation.length - 1, 1)) * totalAngle;
-                    person2Pos = {
-                      x: centerX + radius * Math.cos(angle),
-                      y: centerY + radius * Math.sin(angle)
-                    };
-                  }
-                });
-                
-                if (person1Pos && person2Pos) {
-                  return (
-                    <line 
-                      key={index}
-                      x1={person1Pos.x}
-                      y1={person1Pos.y}
-                      x2={person2Pos.x}
-                      y2={person2Pos.y}
-                      stroke="#e91e63" 
-                      strokeWidth="4" 
-                      strokeDasharray="10,5" 
-                      opacity="0.8"
-                    />
-                  );
+                  currentGen++;
                 }
               }
-              return null;
-            })}
+              
+              return (relationships || []).filter(rel => rel.relationship_type === 'spouse').map((rel, index) => {
+                const person1 = people.find(p => p.id === rel.person1_id);
+                const person2 = people.find(p => p.id === rel.person2_id);
+                
+                if (person1 && person2) {
+                  // Encontrar posiciones reales de ambas personas en el abanico
+                  let person1Pos = null, person2Pos = null;
+                  
+                  Object.keys(generations).forEach(genKey => {
+                    const generation = generations[genKey];
+                    const genLevel = parseInt(genKey);
+                    const radius = baseRadius + (genLevel * 80);
+                    
+                    const p1Index = generation.findIndex(p => p.id === person1.id);
+                    const p2Index = generation.findIndex(p => p.id === person2.id);
+                    
+                    if (p1Index !== -1) {
+                      const totalAngle = Math.PI;
+                      const startAngle = -Math.PI / 2 - totalAngle / 2;
+                      const angle = startAngle + (p1Index / Math.max(generation.length - 1, 1)) * totalAngle;
+                      person1Pos = {
+                        x: centerX + radius * Math.cos(angle),
+                        y: centerY + radius * Math.sin(angle)
+                      };
+                    }
+                    
+                    if (p2Index !== -1) {
+                      const totalAngle = Math.PI;
+                      const startAngle = -Math.PI / 2 - totalAngle / 2;
+                      const angle = startAngle + (p2Index / Math.max(generation.length - 1, 1)) * totalAngle;
+                      person2Pos = {
+                        x: centerX + radius * Math.cos(angle),
+                        y: centerY + radius * Math.sin(angle)
+                      };
+                    }
+                  });
+                  
+                  if (person1Pos && person2Pos) {
+                    return (
+                      <line 
+                        key={index}
+                        x1={person1Pos.x}
+                        y1={person1Pos.y}
+                        x2={person2Pos.x}
+                        y2={person2Pos.y}
+                        stroke="#e91e63" 
+                        strokeWidth="4" 
+                        strokeDasharray="10,5" 
+                        opacity="0.8"
+                      />
+                    );
+                  }
+                }
+                return null;
+              });
+            })()}
           </svg>
         </div>
         
