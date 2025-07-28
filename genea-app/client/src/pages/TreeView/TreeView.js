@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import PersonModal from '../../components/PersonModal';
 import TreeVisualization from '../../components/TreeVisualization';
 import TraditionalFamilyTree from '../../components/TraditionalFamilyTree';
+import DragDropTreeBuilder from '../../components/DragDropTreeBuilder';
 import { supabase } from '../../config/supabase.config';
 
 const TreeView = () => {
@@ -449,6 +450,20 @@ const TreeView = () => {
             >
               🌟 Abanico
             </button>
+            <button 
+              onClick={() => setViewType('builder')}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: viewType === 'builder' ? '#4caf50' : 'white',
+                color: viewType === 'builder' ? 'white' : '#4caf50',
+                border: '1px solid #4caf50',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              🎨 Constructor
+            </button>
 
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -497,7 +512,9 @@ const TreeView = () => {
           </div>
         </div>
         
-        {viewType === 'traditional' && people.length === 0 ? (
+        {viewType === 'builder' ? (
+          <DragDropTreeBuilder familyId={familyId} />
+        ) : viewType === 'traditional' && people.length === 0 ? (
           <TraditionalFamilyTree />
         ) : (
           <TreeVisualization people={people} relationships={relationships} viewType={viewType} />

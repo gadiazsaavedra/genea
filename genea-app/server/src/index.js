@@ -109,6 +109,7 @@ initializeSupabase()
     app.use('/api/ai', aiRoutesNew);
     app.use('/api/relationships', require('./routes/relationships.routes'));
     app.use('/api/relationships', require('./routes/relationships-family.routes'));
+    app.use('/api/tree-layouts', require('./routes/tree-layouts.routes'));
 
     // Ruta de prueba
     app.get('/', (req, res) => {
