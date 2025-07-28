@@ -12,23 +12,35 @@ const Statistics = () => {
 
   const fetchStatistics = async () => {
     try {
+      console.log('Fetching statistics...');
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
+      console.log('Session:', !!session, 'Token:', !!token);
+      
       if (!token) {
+        console.log('No token available');
         setLoading(false);
         return;
       }
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/stats`, {
+      const url = `${process.env.REACT_APP_API_URL}/stats`;
+      console.log('Fetching from:', url);
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
+      console.log('Response status:', response.status);
+      const result = await response.json();
+      console.log('Response data:', result);
+      
       if (response.ok) {
-        const result = await response.json();
         setStats(result.data);
+      } else {
+        console.error('API Error:', result);
       }
     } catch (error) {
       console.error('Error loading statistics:', error);
