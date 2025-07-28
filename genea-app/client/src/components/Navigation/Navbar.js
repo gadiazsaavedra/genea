@@ -129,6 +129,10 @@ const Navbar = () => {
                   <Link to="/ai" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
                     🤖 Asistente IA
                   </Link>
+                  <div className="dropdown-divider"></div>
+                  <Link to="/events" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    🎉 Eventos Familiares
+                  </Link>
                   <Link to="/settings" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
                     Configuración
                   </Link>

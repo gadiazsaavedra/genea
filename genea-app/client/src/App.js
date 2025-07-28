@@ -35,6 +35,7 @@ const Comments = lazy(() => import('./pages/Comments/Comments'));
 const Timeline = lazy(() => import('./pages/Timeline/Timeline'));
 const Research = lazy(() => import('./pages/Research/Research'));
 const AI = lazy(() => import('./pages/AI/AI'));
+const Events = lazy(() => import('./pages/Events/Events'));
 
 // Componente para mostrar durante la carga
 const LoadingFallback = () => (
@@ -197,6 +198,14 @@ function App() {
                     element={
                       <PrivateRoute>
                         <AI />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/events" 
+                    element={
+                      <PrivateRoute>
+                        <Events />
                       </PrivateRoute>
                     } 
                   />

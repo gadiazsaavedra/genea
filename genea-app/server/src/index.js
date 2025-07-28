@@ -38,6 +38,7 @@ const paymentRoutes = require('./routes/payment.routes');
 const researchRoutes = require('./routes/research.routes');
 const socialRoutes = require('./routes/social.routes');
 const aiRoutes = require('./routes/ai.routes');
+const eventsRoutes = require('./routes/events.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -93,6 +94,7 @@ initializeSupabase()
     app.use('/api/research', researchRoutes);
     app.use('/api/social', socialRoutes);
     app.use('/api/ai', aiRoutes);
+    app.use('/api/events', eventsRoutes);
 
     // Ruta de prueba
     app.get('/', (req, res) => {
