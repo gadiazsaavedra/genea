@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase.config';
+import EventGallery from './EventGallery';
 import './Events.css';
 
 const Events = () => {
@@ -7,6 +8,7 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showGallery, setShowGallery] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -186,11 +188,43 @@ const Events = () => {
             </div>
             
             <div style={{ marginBottom: '15px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>
-                📸 Fotos ({event.media ? event.media.length : 0})
+              <div style={{ 
+                fontSize: '14px', 
+                fontWeight: 'bold', 
+                marginBottom: '10px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>📸 Fotos ({event.media ? event.media.length : 0})</span>
+                {event.media && event.media.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setShowGallery(true);
+                    }}
+                    style={{
+                      fontSize: '12px',
+                      padding: '4px 8px',
+                      backgroundColor: '#2196f3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Ver todas
+                  </button>
+                )}
               </div>
               {event.media && event.media.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '5px' }}>
+                <div 
+                  style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '5px', cursor: 'pointer' }}
+                  onClick={() => {
+                    setSelectedEvent(event);
+                    setShowGallery(true);
+                  }}
+                >
                   {event.media.slice(0, 6).map(photo => (
                     <img 
                       key={photo.id}
@@ -199,6 +233,21 @@ const Events = () => {
                       style={{ width: '100%', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
                     />
                   ))}
+                  {event.media.length > 6 && (
+                    <div style={{
+                      width: '100%',
+                      height: '60px',
+                      backgroundColor: 'rgba(0,0,0,0.7)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      +{event.media.length - 5} más
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div style={{ color: '#999', fontSize: '12px' }}>No hay fotos</div>
@@ -237,6 +286,16 @@ const Events = () => {
         <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
           No hay eventos familiares. ¡Crea el primero!
         </div>
+      )}
+      
+      {showGallery && selectedEvent && (
+        <EventGallery 
+          event={selectedEvent}
+          onClose={() => {
+            setShowGallery(false);
+            setSelectedEvent(null);
+          }}
+        />
       )}
     </div>
   );
