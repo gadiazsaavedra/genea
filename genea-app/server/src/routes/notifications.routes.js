@@ -87,6 +87,9 @@ router.post('/', async (req, res) => {
         case 'photo_uploaded':
           familyMessage = `${userName} subió ${personName} foto(s) a un evento`;
           break;
+        case 'comment_added':
+          familyMessage = `${userName} comentó en la foto "${personName}"`;
+          break;
       }
     }
     

@@ -4,10 +4,19 @@ const commentController = {
   // Crear un nuevo comentario
   createComment: async (req, res) => {
     try {
-      const { mediaId, text, mentions } = req.body;
+      const { content, media_id } = req.body;
       const userId = req.user.uid;
-      const userName = req.user.displayName || 'Usuario';
-      const userPhotoURL = req.user.photoURL || null;
+      
+      if (!content || !media_id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Contenido y foto son requeridos'
+        });
+      }
+      
+      // Obtener nombre del usuario
+      const { data: user, error: userError } = await supabaseClient.auth.admin.getUserById(userId);
+      const userName = user?.user?.user_metadata?.full_name || user?.user?.email || 'Usuario';
       
       // Verificar que el medio existe y el usuario tiene acceso
       const { data: media, error: mediaError } = await supabaseClient
