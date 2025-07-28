@@ -5,7 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ConnectionProvider } from './contexts/ConnectionContext';
 import PrivateRoute from './components/PrivateRoute';
 import authService from './services/authService';
-import DeveloperInfo from './components/DeveloperInfo';
+
 import MobileNavigation from './components/Mobile/MobileNavigation';
 import PWAInstall from './components/PWAInstall';
 import OfflineIndicator from './components/OfflineIndicator';
@@ -231,7 +231,6 @@ function App() {
             </main>
             <MobileNavigation />
             <PWAInstall />
-            <DeveloperInfo variant="footer" />
           </div>
         </Router>
       </ConnectionProvider>

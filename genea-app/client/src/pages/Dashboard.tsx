@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import DeveloperInfo from '../components/DeveloperInfo';
 
 // Interfaces
 interface Family {
@@ -436,6 +437,11 @@ const Dashboard: React.FC = () => {
             ))}
           </Grid>
         )}
+      </Box>
+      
+      {/* Información del desarrollador solo en Dashboard */}
+      <Box sx={{ mt: 6, mb: 4 }}>
+        <DeveloperInfo variant="footer" />
       </Box>
     </Container>
   );
