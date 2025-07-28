@@ -466,7 +466,7 @@ const PersonManagement = () => {
                       <button 
                         className="action-btn view-btn" 
                         title="Ver detalles"
-                        onClick={() => {/* Ver detalles */}}
+                        onClick={() => window.open(`/persons/${person.id}/media`, '_blank')}
                       >
                         👁️
                       </button>
