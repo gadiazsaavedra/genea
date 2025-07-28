@@ -44,6 +44,7 @@ const { router: notificationsRoutesNew } = require('./routes/notifications.route
 const commentsRoutesNew = require('./routes/comments.routes');
 const timelineRoutesNew = require('./routes/timeline.routes');
 const researchRoutesNew = require('./routes/research.routes');
+const aiRoutesNew = require('./routes/ai.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -105,6 +106,7 @@ initializeSupabase()
     app.use('/api/comments', commentsRoutesNew);
     app.use('/api/timeline', timelineRoutesNew);
     app.use('/api/research', researchRoutesNew);
+    app.use('/api/ai', aiRoutesNew);
 
     // Ruta de prueba
     app.get('/', (req, res) => {

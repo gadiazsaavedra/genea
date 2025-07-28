@@ -29,6 +29,9 @@ const AI = () => {
         setResponse(aiResponse);
         setHistory(prev => [...prev, { question, response: aiResponse, timestamp: new Date() }]);
         setQuestion('');
+      } else {
+        const errorResult = await response.json();
+        setResponse(`Error: ${errorResult.message || 'No se pudo procesar la consulta'}`);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -45,10 +48,12 @@ const AI = () => {
       <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#e3f2fd', borderRadius: '8px' }}>
         <h3>💡 Ejemplos de preguntas:</h3>
         <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
-          <li>¿Cuántos descendientes tiene Juan Barbara?</li>
-          <li>¿Cuál es el lugar de nacimiento más común en mi familia?</li>
-          <li>¿Quiénes son los fundadores de mi árbol genealógico?</li>
-          <li>¿Hay patrones en los nombres de mi familia?</li>
+          <li>¿Cuántas personas hay en mi familia?</li>
+          <li>¿Cuál es el apellido más común?</li>
+          <li>¿Quién es la persona más vieja?</li>
+          <li>¿Cuál es el lugar de nacimiento más común?</li>
+          <li>¿Cuántos eventos hay registrados?</li>
+          <li>Dame estadísticas de mi familia</li>
         </ul>
       </div>
 
@@ -93,7 +98,7 @@ const AI = () => {
           marginBottom: '30px'
         }}>
           <h3 style={{ color: '#6f42c1', marginBottom: '15px' }}>🤖 Respuesta de la IA:</h3>
-          <p style={{ lineHeight: '1.6', margin: 0 }}>{response}</p>
+          <div style={{ lineHeight: '1.6', margin: 0, whiteSpace: 'pre-line' }}>{response}</div>
         </div>
       )}
 
