@@ -143,9 +143,9 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               
               if (person1PosInGen0 === -1 || person2PosInGen0 === -1) return null;
               
-              // Coordenadas relativas en el viewBox (1200x800)
-              const x1 = person1PosInGen0 === 0 ? 300 : 900; // Izquierda o derecha
-              const x2 = person2PosInGen0 === 0 ? 300 : 900;
+              // Coordenadas dinámicas basadas en posición real
+              const x1 = 200 + (person1PosInGen0 * 400); // Espaciado dinámico
+              const x2 = 200 + (person2PosInGen0 * 400); // 400px entre cónyuges
               const y = 180;
               
               return (
@@ -276,7 +276,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
             <div key={genKey} style={{ 
               display: 'flex', 
               justifyContent: 'center', 
-              gap: genKey === '0' ? '200px' : '60px', // Mucha más separación para cónyuges
+              gap: genKey === '0' ? '120px' : '60px', // Separación reducida para cónyuges
               marginBottom: genKey === '0' ? '120px' : '80px', // Más espacio para líneas
               flexWrap: 'wrap',
               position: 'relative'
