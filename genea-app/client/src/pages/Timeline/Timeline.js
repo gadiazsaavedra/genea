@@ -54,9 +54,9 @@ const Timeline = () => {
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                backgroundColor: '#007bff',
+                backgroundColor: event.type === 'birth' ? '#28a745' : '#007bff',
                 border: '3px solid white',
-                boxShadow: '0 0 0 2px #007bff'
+                boxShadow: `0 0 0 2px ${event.type === 'birth' ? '#28a745' : '#007bff'}`
               }}></div>
               
               <div style={{ 
@@ -68,21 +68,38 @@ const Timeline = () => {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                   <div>
-                    <h3 style={{ margin: '0 0 10px 0', color: '#007bff' }}>{event.title}</h3>
+                    <h3 style={{ 
+                      margin: '0 0 10px 0', 
+                      color: event.type === 'birth' ? '#28a745' : '#007bff' 
+                    }}>
+                      {event.type === 'birth' ? '👶' : '🎉'} {event.title}
+                    </h3>
                     <p style={{ margin: '0 0 10px 0' }}>{event.description}</p>
                     <div style={{ fontSize: '14px', color: '#666' }}>
                       <span>👤 {event.person_name}</span>
                       {event.location && <span style={{ marginLeft: '15px' }}>📍 {event.location}</span>}
                     </div>
                   </div>
-                  <div style={{ 
-                    backgroundColor: '#007bff', 
-                    color: 'white', 
-                    padding: '5px 10px', 
-                    borderRadius: '15px', 
-                    fontSize: '12px' 
-                  }}>
-                    {event.date ? new Date(event.date).getFullYear() : 'Fecha desconocida'}
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ 
+                      backgroundColor: event.type === 'birth' ? '#28a745' : '#007bff', 
+                      color: 'white', 
+                      padding: '5px 10px', 
+                      borderRadius: '15px', 
+                      fontSize: '12px',
+                      marginBottom: '5px'
+                    }}>
+                      {event.date ? new Date(event.date).toLocaleDateString() : 'Fecha desconocida'}
+                    </div>
+                    <div style={{ 
+                      backgroundColor: event.type === 'birth' ? '#d4edda' : '#e3f2fd', 
+                      color: event.type === 'birth' ? '#155724' : '#1565c0',
+                      padding: '3px 8px', 
+                      borderRadius: '10px', 
+                      fontSize: '10px' 
+                    }}>
+                      {event.type === 'birth' ? '👶 Nacimiento' : '🎉 Evento'}
+                    </div>
                   </div>
                 </div>
               </div>
