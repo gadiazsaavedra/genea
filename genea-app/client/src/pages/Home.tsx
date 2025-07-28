@@ -360,8 +360,11 @@ const Home: React.FC = () => {
               <Typography variant="h6" color="text.primary" gutterBottom>
                 Contacto
               </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Email: <a href="mailto:gadiazsaavedra@gmail.com" style={{ color: 'inherit', textDecoration: 'none' }}>gadiazsaavedra@gmail.com</a>
+              </Typography>
               <Typography variant="body2" color="text.secondary">
-                Email: info@genea-app.com
+                WhatsApp: <a href="https://wa.me/5491149737619" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>+54 11 4973-7619</a>
               </Typography>
             </Grid>
           </Grid>
