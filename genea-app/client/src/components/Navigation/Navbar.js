@@ -133,6 +133,9 @@ const Navbar = () => {
                   <Link to="/events" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
                     🎉 Eventos Familiares
                   </Link>
+                  <Link to="/map" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    🗺️ Mapa Familiar
+                  </Link>
                   <Link to="/settings" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
                     Configuración
                   </Link>

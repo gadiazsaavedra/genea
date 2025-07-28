@@ -36,6 +36,7 @@ const Timeline = lazy(() => import('./pages/Timeline/Timeline'));
 const Research = lazy(() => import('./pages/Research/Research'));
 const AI = lazy(() => import('./pages/AI/AI'));
 const Events = lazy(() => import('./pages/Events/Events'));
+const Map = lazy(() => import('./pages/Map/Map'));
 const InvitationAccept = lazy(() => import('./pages/InvitationAccept'));
 
 // Componente para mostrar durante la carga
@@ -207,6 +208,14 @@ function App() {
                     element={
                       <PrivateRoute>
                         <Events />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/map" 
+                    element={
+                      <PrivateRoute>
+                        <Map />
                       </PrivateRoute>
                     } 
                   />
