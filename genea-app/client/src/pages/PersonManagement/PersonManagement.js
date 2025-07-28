@@ -275,6 +275,26 @@ const PersonManagement = () => {
         );
         setPersons(updatedPersons);
         setFilteredPersons(updatedPersons);
+        
+        // Crear notificación
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`
+            },
+            body: JSON.stringify({
+              type: 'person_updated',
+              title: '✏️ Persona actualizada',
+              message: `Se actualizó la información de ${result.data.first_name}`,
+              link: `/persons/${result.data.id}`
+            })
+          });
+        } catch (notifError) {
+          console.log('Error creating notification:', notifError);
+        }
       } else {
         // Crear nueva persona
         console.log('Creating person with API:', `${process.env.REACT_APP_API_URL}/persons`);
@@ -320,6 +340,26 @@ const PersonManagement = () => {
         
         setPersons([...persons, result.data]);
         setFilteredPersons([...filteredPersons, result.data]);
+        
+        // Crear notificación
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`
+            },
+            body: JSON.stringify({
+              type: 'person_added',
+              title: '👤 Nueva persona agregada',
+              message: `Se agregó a ${result.data.first_name} al árbol familiar`,
+              link: `/persons`
+            })
+          });
+        } catch (notifError) {
+          console.log('Error creating notification:', notifError);
+        }
       }
       setShowForm(false);
     } catch (error) {

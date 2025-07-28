@@ -53,6 +53,27 @@ const Events = () => {
       });
       
       if (response.ok) {
+        const result = await response.json();
+        
+        // Crear notificación
+        try {
+          await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`
+            },
+            body: JSON.stringify({
+              type: 'event_created',
+              title: '🎉 Nuevo evento familiar',
+              message: `Se creó el evento "${newEvent.title}"`,
+              link: `/events`
+            })
+          });
+        } catch (notifError) {
+          console.log('Error creating notification:', notifError);
+        }
+        
         setNewEvent({ title: '', description: '', event_date: '', location: '', event_type: 'reunion' });
         setShowForm(false);
         fetchEvents();
@@ -109,6 +130,26 @@ const Events = () => {
       
       if (response.ok) {
         fetchEvents();
+        
+        // Crear notificación
+        try {
+          await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`
+            },
+            body: JSON.stringify({
+              type: 'photo_uploaded',
+              title: '📸 Nuevas fotos subidas',
+              message: `Se subieron ${files.length} foto(s) al evento`,
+              link: `/events`
+            })
+          });
+        } catch (notifError) {
+          console.log('Error creating notification:', notifError);
+        }
+        
         alert('Fotos subidas correctamente');
       }
     } catch (error) {

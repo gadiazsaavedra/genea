@@ -88,6 +88,25 @@ router.post('/', async (req, res) => {
       whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(whatsappMessage)}`;
     }
     
+    // Crear notificación para el invitado (si tiene cuenta)
+    const { createNotification } = require('./notifications.routes');
+    if (email) {
+      try {
+        const { data: existingUser } = await supabaseClient.auth.admin.getUserByEmail(email);
+        if (existingUser?.user) {
+          await createNotification(
+            existingUser.user.id,
+            'invitation',
+            '📧 Nueva invitación familiar',
+            `Has recibido una invitación para unirte a una familia en Genea`,
+            `/invitation/accept/${token}`
+          );
+        }
+      } catch (notifError) {
+        console.log('Error creating notification:', notifError.message);
+      }
+    }
+    
     // Logs para debugging
     if (email) console.log(`📧 Email: ${email}`);
     if (phone) console.log(`📱 WhatsApp: ${phone}`);
