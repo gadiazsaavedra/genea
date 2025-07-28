@@ -86,30 +86,40 @@ const DragDropTreeBuilder = ({ familyId }) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
+      if (!session?.access_token) {
+        alert('No hay sesión activa. Por favor, inicia sesión.');
+        return;
+      }
+      
       const layoutData = {
         familyId,
         positions,
-        connections,
-        createdAt: new Date().toISOString()
+        connections
       };
+
+      console.log('Saving layout data:', layoutData);
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}/tree-layouts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify(layoutData)
       });
 
+      const result = await response.json();
+      console.log('Save response:', result);
+
       if (response.ok) {
         alert('¡Árbol guardado exitosamente! 🎉');
       } else {
-        alert('Error al guardar el árbol');
+        console.error('Save error:', result);
+        alert(`Error al guardar: ${result.message || 'Error desconocido'}`);
       }
     } catch (error) {
       console.error('Error saving tree:', error);
-      alert('Error al guardar el árbol');
+      alert(`Error al guardar el árbol: ${error.message}`);
     }
   };
 
