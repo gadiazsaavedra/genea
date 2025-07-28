@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase.config';
 import PersonForm from '../../components/PersonForm/PersonForm';
 import BulkDeleteModal from '../../components/BulkDeleteModal';
+import RelationshipManager from '../../components/RelationshipManager';
 import { saveOfflineData, getOfflineData } from '../../utils/pwa';
 import './PersonManagement.css';
 
@@ -14,6 +15,7 @@ const PersonManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPersons, setFilteredPersons] = useState([]);
   const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [selectedPersonForRelations, setSelectedPersonForRelations] = useState(null);
   const [filters, setFilters] = useState({
     gender: '',
     isAlive: '',
@@ -583,6 +585,14 @@ const PersonManagement = () => {
                         ✏️
                       </button>
                       <button 
+                        className="action-btn relation-btn" 
+                        title="Gestionar relaciones"
+                        onClick={() => setSelectedPersonForRelations(person)}
+                        style={{ backgroundColor: '#9c27b0' }}
+                      >
+                        👥
+                      </button>
+                      <button 
                         className="action-btn delete-btn" 
                         title="Eliminar"
                         onClick={() => handleDeletePerson(person.id)}
@@ -621,6 +631,13 @@ const PersonManagement = () => {
         onClose={() => setShowBulkDelete(false)}
         onConfirm={handleBulkDelete}
       />
+      
+      {selectedPersonForRelations && (
+        <RelationshipManager
+          personId={selectedPersonForRelations.id}
+          onClose={() => setSelectedPersonForRelations(null)}
+        />
+      )}
     </div>
   );
 };
