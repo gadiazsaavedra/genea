@@ -4,6 +4,7 @@ import PersonModal from '../../components/PersonModal';
 import TreeVisualization from '../../components/TreeVisualization';
 import TraditionalFamilyTree from '../../components/TraditionalFamilyTree';
 import DragDropTreeBuilder from '../../components/DragDropTreeBuilder';
+import SavedTreeViewer from '../../components/SavedTreeViewer';
 import { supabase } from '../../config/supabase.config';
 
 const TreeView = () => {
@@ -464,6 +465,20 @@ const TreeView = () => {
             >
               🎨 Constructor
             </button>
+            <button 
+              onClick={() => setViewType('saved')}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: viewType === 'saved' ? '#ff9800' : 'white',
+                color: viewType === 'saved' ? 'white' : '#ff9800',
+                border: '1px solid #ff9800',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              🎆 Árbol Guardado
+            </button>
 
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -514,6 +529,8 @@ const TreeView = () => {
         
         {viewType === 'builder' ? (
           <DragDropTreeBuilder familyId={familyId} />
+        ) : viewType === 'saved' ? (
+          <SavedTreeViewer familyId={familyId} />
         ) : viewType === 'traditional' && people.length === 0 ? (
           <TraditionalFamilyTree />
         ) : (
