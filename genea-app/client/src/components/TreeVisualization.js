@@ -972,7 +972,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                         {(person.first_name || '?').charAt(0)}
                       </text>
                       
-                      {/* Nombre */}
+                      {/* Nombre con rotación para mejor legibilidad */}
                       <text 
                         x={x} 
                         y={y + 55} 
@@ -980,6 +980,7 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                         fontSize="12" 
                         fontWeight="bold"
                         fill="#333"
+                        transform={`rotate(${angle * 180 / Math.PI + 90}, ${x}, ${y + 55})`}
                       >
                         {person.first_name || 'Sin nombre'}
                       </text>
