@@ -80,7 +80,7 @@ initializeSupabase()
     app.use('/api/relationships', relationshipRoutes);
     app.use('/api/media', mediaRoutes);
     app.use('/api/auth', authRoutes);
-    // app.use('/api/tree', treeRoutes); // Comentado temporalmente
+    // Rutas principales activas
     app.use('/api/invitations', invitationRoutes);
     app.use('/api/notifications', notificationRoutes);
     app.use('/api/comments', commentRoutes);

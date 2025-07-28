@@ -24,6 +24,8 @@ const Register = lazy(() => import('./pages/Auth/Register'));
 const AuthCallback = lazy(() => import('./pages/Auth/AuthCallback'));
 const Profile = lazy(() => import('./pages/Profile/Profile'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
+const Statistics = lazy(() => import('./pages/Statistics/Statistics'));
+const Export = lazy(() => import('./pages/Export/Export'));
 
 // Componente para mostrar durante la carga
 const LoadingFallback = () => (
@@ -120,6 +122,22 @@ function App() {
                     element={
                       <PrivateRoute>
                         <Settings />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/statistics" 
+                    element={
+                      <PrivateRoute>
+                        <Statistics />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/export" 
+                    element={
+                      <PrivateRoute>
+                        <Export />
                       </PrivateRoute>
                     } 
                   />

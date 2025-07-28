@@ -104,6 +104,12 @@ const Navbar = () => {
                   <Link to="/profile" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
                     Perfil
                   </Link>
+                  <Link to="/statistics" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    📊 Estadísticas
+                  </Link>
+                  <Link to="/export" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    📄 Exportar
+                  </Link>
                   <Link to="/settings" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
                     Configuración
                   </Link>
