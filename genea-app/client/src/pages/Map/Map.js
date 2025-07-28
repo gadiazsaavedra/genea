@@ -21,7 +21,7 @@ const Map = () => {
         const result = await response.json();
         const peopleData = Array.isArray(result.data) ? result.data : [];
         setPeople(peopleData);
-        processLocations(peopleData);
+        await processLocations(peopleData);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -30,19 +30,20 @@ const Map = () => {
     }
   };
 
-  const processLocations = (peopleData) => {
+  const processLocations = async (peopleData) => {
     const locationMap = new Map();
 
-    peopleData.forEach(person => {
+    for (const person of peopleData) {
       if (person.birth_place) {
         const key = person.birth_place;
         if (!locationMap.has(key)) {
+          const coordinates = await getCoordinates(person.birth_place);
           locationMap.set(key, {
             name: person.birth_place,
             people: [],
             births: 0,
             deaths: 0,
-            coordinates: getCoordinates(person.birth_place)
+            coordinates
           });
         }
         locationMap.get(key).people.push({
@@ -56,12 +57,13 @@ const Map = () => {
       if (person.death_place) {
         const key = person.death_place;
         if (!locationMap.has(key)) {
+          const coordinates = await getCoordinates(person.death_place);
           locationMap.set(key, {
             name: person.death_place,
             people: [],
             births: 0,
             deaths: 0,
-            coordinates: getCoordinates(person.death_place)
+            coordinates
           });
         }
         locationMap.get(key).people.push({
@@ -71,30 +73,37 @@ const Map = () => {
         });
         locationMap.get(key).deaths++;
       }
-    });
+    }
 
     setLocations(Array.from(locationMap.values()));
   };
 
-  const getCoordinates = (placeName) => {
-    const places = {
-      'Buenos Aires': { lat: -34.6037, lng: -58.3816 },
-      'Córdoba': { lat: -31.4201, lng: -64.1888 },
-      'Rosario': { lat: -32.9442, lng: -60.6505 },
-      'Mendoza': { lat: -32.8895, lng: -68.8458 },
-      'La Plata': { lat: -34.9215, lng: -57.9545 },
-      'Chaco': { lat: -27.4511, lng: -58.9867 },
-      'Corrientes': { lat: -27.4692, lng: -58.8306 },
-      'Brasil': { lat: -14.2350, lng: -51.9253 },
-      'Madrid': { lat: 40.4168, lng: -3.7038 },
-      'Barcelona': { lat: 41.3851, lng: 2.1734 },
-      'Valencia': { lat: 39.4699, lng: -0.3763 },
-      'Sevilla': { lat: 37.3891, lng: -5.9845 },
-      'México': { lat: 19.4326, lng: -99.1332 },
-      'Lima': { lat: -12.0464, lng: -77.0428 },
-      'Santiago': { lat: -33.4489, lng: -70.6693 }
-    };
-    return places[placeName] || { lat: 0, lng: 0 };
+  const getCoordinates = async (placeName) => {
+    const cacheKey = `coords_${placeName}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeName)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const coords = {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        };
+        localStorage.setItem(cacheKey, JSON.stringify(coords));
+        return coords;
+      }
+    } catch (error) {
+      console.error('Error geocoding:', error);
+    }
+    
+    return { lat: 0, lng: 0 };
   };
 
   const getMarkerSize = (location) => {
