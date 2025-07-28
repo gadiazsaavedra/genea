@@ -1021,19 +1021,53 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
               const person2 = people.find(p => p.id === rel.person2_id);
               
               if (person1 && person2) {
-                // Encontrar posiciones de ambas personas en el abanico
-                // (Cálculo simplificado - usar posiciones aproximadas)
-                return (
-                  <path 
-                    key={index}
-                    d={`M ${centerX - 60} ${centerY - 80} Q ${centerX} ${centerY - 120} ${centerX + 60} ${centerY - 80}`}
-                    stroke="#e91e63" 
-                    strokeWidth="4" 
-                    strokeDasharray="10,5" 
-                    fill="none"
-                    opacity="0.8"
-                  />
-                );
+                // Encontrar posiciones reales de ambas personas en el abanico
+                let person1Pos = null, person2Pos = null;
+                
+                Object.keys(generations).forEach(genKey => {
+                  const generation = generations[genKey];
+                  const genLevel = parseInt(genKey);
+                  const radius = baseRadius + (genLevel * 80);
+                  
+                  const p1Index = generation.findIndex(p => p.id === person1.id);
+                  const p2Index = generation.findIndex(p => p.id === person2.id);
+                  
+                  if (p1Index !== -1) {
+                    const totalAngle = Math.PI;
+                    const startAngle = -Math.PI / 2 - totalAngle / 2;
+                    const angle = startAngle + (p1Index / Math.max(generation.length - 1, 1)) * totalAngle;
+                    person1Pos = {
+                      x: centerX + radius * Math.cos(angle),
+                      y: centerY + radius * Math.sin(angle)
+                    };
+                  }
+                  
+                  if (p2Index !== -1) {
+                    const totalAngle = Math.PI;
+                    const startAngle = -Math.PI / 2 - totalAngle / 2;
+                    const angle = startAngle + (p2Index / Math.max(generation.length - 1, 1)) * totalAngle;
+                    person2Pos = {
+                      x: centerX + radius * Math.cos(angle),
+                      y: centerY + radius * Math.sin(angle)
+                    };
+                  }
+                });
+                
+                if (person1Pos && person2Pos) {
+                  return (
+                    <line 
+                      key={index}
+                      x1={person1Pos.x}
+                      y1={person1Pos.y}
+                      x2={person2Pos.x}
+                      y2={person2Pos.y}
+                      stroke="#e91e63" 
+                      strokeWidth="4" 
+                      strokeDasharray="10,5" 
+                      opacity="0.8"
+                    />
+                  );
+                }
               }
               return null;
             })}
