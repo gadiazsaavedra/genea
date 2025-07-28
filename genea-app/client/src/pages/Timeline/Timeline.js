@@ -43,7 +43,16 @@ const Timeline = () => {
         }}></div>
         
         {!Array.isArray(events) || events.length === 0 ? (
-          <p>No hay eventos en el timeline</p>
+          <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+            <h3 style={{ color: '#666', marginBottom: '15px' }}>Timeline vacío</h3>
+            <p style={{ color: '#888', marginBottom: '20px' }}>No hay eventos o personas con fechas registradas.</p>
+            <div style={{ fontSize: '14px', color: '#999' }}>
+              <strong>Para ver el timeline:</strong><br/>
+              • Agrega eventos en la sección Eventos<br/>
+              • Registra fechas de nacimiento en Personas<br/>
+              • Asegúrate de incluir fechas válidas
+            </div>
+          </div>
         ) : (
           events.map((event, index) => (
             <div key={index} style={{ position: 'relative', marginBottom: '30px' }}>
