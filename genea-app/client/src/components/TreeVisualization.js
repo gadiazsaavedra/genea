@@ -871,14 +871,14 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
 
   const renderFan = () => {
     const centerX = 400;
-    const centerY = 450;
+    const centerY = 350;
     const baseRadius = 120;
 
     return (
       <div style={{ padding: '20px' }}>
         <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#1976d2' }}>🌟 Vista Abanico Generacional</h3>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <svg width="800" height="500" style={{ border: '2px solid #1976d2', borderRadius: '12px', backgroundColor: '#f8f9fa' }}>
+          <svg width="800" height="600" style={{ border: '2px solid #1976d2', borderRadius: '12px', backgroundColor: '#f8f9fa' }}>
             {/* Organizar por generaciones en abanico */}
             {(() => {
               const generations = {};
