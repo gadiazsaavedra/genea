@@ -6,6 +6,9 @@ const authMiddleware = require('../middleware/auth.middleware');
 // Todas las rutas requieren autenticación
 router.use(authMiddleware.verifyToken);
 
+// Obtener estadísticas generales
+router.get('/', statsController.getGeneralStats);
+
 // Obtener estadísticas de una familia
 router.get('/:familyId', statsController.getFamilyStats);
 

@@ -1,6 +1,46 @@
 const { supabaseClient } = require('../config/supabase.config');
 
 const statsController = {
+  // Obtener estadísticas generales del usuario
+  getGeneralStats: async (req, res) => {
+    try {
+      const userId = req.user.uid;
+      
+      // Obtener todas las personas del usuario
+      const { data: persons, error: personsError } = await supabaseClient
+        .from('people')
+        .select('*')
+        .eq('created_by', userId);
+      
+      if (personsError) throw new Error(personsError.message);
+      
+      // Estadísticas básicas
+      const totalPersons = persons.length;
+      const maleCount = persons.filter(p => p.gender === 'male').length;
+      const femaleCount = persons.filter(p => p.gender === 'female').length;
+      const aliveCount = persons.filter(p => p.is_alive !== false).length;
+      const foundersCount = persons.filter(p => p.is_founder === true).length;
+      
+      res.json({
+        success: true,
+        data: {
+          totalPersons,
+          maleCount,
+          femaleCount,
+          aliveCount,
+          foundersCount
+        }
+      });
+    } catch (error) {
+      console.error('Error al obtener estadísticas:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Error al obtener estadísticas', 
+        error: error.message 
+      });
+    }
+  },
+
   // Obtener estadísticas de una familia
   getFamilyStats: async (req, res) => {
     try {
