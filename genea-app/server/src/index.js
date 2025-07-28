@@ -108,6 +108,7 @@ initializeSupabase()
     app.use('/api/research', researchRoutesNew);
     app.use('/api/ai', aiRoutesNew);
     app.use('/api/relationships', require('./routes/relationships.routes'));
+    app.use('/api/relationships', require('./routes/relationships-family.routes'));
 
     // Ruta de prueba
     app.get('/', (req, res) => {

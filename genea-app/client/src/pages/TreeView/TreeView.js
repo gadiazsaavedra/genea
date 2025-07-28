@@ -163,7 +163,8 @@ const TreeView = () => {
         return;
       }
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/relationships?familyId=${familyId}`, {
+      // Obtener todas las relaciones y filtrar por familia localmente
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/relationships/family/${familyId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
