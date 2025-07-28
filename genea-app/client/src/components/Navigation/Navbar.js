@@ -110,6 +110,25 @@ const Navbar = () => {
                   <Link to="/export" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
                     📄 Exportar
                   </Link>
+                  <div className="dropdown-divider"></div>
+                  <Link to="/invitations" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    📧 Invitaciones
+                  </Link>
+                  <Link to="/notifications" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    🔔 Notificaciones
+                  </Link>
+                  <Link to="/comments" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    💬 Comentarios
+                  </Link>
+                  <Link to="/timeline" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    📅 Timeline
+                  </Link>
+                  <Link to="/research" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    🔍 Investigación
+                  </Link>
+                  <Link to="/ai" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                    🤖 Asistente IA
+                  </Link>
                   <Link to="/settings" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
                     Configuración
                   </Link>

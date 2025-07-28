@@ -26,6 +26,12 @@ const Profile = lazy(() => import('./pages/Profile/Profile'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const Statistics = lazy(() => import('./pages/Statistics/Statistics'));
 const Export = lazy(() => import('./pages/Export/Export'));
+const Invitations = lazy(() => import('./pages/Invitations/Invitations'));
+const Notifications = lazy(() => import('./pages/Notifications/Notifications'));
+const Comments = lazy(() => import('./pages/Comments/Comments'));
+const Timeline = lazy(() => import('./pages/Timeline/Timeline'));
+const Research = lazy(() => import('./pages/Research/Research'));
+const AI = lazy(() => import('./pages/AI/AI'));
 
 // Componente para mostrar durante la carga
 const LoadingFallback = () => (
@@ -138,6 +144,54 @@ function App() {
                     element={
                       <PrivateRoute>
                         <Export />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/invitations" 
+                    element={
+                      <PrivateRoute>
+                        <Invitations />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/notifications" 
+                    element={
+                      <PrivateRoute>
+                        <Notifications />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/comments" 
+                    element={
+                      <PrivateRoute>
+                        <Comments />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/timeline" 
+                    element={
+                      <PrivateRoute>
+                        <Timeline />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/research" 
+                    element={
+                      <PrivateRoute>
+                        <Research />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ai" 
+                    element={
+                      <PrivateRoute>
+                        <AI />
                       </PrivateRoute>
                     } 
                   />
