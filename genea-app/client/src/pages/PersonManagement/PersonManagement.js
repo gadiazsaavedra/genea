@@ -17,7 +17,7 @@ const PersonManagement = () => {
   const [filters, setFilters] = useState({
     gender: '',
     isAlive: '',
-    isFounder: ''
+    personType: ''
   });
 
   useEffect(() => {
@@ -115,9 +115,12 @@ const PersonManagement = () => {
       filtered = filtered.filter(person => person.is_alive === (filters.isAlive === 'true'));
     }
     
-    // Filtro por fundador
-    if (filters.isFounder !== '') {
-      filtered = filtered.filter(person => person.is_founder === (filters.isFounder === 'true'));
+    // Filtro por tipo de persona
+    if (filters.personType) {
+      filtered = filtered.filter(person => {
+        const personType = person.person_type || (person.is_founder ? 'founder' : 'descendant');
+        return personType === filters.personType;
+      });
     }
     
     setFilteredPersons(filtered);
@@ -133,7 +136,15 @@ const PersonManagement = () => {
     setShowForm(true);
   };
 
-  const handleToggleFounder = async (person) => {
+  const getTypeColor = (type) => {
+    switch (type) {
+      case 'founder': return '#ff9800';
+      case 'spouse': return '#e91e63';
+      default: return '#2196f3';
+    }
+  };
+
+  const handleChangePersonType = async (person, newType) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -143,7 +154,10 @@ const PersonManagement = () => {
         return;
       }
       
-      const newFounderStatus = !person.is_founder;
+      const updateData = {
+        person_type: newType,
+        is_founder: newType === 'founder'
+      };
       
       const response = await fetch(`${process.env.REACT_APP_API_URL}/persons/${person.id}`, {
         method: 'PUT',
@@ -151,27 +165,29 @@ const PersonManagement = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          is_founder: newFounderStatus
-        })
+        body: JSON.stringify(updateData)
       });
       
       if (response.ok) {
         const updatedPersons = persons.map(p => 
-          p.id === person.id ? { ...p, is_founder: newFounderStatus } : p
+          p.id === person.id ? { ...p, person_type: newType, is_founder: newType === 'founder' } : p
         );
         setPersons(updatedPersons);
         
-        const statusText = newFounderStatus ? 'fundador' : 'descendiente';
-        alert(`${person.first_name} ahora es ${statusText}`);
+        const typeNames = {
+          'founder': 'fundador',
+          'descendant': 'descendiente', 
+          'spouse': 'cónyuge'
+        };
+        alert(`${person.first_name} ahora es ${typeNames[newType]}`);
       } else {
         const result = await response.json();
-        console.error('Toggle founder error:', result);
+        console.error('Change type error:', result);
         alert(`Error: ${result.message || result.error || 'No se pudo actualizar'}`);
       }
     } catch (error) {
-      console.error('Error updating founder status:', error);
-      alert('Error al actualizar estado de fundador');
+      console.error('Error updating person type:', error);
+      alert('Error al actualizar tipo de persona');
     }
   };
 
@@ -471,20 +487,21 @@ const PersonManagement = () => {
           <div>
             <label style={{ marginRight: '8px', fontWeight: 'bold' }}>Tipo:</label>
             <select 
-              value={filters.isFounder} 
-              onChange={(e) => setFilters({...filters, isFounder: e.target.value})}
+              value={filters.personType || ''} 
+              onChange={(e) => setFilters({...filters, personType: e.target.value})}
               style={{ padding: '6px' }}
             >
               <option value="">Todos</option>
-              <option value="true">Fundadores</option>
-              <option value="false">Descendientes</option>
+              <option value="founder">Fundadores</option>
+              <option value="descendant">Descendientes</option>
+              <option value="spouse">Cónyuges</option>
             </select>
           </div>
           
           <button 
             onClick={() => {
               setSearchTerm('');
-              setFilters({ gender: '', isAlive: '', isFounder: '' });
+              setFilters({ gender: '', isAlive: '', personType: '' });
             }}
             style={{ 
               padding: '6px 12px', 
@@ -532,24 +549,23 @@ const PersonManagement = () => {
                       </span>
                     </td>
                     <td>
-                      <button
-                        onClick={() => handleToggleFounder(person)}
+                      <select
+                        value={person.person_type || (person.is_founder ? 'founder' : 'descendant')}
+                        onChange={(e) => handleChangePersonType(person, e.target.value)}
                         style={{
-                          backgroundColor: person.is_founder ? '#ff9800' : '#2196f3',
+                          backgroundColor: getTypeColor(person.person_type || (person.is_founder ? 'founder' : 'descendant')),
                           color: 'white',
-                          padding: '4px 12px',
+                          padding: '4px 8px',
                           borderRadius: '12px',
                           fontSize: '12px',
                           border: 'none',
-                          cursor: 'pointer',
-                          transition: 'opacity 0.2s'
+                          cursor: 'pointer'
                         }}
-                        onMouseOver={(e) => e.target.style.opacity = '0.8'}
-                        onMouseOut={(e) => e.target.style.opacity = '1'}
-                        title={`Cambiar a ${person.is_founder ? 'descendiente' : 'fundador'}`}
                       >
-                        {person.is_founder ? '🌟 Fundador' : '🌳 Descendiente'}
-                      </button>
+                        <option value="founder">🌟 Fundador</option>
+                        <option value="descendant">🌳 Descendiente</option>
+                        <option value="spouse">💍 Cónyuge</option>
+                      </select>
                     </td>
                     <td className="actions-cell">
                       <button 
