@@ -19,7 +19,7 @@ const Invitations = () => {
       });
       if (response.ok) {
         const result = await response.json();
-        setInvitations(result.data || []);
+        setInvitations(Array.isArray(result.data) ? result.data : []);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -81,7 +81,7 @@ const Invitations = () => {
 
       <div>
         <h2>Invitaciones Enviadas</h2>
-        {invitations.length === 0 ? (
+        {!Array.isArray(invitations) || invitations.length === 0 ? (
           <p>No hay invitaciones</p>
         ) : (
           <div>

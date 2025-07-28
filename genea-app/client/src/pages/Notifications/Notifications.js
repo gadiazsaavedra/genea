@@ -17,7 +17,7 @@ const Notifications = () => {
       });
       if (response.ok) {
         const result = await response.json();
-        setNotifications(result.data || []);
+        setNotifications(Array.isArray(result.data) ? result.data : []);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -45,7 +45,7 @@ const Notifications = () => {
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h1>🔔 Notificaciones</h1>
       
-      {notifications.length === 0 ? (
+      {!Array.isArray(notifications) || notifications.length === 0 ? (
         <p>No hay notificaciones</p>
       ) : (
         <div>

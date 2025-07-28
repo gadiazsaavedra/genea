@@ -19,7 +19,7 @@ const Comments = () => {
       });
       if (response.ok) {
         const result = await response.json();
-        setComments(result.data || []);
+        setComments(Array.isArray(result.data) ? result.data : []);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -85,7 +85,7 @@ const Comments = () => {
 
       <div>
         <h2>Comentarios Recientes</h2>
-        {comments.length === 0 ? (
+        {!Array.isArray(comments) || comments.length === 0 ? (
           <p>No hay comentarios</p>
         ) : (
           <div>

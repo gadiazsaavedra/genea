@@ -17,7 +17,7 @@ const Timeline = () => {
       });
       if (response.ok) {
         const result = await response.json();
-        setEvents(result.data || []);
+        setEvents(Array.isArray(result.data) ? result.data : []);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -42,7 +42,7 @@ const Timeline = () => {
           backgroundColor: '#007bff' 
         }}></div>
         
-        {events.length === 0 ? (
+        {!Array.isArray(events) || events.length === 0 ? (
           <p>No hay eventos en el timeline</p>
         ) : (
           events.map((event, index) => (

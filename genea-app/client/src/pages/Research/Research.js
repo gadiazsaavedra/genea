@@ -24,7 +24,7 @@ const Research = () => {
       
       if (response.ok) {
         const result = await response.json();
-        setResults(result.data || []);
+        setResults(Array.isArray(result.data) ? result.data : []);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -65,7 +65,7 @@ const Research = () => {
 
       <div>
         <h2>📋 Resultados de Investigación</h2>
-        {results.length === 0 ? (
+        {!Array.isArray(results) || results.length === 0 ? (
           <p>No hay resultados. Realiza una búsqueda para encontrar información genealógica.</p>
         ) : (
           <div>
