@@ -25,7 +25,11 @@ const MediaManagement = () => {
           const response = await personService.getPersonById(personId);
           
           if (response.success && response.data) {
-            setPerson(response.data);
+            const personData = {
+              ...response.data,
+              fullName: response.data.fullName || `${response.data.first_name || ''} ${response.data.last_name || ''}`.trim() || 'Sin nombre'
+            };
+            setPerson(personData);
             setLoading(false);
             return;
           }
@@ -38,6 +42,8 @@ const MediaManagement = () => {
           const mockPerson = {
             _id: personId,
             fullName: 'Juan Pérez',
+            first_name: 'Juan',
+            last_name: 'Pérez',
             birthDate: '1950-05-15',
             birthPlace: 'Madrid, España',
             isAlive: true,
@@ -167,12 +173,12 @@ const MediaManagement = () => {
               <img src={person.profilePhoto} alt={person.fullName} />
             ) : (
               <div className="no-photo">
-                {person.fullName.charAt(0)}
+                {person.fullName ? person.fullName.charAt(0) : '?'}
               </div>
             )}
           </div>
           <div className="person-details">
-            <h1>{person.fullName}</h1>
+            <h1>{person.fullName || 'Sin nombre'}</h1>
             <p>{person.birthDate ? new Date(person.birthDate).getFullYear() : ''} - {!person.isAlive && person.deathDate ? new Date(person.deathDate).getFullYear() : ''}</p>
           </div>
         </div>
