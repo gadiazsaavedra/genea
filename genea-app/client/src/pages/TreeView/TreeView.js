@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import PersonModal from '../../components/PersonModal';
 import TreeVisualization from '../../components/TreeVisualization';
+import TraditionalFamilyTree from '../../components/TraditionalFamilyTree';
 import { supabase } from '../../config/supabase.config';
 
 const TreeView = () => {
@@ -273,6 +274,117 @@ const TreeView = () => {
     setShowPersonModal(true);
   };
 
+  const loadExampleData = () => {
+    if (window.confirm('¿Deseas cargar los datos de ejemplo (Juan, Constantina, Luis, Alicia, etc.)? Esto agregará las personas al árbol actual.')) {
+      const examplePeople = [
+        {
+          id: 'juan-' + Date.now(),
+          first_name: 'Juan',
+          last_name: '',
+          gender: 'male',
+          birth_date: '1950-01-01',
+          is_founder: true
+        },
+        {
+          id: 'constantina-' + Date.now(),
+          first_name: 'Constantina',
+          last_name: '',
+          gender: 'female',
+          birth_date: '1952-01-01',
+          is_founder: true
+        },
+        {
+          id: 'luis-' + Date.now(),
+          first_name: 'Luis',
+          last_name: '',
+          gender: 'male',
+          birth_date: '1975-01-01',
+          is_founder: false
+        },
+        {
+          id: 'alicia-' + Date.now(),
+          first_name: 'Alicia',
+          last_name: '',
+          gender: 'female',
+          birth_date: '1978-01-01',
+          is_founder: false
+        },
+        {
+          id: 'maria-' + Date.now(),
+          first_name: 'María',
+          last_name: '',
+          gender: 'female',
+          birth_date: '1977-01-01',
+          is_founder: false
+        },
+        {
+          id: 'carlos-' + Date.now(),
+          first_name: 'Carlos',
+          last_name: '',
+          gender: 'male',
+          birth_date: '1980-01-01',
+          is_founder: false
+        }
+      ];
+
+      const exampleRelationships = [
+        {
+          id: 'rel1-' + Date.now(),
+          person1_id: examplePeople[0].id, // Juan
+          person2_id: examplePeople[1].id, // Constantina
+          relationship_type: 'spouse'
+        },
+        {
+          id: 'rel2-' + Date.now(),
+          person1_id: examplePeople[2].id, // Luis
+          person2_id: examplePeople[3].id, // Alicia
+          relationship_type: 'spouse'
+        },
+        {
+          id: 'rel3-' + Date.now(),
+          person1_id: examplePeople[0].id, // Juan
+          person2_id: examplePeople[2].id, // Luis
+          relationship_type: 'parent'
+        },
+        {
+          id: 'rel4-' + Date.now(),
+          person1_id: examplePeople[1].id, // Constantina
+          person2_id: examplePeople[2].id, // Luis
+          relationship_type: 'parent'
+        },
+        {
+          id: 'rel5-' + Date.now(),
+          person1_id: examplePeople[0].id, // Juan
+          person2_id: examplePeople[4].id, // María
+          relationship_type: 'parent'
+        },
+        {
+          id: 'rel6-' + Date.now(),
+          person1_id: examplePeople[1].id, // Constantina
+          person2_id: examplePeople[4].id, // María
+          relationship_type: 'parent'
+        },
+        {
+          id: 'rel7-' + Date.now(),
+          person1_id: examplePeople[0].id, // Juan
+          person2_id: examplePeople[5].id, // Carlos
+          relationship_type: 'parent'
+        },
+        {
+          id: 'rel8-' + Date.now(),
+          person1_id: examplePeople[1].id, // Constantina
+          person2_id: examplePeople[5].id, // Carlos
+          relationship_type: 'parent'
+        }
+      ];
+
+      setPeople([...people, ...examplePeople]);
+      setRelationships([...relationships, ...exampleRelationships]);
+      setViewType('traditional');
+      alert('Datos de ejemplo cargados correctamente!');
+    }
+  };
+
   if (loading) {
     return <div style={{ padding: '20px' }}>Cargando árbol...</div>;
   }
@@ -337,8 +449,23 @@ const TreeView = () => {
             >
               🌟 Abanico
             </button>
+
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={loadExampleData}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: '#ff9800', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+              title="Cargar datos de ejemplo: Juan, Constantina, Luis, Alicia, María y Carlos"
+            >
+              📥 Cargar Ejemplo
+            </button>
             <button 
               onClick={openFounderModal}
               style={{ 
@@ -370,7 +497,11 @@ const TreeView = () => {
           </div>
         </div>
         
-        <TreeVisualization people={people} relationships={relationships} viewType={viewType} />
+        {viewType === 'traditional' && people.length === 0 ? (
+          <TraditionalFamilyTree />
+        ) : (
+          <TreeVisualization people={people} relationships={relationships} viewType={viewType} />
+        )}
       </div>
 
       <div style={{ 

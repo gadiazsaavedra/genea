@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árbol Genealógico Tradicional - Juan y Constantina</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #1976d2, #2196f3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .tree-container {
+            padding: 40px;
+            position: relative;
+            min-height: 600px;
+            background: #fafafa;
+        }
+        
+        .person {
+            position: absolute;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .person:hover {
+            transform: scale(1.1);
+        }
+        
+        .person-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            border: 4px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .male { background: linear-gradient(45deg, #4A90E2, #357ABD); }
+        .female { background: linear-gradient(45deg, #E24A6F, #C73650); }
+        
+        .person-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .person-year {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .connection-line {
+            position: absolute;
+            background: #4CAF50;
+            z-index: 1;
+        }
+        
+        .marriage-line {
+            position: absolute;
+            border-top: 3px dashed #E91E63;
+            z-index: 1;
+        }
+        
+        .marriage-heart {
+            position: absolute;
+            color: #E91E63;
+            font-size: 20px;
+            z-index: 2;
+            transform: translate(-50%, -50%);
+        }
+        
+        .generation-label {
+            position: absolute;
+            left: 20px;
+            font-weight: bold;
+            color: #666;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            font-size: 14px;
+        }
+        
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 10px;
+        }
+        
+        .legend-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .legend-line {
+            width: 20px;
+            height: 3px;
+            flex-shrink: 0;
+        }
+        
+        .info-panel {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            min-width: 250px;
+            display: none;
+            z-index: 10;
+        }
+        
+        .info-panel.active {
+            display: block;
+        }
+        
+        .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .stats {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        
+        .stat-item {
+            display: inline-block;
+            margin: 0 20px;
+            padding: 10px;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 Árbol Genealógico Tradicional</h1>
+            <p>Familia de Juan y Constantina</p>
+        </div>
+        
+        <div class="tree-container" id="treeContainer">
+            <!-- Etiquetas de generación -->
+            <div class="generation-label" style="top: 100px;">Generación 1</div>
+            <div class="generation-label" style="top: 300px;">Generación 2</div>
+            
+            <!-- Líneas de conexión padre-hijo -->
+            <div class="connection-line" style="left: 200px; top: 170px; width: 200px; height: 3px;"></div>
+            <div class="connection-line" style="left: 300px; top: 170px; width: 3px; height: 80px;"></div>
+            <div class="connection-line" style="left: 80px; top: 250px; width: 440px; height: 3px;"></div>
+            
+            <!-- Líneas verticales a cada hijo -->
+            <div class="connection-line" style="left: 130px; top: 250px; width: 3px; height: 50px;"></div>
+            <div class="connection-line" style="left: 230px; top: 250px; width: 3px; height: 50px;"></div>
+            <div class="connection-line" style="left: 370px; top: 250px; width: 3px; height: 50px;"></div>
+            <div class="connection-line" style="left: 520px; top: 250px; width: 3px; height: 50px;"></div>
+            
+            <!-- Línea de matrimonio Juan-Constantina -->
+            <div class="marriage-line" style="left: 200px; top: 100px; width: 200px;"></div>
+            <div class="marriage-heart" style="left: 300px; top: 100px;">♥</div>
+            
+            <!-- Línea de matrimonio Luis-Alicia -->
+            <div class="marriage-line" style="left: 80px; top: 300px; width: 100px;"></div>
+            <div class="marriage-heart" style="left: 130px; top: 300px;">♥</div>
+            
+            <!-- Personas -->
+            <!-- Generación 1 -->
+            <div class="person" style="left: 150px; top: 50px;" onclick="showInfo('juan')">
+                <div class="person-circle male">J</div>
+                <div class="person-name">Juan</div>
+                <div class="person-year">1950</div>
+            </div>
+            
+            <div class="person" style="left: 350px; top: 50px;" onclick="showInfo('constantina')">
+                <div class="person-circle female">C</div>
+                <div class="person-name">Constantina</div>
+                <div class="person-year">1952</div>
+            </div>
+            
+            <!-- Generación 2 -->
+            <div class="person" style="left: 30px; top: 250px;" onclick="showInfo('alicia')">
+                <div class="person-circle female">A</div>
+                <div class="person-name">Alicia</div>
+                <div class="person-year">1978</div>
+            </div>
+            
+            <div class="person" style="left: 180px; top: 250px;" onclick="showInfo('luis')">
+                <div class="person-circle male">L</div>
+                <div class="person-name">Luis</div>
+                <div class="person-year">1975</div>
+            </div>
+            
+            <div class="person" style="left: 320px; top: 250px;" onclick="showInfo('maria')">
+                <div class="person-circle female">M</div>
+                <div class="person-name">María</div>
+                <div class="person-year">1977</div>
+            </div>
+            
+            <div class="person" style="left: 470px; top: 250px;" onclick="showInfo('carlos')">
+                <div class="person-circle male">C</div>
+                <div class="person-name">Carlos</div>
+                <div class="person-year">1980</div>
+            </div>
+            
+            <!-- Leyenda -->
+            <div class="legend">
+                <div class="legend-title">Leyenda</div>
+                <div class="legend-item">
+                    <div class="legend-circle male"></div>
+                    <span>Hombre</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle female"></div>
+                    <span>Mujer</span>
+                </div>
+                <div class="legend-item">
+                    <span style="color: #E91E63; font-size: 16px;">♥</span>
+                    <span>Matrimonio</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: #4CAF50;"></div>
+                    <span>Parentesco</span>
+                </div>
+            </div>
+            
+            <!-- Panel de información -->
+            <div class="info-panel" id="infoPanel">
+                <button class="close-btn" onclick="hideInfo()">×</button>
+                <div id="infoContent"></div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number">6</div>
+                <div class="stat-label">Personas</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Generaciones</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Matrimonios</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Hijos</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const people = {
+            juan: {
+                name: 'Juan',
+                gender: 'Masculino',
+                year: '1950',
+                spouse: 'Constantina',
+                children: 'Luis, María, Carlos',
+                description: 'Fundador de la familia junto con Constantina. Padre de cuatro hijos.'
+            },
+            constantina: {
+                name: 'Constantina',
+                gender: 'Femenino',
+                year: '1952',
+                spouse: 'Juan',
+                children: 'Luis, María, Carlos',
+                description: 'Fundadora de la familia junto con Juan. Madre de cuatro hijos.'
+            },
+            luis: {
+                name: 'Luis',
+                gender: 'Masculino',
+                year: '1975',
+                parents: 'Juan y Constantina',
+                spouse: 'Alicia',
+                description: 'Hijo mayor de Juan y Constantina. Casado con Alicia.'
+            },
+            alicia: {
+                name: 'Alicia',
+                gender: 'Femenino',
+                year: '1978',
+                spouse: 'Luis',
+                description: 'Esposa de Luis. Forma parte de la familia por matrimonio.'
+            },
+            maria: {
+                name: 'María',
+                gender: 'Femenino',
+                year: '1977',
+                parents: 'Juan y Constantina',
+                description: 'Hija de Juan y Constantina. Segunda de los hermanos.'
+            },
+            carlos: {
+                name: 'Carlos',
+                gender: 'Masculino',
+                year: '1980',
+                parents: 'Juan y Constantina',
+                description: 'Hijo menor de Juan y Constantina.'
+            }
+        };
+
+        function showInfo(personId) {
+            const person = people[personId];
+            const panel = document.getElementById('infoPanel');
+            const content = document.getElementById('infoContent');
+            
+            content.innerHTML = `
+                <h3 style="color: #1976d2; margin-top: 0;">${person.name}</h3>
+                <p><strong>Género:</strong> ${person.gender}</p>
+                <p><strong>Año de nacimiento:</strong> ${person.year}</p>
+                ${person.parents ? `<p><strong>Padres:</strong> ${person.parents}</p>` : ''}
+                ${person.spouse ? `<p><strong>Cónyuge:</strong> ${person.spouse}</p>` : ''}
+                ${person.children ? `<p><strong>Hijos:</strong> ${person.children}</p>` : ''}
+                <p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; color: #666;">
+                    ${person.description}
+                </p>
+            `;
+            
+            panel.classList.add('active');
+        }
+
+        function hideInfo() {
+            document.getElementById('infoPanel').classList.remove('active');
+        }
+
+        // Agregar efectos de hover dinámicos
+        document.addEventListener('DOMContentLoaded', function() {
+            const persons = document.querySelectorAll('.person');
+            persons.forEach(person => {
+                person.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.1)';
+                });
+                person.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
