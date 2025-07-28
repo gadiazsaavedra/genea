@@ -79,26 +79,9 @@ const Navbar = () => {
                   {t('nav.people')}
                 </Link>
               </li>
-              <li className="nav-item">
-                <button 
-                  className="nav-link logout-btn" 
-                  onClick={handleLogout}
-                  style={{ 
-                    background: 'none', 
-                    border: 'none', 
-                    color: '#fff', 
-                    cursor: 'pointer',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '4px',
-                    backgroundColor: '#dc3545'
-                  }}
-                >
-                  {t('nav.logout')}
-                </button>
-              </li>
               <li className="nav-item dropdown">
                 <span className="nav-link dropdown-toggle">
-                  {user?.user_metadata?.displayName || user?.email?.split('@')[0] || 'Mi Cuenta'}
+                  👤 {user?.user_metadata?.displayName || user?.email?.split('@')[0] || 'Mi Cuenta'}
                 </span>
                 <div className="dropdown-menu">
                   <Link to="/profile" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
@@ -140,8 +123,12 @@ const Navbar = () => {
                     Configuración
                   </Link>
                   <div className="dropdown-divider"></div>
-                  <button className="dropdown-item" onClick={handleLogout}>
-                    {t('nav.logout')}
+                  <button 
+                    className="dropdown-item" 
+                    onClick={handleLogout}
+                    style={{ color: '#dc3545', fontWeight: 'bold' }}
+                  >
+                    😪 {t('nav.logout')}
                   </button>
                 </div>
               </li>
