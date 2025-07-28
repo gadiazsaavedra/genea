@@ -1095,16 +1095,19 @@ const TreeVisualization = ({ people, relationships, viewType }) => {
                   });
                   
                   if (person1Pos && person2Pos) {
+                    // Crear línea semicircular entre cónyuges
+                    const midX = (person1Pos.x + person2Pos.x) / 2;
+                    const midY = (person1Pos.y + person2Pos.y) / 2;
+                    const controlY = midY - 40; // Punto de control más arriba para curva
+                    
                     return (
-                      <line 
+                      <path 
                         key={index}
-                        x1={person1Pos.x}
-                        y1={person1Pos.y}
-                        x2={person2Pos.x}
-                        y2={person2Pos.y}
+                        d={`M ${person1Pos.x} ${person1Pos.y} Q ${midX} ${controlY} ${person2Pos.x} ${person2Pos.y}`}
                         stroke="#e91e63" 
                         strokeWidth="4" 
                         strokeDasharray="10,5" 
+                        fill="none"
                         opacity="0.8"
                       />
                     );
