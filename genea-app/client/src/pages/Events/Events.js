@@ -62,6 +62,26 @@ const Events = () => {
     }
   };
 
+  const handleDeleteEvent = async (eventId) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este evento? Esta acción no se puede deshacer.')) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/events/${eventId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${session?.access_token}` }
+        });
+        
+        if (response.ok) {
+          fetchEvents();
+          alert('Evento eliminado correctamente');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al eliminar el evento');
+      }
+    }
+  };
+
   const handlePhotoUpload = async (eventId, files) => {
     const formData = new FormData();
     Array.from(files).forEach(file => formData.append('photos', file));
@@ -170,15 +190,31 @@ const Events = () => {
           <div key={event.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
               <h3 style={{ margin: 0, color: '#1976d2' }}>{event.title}</h3>
-              <span style={{ 
-                backgroundColor: event.event_type === 'boda' ? '#e91e63' : event.event_type === 'cumpleanos' ? '#ff9800' : '#4caf50',
-                color: 'white',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                fontSize: '12px'
-              }}>
-                {event.event_type}
-              </span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ 
+                  backgroundColor: event.event_type === 'boda' ? '#e91e63' : event.event_type === 'cumpleanos' ? '#ff9800' : '#4caf50',
+                  color: 'white',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontSize: '12px'
+                }}>
+                  {event.event_type}
+                </span>
+                <button
+                  onClick={() => handleDeleteEvent(event.id)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#f44336',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    padding: '2px'
+                  }}
+                  title="Eliminar evento"
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
             
             <p style={{ color: '#666', marginBottom: '10px' }}>{event.description}</p>

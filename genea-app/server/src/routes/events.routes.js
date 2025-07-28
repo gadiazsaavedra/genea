@@ -10,6 +10,7 @@ router.use(verifyToken);
 
 router.get('/', eventsController.getAllEvents);
 router.post('/', eventsController.createEvent);
+router.delete('/:eventId', eventsController.deleteEvent);
 router.post('/:eventId/photos', upload.array('photos'), eventsController.uploadEventPhotos);
 
 module.exports = router;

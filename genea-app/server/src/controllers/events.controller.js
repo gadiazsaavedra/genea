@@ -28,6 +28,32 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
+// Eliminar evento
+exports.deleteEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user.uid;
+    
+    const { error } = await supabaseClient
+      .from('events')
+      .delete()
+      .eq('id', eventId);
+    
+    if (error) throw error;
+    
+    res.json({
+      success: true,
+      message: 'Evento eliminado correctamente'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar evento',
+      error: error.message
+    });
+  }
+};
+
 // Crear evento
 exports.createEvent = async (req, res) => {
   try {
