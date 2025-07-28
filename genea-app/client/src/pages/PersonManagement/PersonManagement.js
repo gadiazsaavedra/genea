@@ -176,7 +176,18 @@ const PersonManagement = () => {
   };
 
   const handleDeletePerson = async (personId) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar esta persona?')) {
+    const person = persons.find(p => p.id === personId);
+    const personName = person ? (person.full_name || `${person.first_name} ${person.last_name || ''}`.trim()) : 'persona';
+    
+    // Doble confirmación con nombre
+    const step1 = window.confirm(`¿Estás seguro de que deseas eliminar a: "${personName}"?`);
+    if (!step1) return;
+    
+    const userInput = window.prompt(
+      `⚠️ CONFIRMACIÓN FINAL ⚠️\n\nPara eliminar a "${personName}" permanentemente, escribe exactamente:\nELIMINAR\n\n(Esta acción no se puede deshacer)`
+    );
+    
+    if (userInput === 'ELIMINAR') {
       try {
         const { error } = await supabase
           .from('persons')
@@ -191,27 +202,41 @@ const PersonManagement = () => {
         console.error('Error al eliminar persona:', error);
         alert('Error al eliminar persona');
       }
+    } else if (userInput !== null) {
+      alert('Eliminación cancelada. Debe escribir exactamente "ELIMINAR"');
     }
   };
 
   const handleBulkDelete = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const { error } = await supabase
-        .from('persons')
-        .delete()
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      
-      setPersons([]);
-      setFilteredPersons([]);
-      alert('Todas las personas han sido eliminadas');
-    } catch (error) {
-      console.error('Error al eliminar personas:', error);
-      alert('Error al eliminar personas');
+    // Doble confirmación para eliminación masiva
+    const step1 = window.confirm(`¿Estás seguro de que deseas eliminar TODAS las ${persons.length} personas?`);
+    if (!step1) return;
+    
+    const userInput = window.prompt(
+      `🚨 ELIMINACIÓN MASIVA 🚨\n\nVas a eliminar TODAS las ${persons.length} personas permanentemente.\n\nPara confirmar, escribe exactamente:\nELIMINAR TODAS\n\n(Esta acción no se puede deshacer)`
+    );
+    
+    if (userInput === 'ELIMINAR TODAS') {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const { error } = await supabase
+          .from('persons')
+          .delete()
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+        
+        setPersons([]);
+        setFilteredPersons([]);
+        alert('Todas las personas han sido eliminadas');
+      } catch (error) {
+        console.error('Error al eliminar personas:', error);
+        alert('Error al eliminar personas');
+      }
+    } else if (userInput !== null) {
+      alert('Eliminación cancelada. Debe escribir exactamente "ELIMINAR TODAS"');
     }
   };
 

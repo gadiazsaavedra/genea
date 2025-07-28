@@ -63,7 +63,18 @@ const Events = () => {
   };
 
   const handleDeleteEvent = async (eventId) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este evento? Esta acción no se puede deshacer.')) {
+    const event = events.find(e => e.id === eventId);
+    const eventName = event ? event.title : 'evento';
+    
+    // Doble confirmación con nombre
+    const step1 = window.confirm(`¿Estás seguro de que deseas eliminar el evento: "${eventName}"?`);
+    if (!step1) return;
+    
+    const userInput = window.prompt(
+      `⚠️ CONFIRMACIÓN FINAL ⚠️\n\nPara eliminar "${eventName}" permanentemente, escribe exactamente:\nELIMINAR\n\n(Esta acción no se puede deshacer)`
+    );
+    
+    if (userInput === 'ELIMINAR') {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const response = await fetch(`${process.env.REACT_APP_API_URL}/events/${eventId}`, {
@@ -79,6 +90,8 @@ const Events = () => {
         console.error('Error:', error);
         alert('Error al eliminar el evento');
       }
+    } else if (userInput !== null) {
+      alert('Eliminación cancelada. Debe escribir exactamente "ELIMINAR"');
     }
   };
 
