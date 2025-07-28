@@ -35,13 +35,20 @@ router.get('/', async (req, res) => {
 // Crear invitación
 router.post('/', async (req, res) => {
   try {
-    const { email, role } = req.body;
+    const { email, phone, role, method } = req.body;
     const userId = req.user.uid;
     
-    if (!email || !role) {
+    if (!role) {
       return res.status(400).json({
         success: false,
-        message: 'Email y rol son requeridos'
+        message: 'Rol es requerido'
+      });
+    }
+    
+    if (!email && !phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email o teléfono son requeridos'
       });
     }
     
@@ -50,29 +57,51 @@ router.post('/', async (req, res) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
     
+    const invitationData = {
+      family_id: '638a55dc-0a73-417c-9c80-556ac0028325',
+      invited_by: userId,
+      role,
+      token,
+      expires_at: expiresAt.toISOString(),
+      invitation_method: method || 'email'
+    };
+    
+    if (email) invitationData.invited_email = email;
+    if (phone) invitationData.invited_phone = phone;
+    
     const { data: invitation, error } = await supabaseClient
       .from('invitations')
-      .insert([{
-        family_id: '638a55dc-0a73-417c-9c80-556ac0028325',
-        invited_by: userId,
-        invited_email: email,
-        role,
-        token,
-        expires_at: expiresAt.toISOString()
-      }])
+      .insert([invitationData])
       .select()
       .single();
     
     if (error) throw error;
     
-    // Simular envío de email
-    console.log(`📧 Email enviado a ${email}`);
-    console.log(`🔗 Link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/invitation/accept/${token}`);
+    // Generar URLs y mensajes
+    const inviteUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invitation/accept/${token}`;
+    let whatsappMessage = '';
+    let whatsappUrl = null;
+    
+    if (phone && (method === 'whatsapp' || method === 'both')) {
+      whatsappMessage = `🌳 *Invitación a Genea*\n\nHas sido invitado a unirte a nuestra familia en Genea.\n\n🔗 Enlace de invitación:\n${inviteUrl}\n\n⏰ Este enlace expira en 7 días.\n\n📱 Genea - Sistema de Gestión de Árbol Genealógico`;
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(whatsappMessage)}`;
+    }
+    
+    // Logs para debugging
+    if (email) console.log(`📧 Email: ${email}`);
+    if (phone) console.log(`📱 WhatsApp: ${phone}`);
+    console.log(`🔗 Link: ${inviteUrl}`);
     
     res.status(201).json({
       success: true,
-      message: 'Invitación enviada correctamente',
-      data: invitation
+      message: 'Invitación creada correctamente',
+      data: {
+        ...invitation,
+        inviteUrl,
+        whatsappMessage,
+        whatsappUrl
+      }
     });
   } catch (error) {
     res.status(500).json({
