@@ -26,6 +26,7 @@ const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
 const AuthCallback = lazy(() => import('./pages/Auth/AuthCallback'));
 const Profile = lazy(() => import('./pages/Profile/Profile'));
+const PersonProfile = lazy(() => import('./pages/PersonProfile/PersonProfile'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const Statistics = lazy(() => import('./pages/Statistics/Statistics'));
 const Export = lazy(() => import('./pages/Export/Export'));
@@ -127,7 +128,7 @@ function App() {
                     path="/persons/:personId/profile" 
                     element={
                       <PrivateRoute>
-                        <Profile />
+                        <PersonProfile />
                       </PrivateRoute>
                     } 
                   />
