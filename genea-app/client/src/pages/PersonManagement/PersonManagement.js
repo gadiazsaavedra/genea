@@ -342,7 +342,7 @@ const PersonManagement = () => {
         
         // Mapear datos del formulario al formato de la API
         const apiData = {
-          familyId: familyId,
+          familyId: '638a55dc-0a73-417c-9c80-556ac0028325', // TODO: obtener de contexto
           firstName: formData.firstName,
           lastName: formData.lastName || null,
           maidenName: formData.maidenName || null,
