@@ -69,8 +69,13 @@ const DragDropTreeBuilder = ({ familyId }) => {
     if (!draggedPerson) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - 75; // Centrar tarjeta
-    const y = e.clientY - rect.top - 60;
+    const rawX = e.clientX - rect.left - 75; // Centrar tarjeta
+    const rawY = e.clientY - rect.top - 60;
+
+    // Snap to grid (20px grid)
+    const gridSize = 20;
+    const x = Math.round(rawX / gridSize) * gridSize;
+    const y = Math.round(rawY / gridSize) * gridSize;
 
     const newPositions = {
       ...positions,
@@ -214,8 +219,9 @@ const DragDropTreeBuilder = ({ familyId }) => {
           borderRadius: '8px',
           backgroundColor: '#f8f9fa',
           position: 'relative',
-          backgroundImage: 'radial-gradient(circle, #ddd 1px, transparent 1px)',
-          backgroundSize: '20px 20px'
+          backgroundImage: 'radial-gradient(circle, #ccc 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+          backgroundPosition: '0 0'
         }}
       >
         {/* Instrucciones */}
@@ -232,7 +238,7 @@ const DragDropTreeBuilder = ({ familyId }) => {
           <h3 style={{ margin: '0 0 10px 0', color: '#1976d2' }}>🎯 Constructor de Árbol</h3>
           <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
             Arrastra las tarjetas para posicionar tu árbol genealógico. 
-            Una vez terminado, haz clic en "Guardar Árbol".
+            Las tarjetas se alinean automáticamente al grid para mayor precisión.
           </p>
         </div>
 
