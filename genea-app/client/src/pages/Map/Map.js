@@ -19,9 +19,15 @@ const Map = () => {
       });
       if (response.ok) {
         const result = await response.json();
+        console.log('=== MAP DEBUG ===');
+        console.log('API Response:', result);
         const peopleData = Array.isArray(result.data) ? result.data : [];
+        console.log('People data:', peopleData);
+        console.log('People with places:', peopleData.filter(p => p.birth_place || p.death_place));
         setPeople(peopleData);
         await processLocations(peopleData);
+      } else {
+        console.error('API Error:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -31,7 +37,7 @@ const Map = () => {
   };
 
   const processLocations = async (peopleData) => {
-    const locationMap = new Map();
+    const locationMap = new window.Map();
 
     for (const person of peopleData) {
       if (person.birth_place) {
@@ -75,7 +81,9 @@ const Map = () => {
       }
     }
 
-    setLocations(Array.from(locationMap.values()));
+    const locationsArray = Array.from(locationMap.values());
+    console.log('Processed locations:', locationsArray);
+    setLocations(locationsArray);
   };
 
   const getCoordinates = async (placeName) => {
