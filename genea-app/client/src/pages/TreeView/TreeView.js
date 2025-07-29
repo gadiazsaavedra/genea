@@ -400,19 +400,7 @@ const TreeView = () => {
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button 
-              onClick={() => setViewType('traditional')}
-              style={{ 
-                padding: '8px 16px', 
-                backgroundColor: viewType === 'traditional' ? '#1976d2' : 'white',
-                color: viewType === 'traditional' ? 'white' : '#1976d2',
-                border: '1px solid #1976d2',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              🌳 Tradicional
-            </button>
+
             <button 
               onClick={() => setViewType('timeline')}
               style={{ 
