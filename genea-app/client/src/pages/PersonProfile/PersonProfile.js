@@ -72,9 +72,11 @@ const PersonProfile = () => {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-          <div>
-            <strong>Género:</strong> {person.gender === 'male' ? 'Masculino' : 'Femenino'}
-          </div>
+          {person.gender && (
+            <div>
+              <strong>Género:</strong> {person.gender === 'male' ? 'Masculino' : person.gender === 'female' ? 'Femenino' : 'No especificado'}
+            </div>
+          )}
           
           {person.birth_date && (
             <div>
@@ -91,6 +93,35 @@ const PersonProfile = () => {
           {person.death_date && (
             <div>
               <strong>Fallecimiento:</strong> {new Date(person.death_date).toLocaleDateString()}
+            </div>
+          )}
+          
+          {person.death_place && (
+            <div>
+              <strong>Lugar de fallecimiento:</strong> {person.death_place}
+            </div>
+          )}
+          
+          <div>
+            <strong>Tipo:</strong> 
+            {person.is_founder && ' 👑 Fundador'}
+            {person.person_type === 'spouse' && ' 💍 Cónyuge'}
+            {!person.is_founder && person.person_type !== 'spouse' && ' 👥 Descendiente'}
+          </div>
+          
+          <div>
+            <strong>Estado:</strong> {person.death_date ? '⚰️ Fallecido' : '✅ Vivo'}
+          </div>
+          
+          {person.created_at && (
+            <div>
+              <strong>Agregado:</strong> {new Date(person.created_at).toLocaleDateString()}
+            </div>
+          )}
+          
+          {person.updated_at && (
+            <div>
+              <strong>Actualizado:</strong> {new Date(person.updated_at).toLocaleDateString()}
             </div>
           )}
         </div>
