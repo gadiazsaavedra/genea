@@ -16,7 +16,7 @@ const TreeView = () => {
   const [relationships, setRelationships] = useState([]);
   const [showPersonModal, setShowPersonModal] = useState(false);
   const [isFounderMode, setIsFounderMode] = useState(false);
-  const [viewType, setViewType] = useState('traditional');
+  const [viewType, setViewType] = useState('saved');
   const [relationshipMode, setRelationshipMode] = useState(null); // 'child' or 'spouse'
   const [selectedParent, setSelectedParent] = useState(null);
 
