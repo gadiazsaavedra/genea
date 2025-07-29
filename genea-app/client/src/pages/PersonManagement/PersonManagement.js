@@ -341,13 +341,19 @@ const PersonManagement = () => {
         console.log('Creating person with API:', `${process.env.REACT_APP_API_URL}/persons`);
         
         // Mapear datos del formulario al formato de la API
-        const nameParts = formData.fullName.split(' ');
         const apiData = {
-          familyId: '638a55dc-0a73-417c-9c80-556ac0028325', // TODO: obtener de contexto
-          firstName: nameParts[0] || '',
-          lastName: nameParts.slice(1).join(' ') || null,
-          gender: null,
-          birthDate: formData.birthDate || null
+          familyId: familyId,
+          firstName: formData.firstName,
+          lastName: formData.lastName || null,
+          maidenName: formData.maidenName || null,
+          gender: formData.gender || null,
+          birthDate: formData.birthDate || null,
+          deathDate: formData.deathDate || null,
+          birthPlace: formData.birthPlace || null,
+          deathPlace: formData.deathPlace || null,
+          biography: formData.biography || null,
+          photoUrl: formData.photoUrl || null,
+          isAlive: formData.isAlive
         };
         
         console.log('Mapped API data:', apiData);

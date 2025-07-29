@@ -3,14 +3,18 @@ import './PersonForm.css';
 
 const PersonForm = ({ person, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
-    fullName: person?.fullName || '',
-    birthDate: person?.birthDate ? new Date(person.birthDate).toISOString().split('T')[0] : '',
-    birthPlace: person?.birthPlace || '',
-    isAlive: person?.isAlive !== undefined ? person.isAlive : true,
-    deathDate: person?.deathDate ? new Date(person.deathDate).toISOString().split('T')[0] : '',
-    deathPlace: person?.deathPlace || '',
-    occupation: person?.occupation || '',
-    bio: person?.bio || ''
+    fullName: person ? `${person.first_name || ''} ${person.last_name || ''}`.trim() : '',
+    firstName: person?.first_name || '',
+    lastName: person?.last_name || '',
+    maidenName: person?.maiden_name || '',
+    birthDate: person?.birth_date ? new Date(person.birth_date).toISOString().split('T')[0] : '',
+    birthPlace: person?.birth_place || '',
+    isAlive: person?.is_alive !== undefined ? person.is_alive : true,
+    deathDate: person?.death_date ? new Date(person.death_date).toISOString().split('T')[0] : '',
+    deathPlace: person?.death_place || '',
+    gender: person?.gender || '',
+    biography: person?.biography || '',
+    photoUrl: person?.photo_url || ''
   });
 
   const [errors, setErrors] = useState({});
@@ -25,8 +29,8 @@ const PersonForm = ({ person, onSubmit, onCancel }) => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'El nombre es obligatorio';
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'El nombre es obligatorio';
     }
     
     if (!formData.isAlive && !formData.deathDate) {
@@ -49,16 +53,52 @@ const PersonForm = ({ person, onSubmit, onCancel }) => {
       <h2>{person ? 'Editar Persona' : 'Añadir Persona'}</h2>
       
       <div className="form-group">
-        <label htmlFor="fullName">Nombre completo *</label>
+        <label htmlFor="firstName">Nombre *</label>
         <input
           type="text"
-          id="fullName"
-          name="fullName"
-          value={formData.fullName}
+          id="firstName"
+          name="firstName"
+          value={formData.firstName}
           onChange={handleChange}
-          className={errors.fullName ? 'error' : ''}
+          className={errors.firstName ? 'error' : ''}
         />
-        {errors.fullName && <span className="error-message">{errors.fullName}</span>}
+        {errors.firstName && <span className="error-message">{errors.firstName}</span>}
+      </div>
+      
+      <div className="form-group">
+        <label htmlFor="lastName">Apellido</label>
+        <input
+          type="text"
+          id="lastName"
+          name="lastName"
+          value={formData.lastName}
+          onChange={handleChange}
+        />
+      </div>
+      
+      <div className="form-group">
+        <label htmlFor="maidenName">Apellido de soltera</label>
+        <input
+          type="text"
+          id="maidenName"
+          name="maidenName"
+          value={formData.maidenName}
+          onChange={handleChange}
+        />
+      </div>
+      
+      <div className="form-group">
+        <label htmlFor="gender">Género</label>
+        <select
+          id="gender"
+          name="gender"
+          value={formData.gender}
+          onChange={handleChange}
+        >
+          <option value="">Seleccionar...</option>
+          <option value="male">Masculino</option>
+          <option value="female">Femenino</option>
+        </select>
       </div>
       
       <div className="form-group">
@@ -134,13 +174,25 @@ const PersonForm = ({ person, onSubmit, onCancel }) => {
       </div>
       
       <div className="form-group">
-        <label htmlFor="bio">Biografía</label>
+        <label htmlFor="biography">Biografía</label>
         <textarea
-          id="bio"
-          name="bio"
-          value={formData.bio}
+          id="biography"
+          name="biography"
+          value={formData.biography}
           onChange={handleChange}
           rows="4"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label htmlFor="photoUrl">URL de foto</label>
+        <input
+          type="url"
+          id="photoUrl"
+          name="photoUrl"
+          value={formData.photoUrl}
+          onChange={handleChange}
+          placeholder="https://ejemplo.com/foto.jpg"
         />
       </div>
       
