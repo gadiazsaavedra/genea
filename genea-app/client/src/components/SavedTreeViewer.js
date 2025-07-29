@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase.config';
 import { getParentAgeInfo } from '../utils/ageCalculator';
+import PersonTimeline from './PersonTimeline';
 
 const SavedTreeViewer = ({ familyId }) => {
   const [people, setPeople] = useState([]);
   const [positions, setPositions] = useState({});
   const [relationships, setRelationships] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPersonId, setSelectedPersonId] = useState(null);
 
   useEffect(() => {
     loadSavedTree();
@@ -217,16 +219,22 @@ const SavedTreeViewer = ({ familyId }) => {
               zIndex: 10
             }}
           >
-            <div style={{
-              border: '2px solid #1976d2',
-              borderRadius: '12px',
-              padding: '16px',
-              backgroundColor: 'white',
-              width: '150px',
-              textAlign: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              transition: 'transform 0.2s'
-            }}>
+            <div 
+              onClick={() => setSelectedPersonId(person.id)}
+              style={{
+                border: '2px solid #1976d2',
+                borderRadius: '12px',
+                padding: '16px',
+                backgroundColor: 'white',
+                width: '150px',
+                textAlign: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                transition: 'transform 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
               <div style={{ 
                 width: '50px', 
                 height: '50px', 
@@ -271,10 +279,27 @@ const SavedTreeViewer = ({ familyId }) => {
               <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>
                 {person.birth_date ? new Date(person.birth_date).getFullYear() : '?'} - Presente
               </p>
+              
+              <div style={{ 
+                fontSize: '10px', 
+                color: '#1976d2', 
+                marginTop: '8px',
+                fontStyle: 'italic'
+              }}>
+                📅 Clic para timeline
+              </div>
             </div>
           </div>
         );
       })}
+
+      {/* Timeline Modal */}
+      {selectedPersonId && (
+        <PersonTimeline 
+          personId={selectedPersonId}
+          onClose={() => setSelectedPersonId(null)}
+        />
+      )}
 
       {/* Leyenda */}
       <div style={{
