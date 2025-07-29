@@ -120,7 +120,7 @@ const MediaManagement = () => {
     };
 
     fetchPerson();
-  }, []); // Solo ejecutar una vez al montar el componente
+  }, [personId]); // Recargar cuando cambie personId
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -146,7 +146,7 @@ const MediaManagement = () => {
           };
         } else if (uploadType === 'photos') {
           const newPhotos = response.data.uploadedPhotos.map((photo, index) => ({
-            _id: `photo_${Date.now()}_${index}`,
+            _id: photo._id || `photo_${Date.now()}_${index}`,
             url: photo.url,
             caption: photo.caption,
             date: photo.date
