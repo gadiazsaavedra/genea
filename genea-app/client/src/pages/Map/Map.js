@@ -133,7 +133,7 @@ const Map = () => {
           <div style={{
             width: '100%',
             height: '600px',
-            backgroundImage: 'url("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/1/0/0")',
+            backgroundImage: 'url("https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             position: 'relative',
