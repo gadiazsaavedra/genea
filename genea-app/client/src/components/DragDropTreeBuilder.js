@@ -23,20 +23,24 @@ const DragDropTreeBuilder = ({ familyId }) => {
         console.log('Loaded people for drag drop:', result.data);
         setPeople(result.data || []);
         
-        // Establecer posiciones iniciales si no existen
+        // Establecer posiciones iniciales solo para personas sin posición
         if (result.data && result.data.length > 0) {
-          const initialPositions = {};
-          result.data.forEach((person, index) => {
-            if (!positions[person.id]) {
-              initialPositions[person.id] = {
-                x: 50 + (index % 4) * 200,
-                y: 100 + Math.floor(index / 4) * 150
-              };
-            }
+          setPositions(prevPositions => {
+            const newPositions = { ...prevPositions };
+            let hasNewPositions = false;
+            
+            result.data.forEach((person, index) => {
+              if (!newPositions[person.id]) {
+                newPositions[person.id] = {
+                  x: 50 + (index % 4) * 200,
+                  y: 100 + Math.floor(index / 4) * 150
+                };
+                hasNewPositions = true;
+              }
+            });
+            
+            return hasNewPositions ? newPositions : prevPositions;
           });
-          if (Object.keys(initialPositions).length > 0) {
-            setPositions(prev => ({ ...prev, ...initialPositions }));
-          }
         }
       } else {
         console.error('Error response:', response.status);
@@ -47,7 +51,26 @@ const DragDropTreeBuilder = ({ familyId }) => {
   };
 
   const loadPositions = async () => {
-    // Cargar posiciones guardadas desde localStorage o API
+    try {
+      // Primero intentar cargar desde API (árbol guardado)
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/tree-layouts/family/${familyId}`, {
+        headers: { 'Authorization': `Bearer ${session?.access_token}` }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data && result.data.positions) {
+          console.log('Loaded saved positions:', result.data.positions);
+          setPositions(result.data.positions);
+          return; // Usar posiciones guardadas
+        }
+      }
+    } catch (error) {
+      console.log('No saved positions found, using localStorage');
+    }
+    
+    // Fallback a localStorage
     const saved = localStorage.getItem(`tree-positions-${familyId}`);
     if (saved) {
       setPositions(JSON.parse(saved));
