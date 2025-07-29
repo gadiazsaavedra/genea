@@ -229,12 +229,6 @@ const FamilyManagement = () => {
                   >
                     Editar
                   </button>
-                  <button 
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDeleteFamily(family.id)}
-                  >
-                    Eliminar
-                  </button>
                 </div>
               </div>
             ))
