@@ -87,8 +87,24 @@ const RelationshipManager = ({ personId, onClose }) => {
     }
   };
 
-  const handleDeleteRelation = async (relationId) => {
-    if (!window.confirm('¿Estás seguro de eliminar esta relación?')) return;
+  const handleDeleteRelation = async (relationId, relationPerson) => {
+    // Primera confirmación
+    const step1 = window.confirm(
+      `¿Estás seguro de eliminar la relación con "${relationPerson.first_name} ${relationPerson.last_name || ''}"?\n\nEsta acción eliminará la conexión familiar.`
+    );
+    if (!step1) return;
+    
+    // Segunda confirmación con texto específico
+    const userInput = window.prompt(
+      `⚠️ CONFIRMACIÓN FINAL ⚠️\n\nPara eliminar la relación con "${relationPerson.first_name} ${relationPerson.last_name || ''}", escribe exactamente:\nELIMINAR RELACION\n\n(Esta acción no se puede deshacer)`
+    );
+    
+    if (userInput !== 'ELIMINAR RELACION') {
+      if (userInput !== null) {
+        alert('Eliminación cancelada. Debe escribir exactamente "ELIMINAR RELACION"');
+      }
+      return;
+    }
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -263,7 +279,7 @@ const RelationshipManager = ({ personId, onClose }) => {
                       {relation.notes && <div style={{ fontSize: '12px', color: '#666' }}>{relation.notes}</div>}
                     </div>
                     <button
-                      onClick={() => handleDeleteRelation(relation.id)}
+                      onClick={() => handleDeleteRelation(relation.id, relation.person)}
                       style={{
                         backgroundColor: '#f44336',
                         color: 'white',
@@ -274,7 +290,7 @@ const RelationshipManager = ({ personId, onClose }) => {
                         fontSize: '12px'
                       }}
                     >
-                      Eliminar
+                      🗑️ Eliminar
                     </button>
                   </div>
                 ))}
