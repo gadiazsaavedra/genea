@@ -6,6 +6,10 @@ const DragDropTreeBuilder = ({ familyId }) => {
   const [draggedPerson, setDraggedPerson] = useState(null);
   const [positions, setPositions] = useState({});
   const [connections, setConnections] = useState([]);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     loadPeople();
@@ -92,8 +96,8 @@ const DragDropTreeBuilder = ({ familyId }) => {
     if (!draggedPerson) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const rawX = e.clientX - rect.left - 75; // Centrar tarjeta
-    const rawY = e.clientY - rect.top - 60;
+    const rawX = (e.clientX - rect.left - pan.x) / zoom - 75;
+    const rawY = (e.clientY - rect.top - pan.y) / zoom - 60;
 
     // Snap to grid (20px grid)
     const gridSize = 20;
@@ -108,6 +112,37 @@ const DragDropTreeBuilder = ({ familyId }) => {
     setPositions(newPositions);
     localStorage.setItem(`tree-positions-${familyId}`, JSON.stringify(newPositions));
     setDraggedPerson(null);
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.max(0.3, Math.min(3, prev * delta)));
+  };
+
+  const handleMouseDown = (e) => {
+    if (e.button === 0 && !draggedPerson) {
+      setIsPanning(true);
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isPanning) {
+      const deltaX = e.clientX - lastPanPoint.x;
+      const deltaY = e.clientY - lastPanPoint.y;
+      setPan(prev => ({ x: prev.x + deltaX, y: prev.y + deltaY }));
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
   };
 
   const saveTreeLayout = async () => {
@@ -235,6 +270,11 @@ const DragDropTreeBuilder = ({ familyId }) => {
       <div
         onDragOver={handleDragOver}
         onDrop={handleDrop}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
         style={{
           width: '100%',
           height: '600px',
@@ -242,11 +282,21 @@ const DragDropTreeBuilder = ({ familyId }) => {
           borderRadius: '8px',
           backgroundColor: '#f8f9fa',
           position: 'relative',
-          backgroundImage: 'radial-gradient(circle, #ccc 1px, transparent 1px)',
-          backgroundSize: '20px 20px',
-          backgroundPosition: '0 0'
+          overflow: 'hidden',
+          cursor: isPanning ? 'grabbing' : 'grab'
         }}
       >
+        <div
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: '0 0',
+            width: '2000px',
+            height: '2000px',
+            backgroundImage: 'radial-gradient(circle, #ccc 1px, transparent 1px)',
+            backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
+            position: 'relative'
+          }}
+        >
         {/* Instrucciones */}
         <div style={{
           position: 'absolute',
@@ -265,41 +315,108 @@ const DragDropTreeBuilder = ({ familyId }) => {
           </p>
         </div>
 
-        {/* Botones de acción */}
+        {/* Renderizar personas */}
+        {people.map(person => (
+          <PersonCard key={person.id} person={person} />
+        ))}
+        </div>
+
+        {/* Controles de zoom y pan */}
         <div style={{
           position: 'absolute',
           top: '20px',
           right: '20px',
           display: 'flex',
-          gap: '10px'
+          flexDirection: 'column',
+          gap: '10px',
+          zIndex: 100
         }}>
-          <button
-            onClick={() => setPositions({})}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#f44336',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            🔄 Resetear
-          </button>
-          <button
-            onClick={saveTreeLayout}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#4caf50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            💾 Guardar Árbol
-          </button>
+          <div style={{
+            display: 'flex',
+            gap: '5px',
+            backgroundColor: 'white',
+            padding: '5px',
+            borderRadius: '4px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          }}>
+            <button
+              onClick={() => setZoom(prev => Math.min(3, prev * 1.2))}
+              style={{
+                padding: '4px 8px',
+                backgroundColor: '#2196f3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              🔍+
+            </button>
+            <span style={{ fontSize: '12px', padding: '4px', minWidth: '40px', textAlign: 'center' }}>
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => setZoom(prev => Math.max(0.3, prev * 0.8))}
+              style={{
+                padding: '4px 8px',
+                backgroundColor: '#2196f3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              🔍-
+            </button>
+            <button
+              onClick={resetView}
+              style={{
+                padding: '4px 8px',
+                backgroundColor: '#ff9800',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              🎯
+            </button>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '5px' }}>
+            <button
+              onClick={() => setPositions({})}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#f44336',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              🔄 Resetear
+            </button>
+            <button
+              onClick={saveTreeLayout}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#4caf50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '12px'
+              }}
+            >
+              💾 Guardar
+            </button>
+          </div>
         </div>
 
         {/* Debug info */}
@@ -316,11 +433,6 @@ const DragDropTreeBuilder = ({ familyId }) => {
             <p>Si no aparecen tarjetas, verifica que hay personas en la familia.</p>
           </div>
         )}
-
-        {/* Renderizar personas */}
-        {people.map(person => (
-          <PersonCard key={person.id} person={person} />
-        ))}
 
         {/* Estadísticas y debug */}
         <div style={{
