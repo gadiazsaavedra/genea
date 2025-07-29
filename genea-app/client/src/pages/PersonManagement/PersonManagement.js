@@ -293,6 +293,21 @@ const PersonManagement = () => {
       }
       
       if (editingPerson) {
+        // Mapear datos del formulario al formato de la API para actualización
+        const apiData = {
+          firstName: formData.firstName,
+          lastName: formData.lastName || null,
+          maidenName: formData.maidenName || null,
+          gender: formData.gender || null,
+          birthDate: formData.birthDate || null,
+          deathDate: formData.deathDate || null,
+          birthPlace: formData.birthPlace || null,
+          deathPlace: formData.deathPlace || null,
+          occupation: formData.occupation || null,
+          biography: formData.biography || null,
+          photoUrl: formData.photoUrl || null
+        };
+        
         // Actualizar persona existente
         const response = await fetch(`${process.env.REACT_APP_API_URL}/persons/${editingPerson.id}`, {
           method: 'PUT',
@@ -300,7 +315,7 @@ const PersonManagement = () => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(formData)
+          body: JSON.stringify(apiData)
         });
         
         const result = await response.json();
