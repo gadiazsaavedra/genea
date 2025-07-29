@@ -2,11 +2,15 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth.middleware');
 const { supabaseClient } = require('../config/supabase.config');
+const aiController = require('../controllers/ai.controller');
 
 router.use(verifyToken);
 
-// Asistente IA simplificado
-router.post('/query', async (req, res) => {
+// Usar el controlador mejorado
+router.post('/query', aiController.query);
+
+// Asistente IA simplificado (backup)
+router.post('/query-old', async (req, res) => {
   try {
     const { question } = req.body;
     

@@ -18,6 +18,47 @@ class AIService {
     };
   }
 
+  // Buscar información específica en los datos familiares
+  async searchFamilyData(familyData, query) {
+    const results = [];
+    const searchTerms = query.toLowerCase().split(' ');
+    
+    familyData.forEach(person => {
+      const personData = {
+        name: `${person.first_name || ''} ${person.last_name || ''}`.trim(),
+        birth_date: person.birth_date,
+        death_date: person.death_date,
+        birth_place: person.birth_place,
+        death_place: person.death_place,
+        occupation: person.occupation,
+        notes: person.notes,
+        cause_of_death: person.cause_of_death,
+        health_info: person.health_info
+      };
+      
+      // Buscar en todos los campos de texto
+      const searchableText = Object.values(personData)
+        .filter(value => typeof value === 'string')
+        .join(' ')
+        .toLowerCase();
+      
+      // Verificar si algún término de búsqueda coincide
+      const matches = searchTerms.filter(term => 
+        searchableText.includes(term)
+      );
+      
+      if (matches.length > 0) {
+        results.push({
+          person: personData,
+          matches: matches,
+          relevance: matches.length / searchTerms.length
+        });
+      }
+    });
+    
+    return results.sort((a, b) => b.relevance - a.relevance);
+  }
+
   // Sugerir relaciones familiares basadas en datos
   async suggestRelationships(familyData) {
     const suggestions = [];

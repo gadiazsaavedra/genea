@@ -181,6 +181,57 @@ const aiController = {
         message: 'Error rechazando sugerencia'
       });
     }
+  },
+
+  // Consulta general de IA
+  query: async (req, res) => {
+    try {
+      const { question } = req.body;
+      const userId = req.user.uid;
+
+      // Obtener todas las personas del usuario
+      const { data: people, error: peopleError } = await supabaseClient
+        .from('people')
+        .select('*');
+
+      if (peopleError) throw peopleError;
+
+      // Buscar información específica
+      const searchResults = await aiService.searchFamilyData(people, question);
+      
+      let response = '';
+      
+      if (searchResults.length > 0) {
+        response = `Encontré ${searchResults.length} resultado(s) relacionado(s) con "${question}":\n\n`;
+        
+        searchResults.slice(0, 5).forEach((result, index) => {
+          response += `${index + 1}. ${result.person.name}\n`;
+          if (result.person.birth_date) response += `   Nacimiento: ${result.person.birth_date}\n`;
+          if (result.person.death_date) response += `   Fallecimiento: ${result.person.death_date}\n`;
+          if (result.person.cause_of_death) response += `   Causa de muerte: ${result.person.cause_of_death}\n`;
+          if (result.person.notes) response += `   Notas: ${result.person.notes}\n`;
+          response += `\n`;
+        });
+      } else {
+        response = `No encontré información específica sobre "${question}" en los datos familiares.\n\n`;
+        response += `Estadísticas generales:\n`;
+        response += `- Total de personas: ${people.length}\n`;
+        response += `- Personas vivas: ${people.filter(p => !p.death_date).length}\n`;
+        response += `- Personas fallecidas: ${people.filter(p => p.death_date).length}\n`;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: { response }
+      });
+
+    } catch (error) {
+      console.error('Error processing AI query:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error procesando consulta de IA'
+      });
+    }
   }
 };
 
