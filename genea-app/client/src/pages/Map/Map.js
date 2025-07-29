@@ -161,22 +161,23 @@ const Map = () => {
               if (location.coordinates.lat === 0 && location.coordinates.lng === 0) return null;
               
               const size = getMarkerSize(location);
-              // Proyección ajustada para mapa equirectangular
+              // Proyección simple equirectangular
               const x = ((location.coordinates.lng + 180) / 360) * 100;
-              // Ajuste Y para proyección Mercator
-              const latRad = location.coordinates.lat * Math.PI / 180;
-              const mercatorY = Math.log(Math.tan(Math.PI/4 + latRad/2));
-              const y = 50 - (mercatorY / (2 * Math.PI)) * 100;
+              const y = ((90 - location.coordinates.lat) / 180) * 100;
               
-              console.log(`${location.name}: x=${x.toFixed(1)}%, y=${y.toFixed(1)}%`);
+              // Ajustes manuales para alineación
+              const adjustedX = x;
+              const adjustedY = y * 0.7 + 15; // Comprimir Y y desplazar hacia arriba
+              
+              console.log(`${location.name}: original x=${x.toFixed(1)}%, y=${y.toFixed(1)}% → adjusted x=${adjustedX.toFixed(1)}%, y=${adjustedY.toFixed(1)}%`);
               
               return (
                 <div
                   key={index}
                   style={{
                     position: 'absolute',
-                    left: `${x}%`,
-                    top: `${y}%`,
+                    left: `${adjustedX}%`,
+                    top: `${adjustedY}%`,
                     transform: 'translate(-50%, -50%)',
                     cursor: 'pointer',
                     zIndex: 100
