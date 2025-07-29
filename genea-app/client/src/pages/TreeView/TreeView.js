@@ -5,6 +5,7 @@ import TreeVisualization from '../../components/TreeVisualization';
 import TraditionalFamilyTree from '../../components/TraditionalFamilyTree';
 import DragDropTreeBuilder from '../../components/DragDropTreeBuilder';
 import SavedTreeViewer from '../../components/SavedTreeViewer';
+import BirthdayNotifications from '../../components/BirthdayNotifications';
 import { supabase } from '../../config/supabase.config';
 
 const TreeView = () => {
@@ -574,6 +575,8 @@ const TreeView = () => {
         onSave={handleAddPerson}
         isFounder={isFounderMode}
       />
+      
+      <BirthdayNotifications familyId={familyId} />
     </div>
   );
 };
