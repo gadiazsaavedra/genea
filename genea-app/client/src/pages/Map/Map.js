@@ -161,9 +161,12 @@ const Map = () => {
               if (location.coordinates.lat === 0 && location.coordinates.lng === 0) return null;
               
               const size = getMarkerSize(location);
-              // Proyección corregida para coordenadas mundiales
+              // Proyección ajustada para mapa equirectangular
               const x = ((location.coordinates.lng + 180) / 360) * 100;
-              const y = ((90 - location.coordinates.lat) / 180) * 100;
+              // Ajuste Y para proyección Mercator
+              const latRad = location.coordinates.lat * Math.PI / 180;
+              const mercatorY = Math.log(Math.tan(Math.PI/4 + latRad/2));
+              const y = 50 - (mercatorY / (2 * Math.PI)) * 100;
               
               console.log(`${location.name}: x=${x.toFixed(1)}%, y=${y.toFixed(1)}%`);
               
