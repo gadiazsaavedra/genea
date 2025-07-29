@@ -277,7 +277,7 @@ const SavedTreeViewer = ({ familyId }) => {
               </div>
               
               <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>
-                {person.birth_date ? new Date(person.birth_date).getFullYear() : '?'} - Presente
+                {person.birth_date ? new Date(person.birth_date).getFullYear() : '?'} - {person.death_date ? new Date(person.death_date).getFullYear() : 'Presente'}
               </p>
               
               <div style={{ 
