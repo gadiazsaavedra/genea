@@ -9,6 +9,10 @@ const SavedTreeViewer = ({ familyId }) => {
   const [relationships, setRelationships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPersonId, setSelectedPersonId] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     loadSavedTree();
@@ -156,6 +160,37 @@ const SavedTreeViewer = ({ familyId }) => {
     return connections;
   };
 
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.max(0.3, Math.min(3, prev * delta)));
+  };
+
+  const handleMouseDown = (e) => {
+    if (e.button === 0) {
+      setIsPanning(true);
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isPanning) {
+      const deltaX = e.clientX - lastPanPoint.x;
+      const deltaY = e.clientY - lastPanPoint.y;
+      setPan(prev => ({ x: prev.x + deltaX, y: prev.y + deltaY }));
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '40px' }}>
@@ -165,22 +200,39 @@ const SavedTreeViewer = ({ familyId }) => {
   }
 
   return (
-    <div style={{ 
-      width: '100%', 
-      height: '600px', 
-      border: '1px solid #ddd', 
-      borderRadius: '8px',
-      backgroundColor: '#f8f9fa',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
+    <div 
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      style={{ 
+        width: '100%', 
+        height: '600px', 
+        border: '1px solid #ddd', 
+        borderRadius: '8px',
+        backgroundColor: '#f8f9fa',
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: isPanning ? 'grabbing' : 'grab'
+      }}>
+      
+      <div
+        style={{
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+          transformOrigin: '0 0',
+          width: '2000px',
+          height: '2000px',
+          position: 'relative'
+        }}
+      >
       {/* SVG para líneas de conexión */}
       <svg style={{ 
         position: 'absolute', 
         top: 0, 
         left: 0, 
-        width: '100%', 
-        height: '100%', 
+        width: '2000px', 
+        height: '2000px', 
         pointerEvents: 'none',
         zIndex: 1 
       }}>
@@ -292,6 +344,74 @@ const SavedTreeViewer = ({ familyId }) => {
           </div>
         );
       })}
+      </div>
+
+      {/* Controles de zoom */}
+      <div style={{
+        position: 'absolute',
+        top: '20px',
+        right: '20px',
+        display: 'flex',
+        gap: '5px',
+        backgroundColor: 'white',
+        padding: '8px',
+        borderRadius: '6px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        zIndex: 100
+      }}>
+        <button
+          onClick={() => setZoom(prev => Math.min(3, prev * 1.2))}
+          style={{
+            padding: '6px 10px',
+            backgroundColor: '#2196f3',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          🔍+
+        </button>
+        <span style={{ 
+          fontSize: '13px', 
+          padding: '6px 8px', 
+          minWidth: '50px', 
+          textAlign: 'center',
+          color: '#666',
+          fontWeight: 'bold'
+        }}>
+          {Math.round(zoom * 100)}%
+        </span>
+        <button
+          onClick={() => setZoom(prev => Math.max(0.3, prev * 0.8))}
+          style={{
+            padding: '6px 10px',
+            backgroundColor: '#2196f3',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          🔍-
+        </button>
+        <button
+          onClick={resetView}
+          style={{
+            padding: '6px 10px',
+            backgroundColor: '#ff9800',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          🎯
+        </button>
+      </div>
 
       {/* Timeline Modal */}
       {selectedPersonId && (
