@@ -9,7 +9,7 @@ const PersonForm = ({ person, onSubmit, onCancel }) => {
     maidenName: person?.maiden_name || '',
     birthDate: person?.birth_date ? new Date(person.birth_date).toISOString().split('T')[0] : '',
     birthPlace: person?.birth_place || '',
-    isAlive: person?.is_alive !== undefined ? person.is_alive : true,
+    isAlive: person?.is_alive !== undefined ? person.is_alive : (person?.death_date ? false : true),
     deathDate: person?.death_date ? new Date(person.death_date).toISOString().split('T')[0] : '',
     deathPlace: person?.death_place || '',
     gender: person?.gender || '',
