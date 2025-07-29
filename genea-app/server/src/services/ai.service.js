@@ -49,6 +49,8 @@ class AIService {
         searchableText.includes(term)
       );
       
+      console.log(`Query terms: [${searchTerms.join(', ')}] - Matches: [${matches.join(', ')}]`);
+      
       if (matches.length > 0) {
         results.push({
           person: personData,
