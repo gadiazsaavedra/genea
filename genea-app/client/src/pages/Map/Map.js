@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import { supabase } from '../../config/supabase.config';
+import 'leaflet/dist/leaflet.css';
+
+// Fix for default markers
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const Map = () => {
   const [people, setPeople] = useState([]);
@@ -130,115 +141,39 @@ const Map = () => {
       
       <div style={{ display: 'flex', gap: '20px' }}>
         <div style={{ flex: 1 }}>
-          <div style={{
-            width: '100%',
-            height: '600px',
-            backgroundImage: 'url("https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            position: 'relative',
-            borderRadius: '8px',
-            border: '2px solid #ddd',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '10px',
-              left: '10px',
-              backgroundColor: 'white',
-              padding: '10px',
-              borderRadius: '5px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              zIndex: 1000
-            }}>
-              <h3 style={{ margin: '0 0 10px 0' }}>Ubicaciones Familiares</h3>
-              <div style={{ fontSize: '12px', color: '#666' }}>
-                📍 {locations.length} ubicaciones encontradas
-              </div>
-            </div>
-
+          <MapContainer 
+            center={[20, 0]} 
+            zoom={2} 
+            style={{ height: '600px', width: '100%', borderRadius: '8px' }}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            
             {locations.map((location, index) => {
               if (location.coordinates.lat === 0 && location.coordinates.lng === 0) return null;
               
-              const size = getMarkerSize(location);
-              // Proyección simple equirectangular
-              const x = ((location.coordinates.lng + 180) / 360) * 100;
-              const y = ((90 - location.coordinates.lat) / 180) * 100;
-              
-              // Ajustes agresivos para alineación correcta
-              const adjustedX = x * 0.8 + 10; // Comprimir X y centrar
-              const adjustedY = y * 0.5 + 25; // Comprimir Y fuertemente y subir más
-              
-              console.log(`${location.name}: original x=${x.toFixed(1)}%, y=${y.toFixed(1)}% → adjusted x=${adjustedX.toFixed(1)}%, y=${adjustedY.toFixed(1)}%`);
-              
               return (
-                <div
+                <Marker 
                   key={index}
-                  style={{
-                    position: 'absolute',
-                    left: `${adjustedX}%`,
-                    top: `${adjustedY}%`,
-                    transform: 'translate(-50%, -50%)',
-                    cursor: 'pointer',
-                    zIndex: 100
+                  position={[location.coordinates.lat, location.coordinates.lng]}
+                  eventHandlers={{
+                    click: () => setSelectedLocation(location)
                   }}
-                  onClick={() => setSelectedLocation(location)}
                 >
-                  <div style={{
-                    width: `${size}px`,
-                    height: `${size}px`,
-                    borderRadius: '50%',
-                    backgroundColor: location.births > location.deaths ? '#4caf50' : '#f44336',
-                    border: '3px solid white',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: '12px'
-                  }}>
-                    {location.births + location.deaths}
-                  </div>
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: 'white',
-                    padding: '2px 6px',
-                    borderRadius: '3px',
-                    fontSize: '10px',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    marginTop: '5px'
-                  }}>
-                    {location.name}
-                  </div>
-                </div>
+                  <Popup>
+                    <div>
+                      <h4>{location.name}</h4>
+                      <p>👶 Nacimientos: {location.births}</p>
+                      <p>⚰️ Defunciones: {location.deaths}</p>
+                      <p>👥 Total: {location.people.length} personas</p>
+                    </div>
+                  </Popup>
+                </Marker>
               );
             })}
-
-            <div style={{
-              position: 'absolute',
-              bottom: '10px',
-              right: '10px',
-              backgroundColor: 'white',
-              padding: '10px',
-              borderRadius: '5px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}>
-              <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Leyenda</div>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '3px' }}>
-                <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#4caf50', marginRight: '5px' }}></div>
-                <span style={{ fontSize: '10px' }}>Más nacimientos</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#f44336', marginRight: '5px' }}></div>
-                <span style={{ fontSize: '10px' }}>Más defunciones</span>
-              </div>
-            </div>
-          </div>
+          </MapContainer>
         </div>
 
         <div style={{ width: '300px' }}>
