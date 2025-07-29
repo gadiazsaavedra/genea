@@ -66,6 +66,7 @@ const mediaService = {
         
         if (error) {
           console.error('Error saving photo to database:', error);
+          throw error;
         }
         
         uploadedPhotos.push({
