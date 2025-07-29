@@ -161,21 +161,19 @@ const Map = () => {
               if (location.coordinates.lat === 0 && location.coordinates.lng === 0) return null;
               
               const size = getMarkerSize(location);
-              // Proyección Web Mercator simplificada
+              // Proyección corregida para coordenadas mundiales
               const x = ((location.coordinates.lng + 180) / 360) * 100;
               const y = ((90 - location.coordinates.lat) / 180) * 100;
               
-              // Ajuste para proyección más precisa
-              const adjustedX = Math.max(0, Math.min(100, x));
-              const adjustedY = Math.max(0, Math.min(100, y));
+              console.log(`${location.name}: x=${x.toFixed(1)}%, y=${y.toFixed(1)}%`);
               
               return (
                 <div
                   key={index}
                   style={{
                     position: 'absolute',
-                    left: `${adjustedX}%`,
-                    top: `${adjustedY}%`,
+                    left: `${x}%`,
+                    top: `${y}%`,
                     transform: 'translate(-50%, -50%)',
                     cursor: 'pointer',
                     zIndex: 100
