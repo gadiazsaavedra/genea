@@ -6,51 +6,98 @@ const mediaService = {
   // Subir foto de perfil
   uploadProfilePhoto: async (personId, file) => {
     try {
-      const formData = new FormData();
-      formData.append('profilePhoto', file);
+      // Subir directamente a Supabase Storage
+      const uploadResult = await mediaService.uploadToStorage(file, 'profiles', `profile_${personId}`);
       
-      const response = await api.post(`/media/profilePhoto/${personId}`, formData, {
+      // Actualizar la persona con la nueva URL de foto
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/persons/${personId}`, {
+        method: 'PUT',
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          photoUrl: uploadResult.url
+        })
       });
-      return response.data;
+      
+      if (!response.ok) {
+        throw new Error('Error al actualizar foto de perfil');
+      }
+      
+      return {
+        success: true,
+        data: {
+          fileUrl: uploadResult.url
+        }
+      };
     } catch (error) {
+      console.error('Error uploading profile photo:', error);
       throw error;
     }
   },
 
-  // Subir archivos multimedia
-  uploadMedia: async (personId, files, descriptions = [], fileTypes = []) => {
+  // Subir fotos
+  uploadPhotos: async (personId, files, captions = []) => {
     try {
-      const formData = new FormData();
+      const uploadedPhotos = [];
       
-      // Añadir cada archivo al FormData
-      files.forEach(file => {
-        formData.append('files', file);
-      });
-      
-      // Añadir descripciones si existen
-      if (descriptions.length > 0) {
-        descriptions.forEach((description, index) => {
-          formData.append('descriptions', description);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const caption = captions[i] || '';
+        
+        // Subir archivo a Supabase Storage
+        const uploadResult = await mediaService.uploadToStorage(file, 'photos', `photo_${personId}_${Date.now()}_${i}`);
+        
+        uploadedPhotos.push({
+          url: uploadResult.url,
+          caption: caption,
+          date: new Date().toISOString()
         });
       }
       
-      // Añadir tipos de archivo si existen
-      if (fileTypes.length > 0) {
-        fileTypes.forEach((type, index) => {
-          formData.append('fileTypes', type);
-        });
-      }
-      
-      const response = await api.post(`/media/${personId}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      return {
+        success: true,
+        data: {
+          uploadedPhotos
         }
-      });
-      return response.data;
+      };
     } catch (error) {
+      console.error('Error uploading photos:', error);
+      throw error;
+    }
+  },
+  
+  // Subir documentos
+  uploadDocuments: async (personId, files, titles = [], types = []) => {
+    try {
+      const uploadedDocuments = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const title = titles[i] || file.name;
+        const type = types[i] || 'Otro';
+        
+        // Subir archivo a Supabase Storage
+        const uploadResult = await mediaService.uploadToStorage(file, 'documents', `doc_${personId}_${Date.now()}_${i}`);
+        
+        uploadedDocuments.push({
+          url: uploadResult.url,
+          title: title,
+          type: type,
+          date: new Date().toISOString()
+        });
+      }
+      
+      return {
+        success: true,
+        data: {
+          uploadedDocuments
+        }
+      };
+    } catch (error) {
+      console.error('Error uploading documents:', error);
       throw error;
     }
   },
