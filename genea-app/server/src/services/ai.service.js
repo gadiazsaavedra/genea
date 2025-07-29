@@ -21,7 +21,17 @@ class AIService {
   // Buscar información específica en los datos familiares
   async searchFamilyData(familyData, query) {
     const results = [];
-    const searchTerms = query.toLowerCase().split(' ');
+    // Normalizar búsqueda removiendo tildes
+    const normalizeText = (text) => {
+      return text.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    
+    const searchTerms = normalizeText(query).split(' ');
     
     familyData.forEach(person => {
       const personData = {
@@ -36,20 +46,21 @@ class AIService {
         health_info: person.health_info
       };
       
-      // Buscar en todos los campos de texto
-      const searchableText = Object.values(personData)
-        .filter(value => typeof value === 'string' && value !== null)
-        .join(' ')
-        .toLowerCase();
+      // Buscar en todos los campos de texto (normalizado)
+      const searchableText = normalizeText(
+        Object.values(personData)
+          .filter(value => typeof value === 'string' && value !== null)
+          .join(' ')
+      );
       
-      console.log(`Searching in: ${personData.name} - Text: ${searchableText}`);
+      console.log(`Searching in: ${personData.name} - Normalized: ${searchableText}`);
       
       // Verificar si algún término de búsqueda coincide
       const matches = searchTerms.filter(term => 
         searchableText.includes(term)
       );
       
-      console.log(`Query terms: [${searchTerms.join(', ')}] - Matches: [${matches.join(', ')}]`);
+      console.log(`Query terms: [${searchTerms.join(', ')}] - Matches: [${matches.join(', ')}] - Found: ${matches.length > 0}`);
       
       if (matches.length > 0) {
         results.push({
