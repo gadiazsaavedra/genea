@@ -14,7 +14,7 @@ const Map = () => {
   const fetchPeople = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/people`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/persons`, {
         headers: { 'Authorization': `Bearer ${session?.access_token}` }
       });
       if (response.ok) {
