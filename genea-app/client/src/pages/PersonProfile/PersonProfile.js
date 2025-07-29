@@ -147,6 +147,20 @@ const PersonProfile = () => {
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <button 
+            onClick={() => navigate(`/persons`)}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#ff9800',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            ✏️ Editar datos
+          </button>
+          
+          <button 
             onClick={() => navigate(`/persons/${personId}/media`)}
             style={{
               padding: '10px 20px',
