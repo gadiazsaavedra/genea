@@ -464,15 +464,6 @@ const PersonManagement = () => {
           <button className="btn btn-primary" onClick={handleAddPerson}>
             Añadir Persona
           </button>
-          {persons.length > 0 && (
-            <button 
-              className="btn btn-danger" 
-              onClick={() => setShowBulkDelete(true)}
-              style={{ backgroundColor: '#d32f2f' }}
-            >
-              Eliminar Todas
-            </button>
-          )}
         </div>
       </div>
 
