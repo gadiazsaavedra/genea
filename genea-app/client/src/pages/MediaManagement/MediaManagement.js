@@ -192,7 +192,7 @@ const MediaManagement = () => {
           </button>
           <button 
             className="btn btn-primary"
-            onClick={() => navigate(`/persons/${personId}`)}
+            onClick={() => navigate(`/persons/${personId}/profile`)}
           >
             Ver perfil completo
           </button>
