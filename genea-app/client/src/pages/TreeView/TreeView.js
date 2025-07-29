@@ -483,20 +483,6 @@ const TreeView = () => {
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button 
-              onClick={loadExampleData}
-              style={{ 
-                padding: '8px 16px', 
-                backgroundColor: '#ff9800', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-              title="Cargar datos de ejemplo: Juan, Constantina, Luis, Alicia, María y Carlos"
-            >
-              📥 Cargar Ejemplo
-            </button>
-            <button 
               onClick={openFounderModal}
               style={{ 
                 padding: '8px 16px', 
