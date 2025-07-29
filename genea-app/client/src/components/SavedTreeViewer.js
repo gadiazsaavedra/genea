@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase.config';
+import { getParentAgeInfo } from '../utils/ageCalculator';
 
 const SavedTreeViewer = ({ familyId }) => {
   const [people, setPeople] = useState([]);
@@ -104,19 +105,48 @@ const SavedTreeViewer = ({ familyId }) => {
           </g>
         );
       } else if (rel.relationship_type === 'parent') {
-        // Línea verde para padre-hijo
+        // Calcular edad del padre al nacer el hijo
+        const parentAge = person1.birth_date && person2.birth_date ? 
+          Math.floor((new Date(person2.birth_date) - new Date(person1.birth_date)) / (365.25 * 24 * 60 * 60 * 1000)) : null;
+        
+        // Línea verde para padre-hijo con edad
         connections.push(
-          <line
-            key={`parent-${rel.id}`}
-            x1={centerX1}
-            y1={centerY1}
-            x2={centerX2}
-            y2={centerY2}
-            stroke="#4caf50"
-            strokeWidth="4"
-            opacity="0.8"
-            markerEnd="url(#arrowhead)"
-          />
+          <g key={`parent-${rel.id}`}>
+            <line
+              x1={centerX1}
+              y1={centerY1}
+              x2={centerX2}
+              y2={centerY2}
+              stroke="#4caf50"
+              strokeWidth="4"
+              opacity="0.8"
+              markerEnd="url(#arrowhead)"
+            />
+            {parentAge && parentAge > 0 && (
+              <g>
+                <rect
+                  x={(centerX1 + centerX2) / 2 - 20}
+                  y={(centerY1 + centerY2) / 2 - 10}
+                  width="40"
+                  height="20"
+                  fill="white"
+                  stroke="#4caf50"
+                  strokeWidth="1"
+                  rx="3"
+                />
+                <text
+                  x={(centerX1 + centerX2) / 2}
+                  y={(centerY1 + centerY2) / 2 + 4}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fontWeight="bold"
+                  fill="#4caf50"
+                >
+                  {parentAge}a
+                </text>
+              </g>
+            )}
+          </g>
         );
       }
     });
@@ -261,7 +291,7 @@ const SavedTreeViewer = ({ familyId }) => {
         <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Leyenda:</div>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
           <div style={{ width: '20px', height: '3px', backgroundColor: '#4caf50', marginRight: '8px' }}></div>
-          <span>Padre/Madre → Hijo/Hija</span>
+          <span>Padre/Madre → Hijo/Hija (edad)</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ width: '20px', height: '3px', backgroundColor: '#e91e63', marginRight: '8px', borderTop: '3px dashed #e91e63', backgroundColor: 'transparent' }}></div>
@@ -269,22 +299,48 @@ const SavedTreeViewer = ({ familyId }) => {
         </div>
       </div>
 
-      {/* Estadísticas */}
+      {/* Estadísticas con edades de padres */}
       <div style={{
         position: 'absolute',
         top: '20px',
         left: '20px',
         backgroundColor: 'white',
-        padding: '10px',
+        padding: '12px',
         borderRadius: '8px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         fontSize: '12px',
-        zIndex: 20
+        zIndex: 20,
+        maxWidth: '280px'
       }}>
-        <div style={{ fontWeight: 'bold', color: '#1976d2' }}>🌳 Árbol Genealógico Guardado</div>
-        <div style={{ marginTop: '4px', color: '#666' }}>
+        <div style={{ fontWeight: 'bold', color: '#1976d2', marginBottom: '8px' }}>
+          🌳 Árbol Genealógico Guardado
+        </div>
+        <div style={{ color: '#666', marginBottom: '8px' }}>
           👥 {people.length} personas | 🔗 {relationships.length} relaciones
         </div>
+        
+        {(() => {
+          const parentAges = getParentAgeInfo(people, relationships);
+          if (parentAges.length > 0) {
+            const avgAge = Math.round(parentAges.reduce((sum, info) => sum + info.ageAtBirth, 0) / parentAges.length);
+            const youngestParent = parentAges[0];
+            const oldestParent = parentAges[parentAges.length - 1];
+            
+            return (
+              <div style={{ borderTop: '1px solid #eee', paddingTop: '8px' }}>
+                <div style={{ fontWeight: 'bold', color: '#4caf50', marginBottom: '4px' }}>
+                  👶 Edades al tener hijos:
+                </div>
+                <div style={{ fontSize: '11px', color: '#666' }}>
+                  • Promedio: {avgAge} años<br/>
+                  • Más joven: {youngestParent.parentName} ({youngestParent.ageAtBirth}a)<br/>
+                  • Mayor: {oldestParent.parentName} ({oldestParent.ageAtBirth}a)
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
     </div>
   );
