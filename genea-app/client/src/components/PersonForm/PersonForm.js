@@ -12,6 +12,7 @@ const PersonForm = ({ person, onSubmit, onCancel }) => {
     isAlive: person?.is_alive !== undefined ? person.is_alive : (person?.death_date ? false : true),
     deathDate: person?.death_date ? new Date(person.death_date).toISOString().split('T')[0] : '',
     deathPlace: person?.death_place || '',
+    deathCause: person?.death_cause || '',
     gender: person?.gender || '',
     occupation: person?.occupation || '',
     biography: person?.biography || '',
@@ -158,6 +159,18 @@ const PersonForm = ({ person, onSubmit, onCancel }) => {
               name="deathPlace"
               value={formData.deathPlace}
               onChange={handleChange}
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="deathCause">Causa de fallecimiento</label>
+            <textarea
+              id="deathCause"
+              name="deathCause"
+              value={formData.deathCause}
+              onChange={handleChange}
+              rows="3"
+              placeholder="Ej: Enfermedad cardíaca, cáncer, accidente, etc."
             />
           </div>
         </>

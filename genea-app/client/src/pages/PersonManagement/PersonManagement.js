@@ -303,6 +303,7 @@ const PersonManagement = () => {
           deathDate: formData.deathDate || null,
           birthPlace: formData.birthPlace || null,
           deathPlace: formData.deathPlace || null,
+          deathCause: formData.deathCause || null,
           occupation: formData.occupation || null,
           biography: formData.biography || null,
           photoUrl: formData.photoUrl || null
@@ -369,6 +370,7 @@ const PersonManagement = () => {
           deathDate: formData.deathDate || null,
           birthPlace: formData.birthPlace || null,
           deathPlace: formData.deathPlace || null,
+          deathCause: formData.deathCause || null,
           occupation: formData.occupation || null,
           biography: formData.biography || null,
           photoUrl: formData.photoUrl || null,

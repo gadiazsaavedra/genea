@@ -102,6 +102,12 @@ const PersonProfile = () => {
             </div>
           )}
           
+          {person.death_cause && (
+            <div>
+              <strong>Causa de fallecimiento:</strong> {person.death_cause}
+            </div>
+          )}
+          
           {person.occupation && (
             <div>
               <strong>Ocupación:</strong> {person.occupation}
