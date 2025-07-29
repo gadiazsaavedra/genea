@@ -121,14 +121,27 @@ const MediaManagement = () => {
             photo_url: response.data.fileUrl
           };
         } else if (uploadType === 'photos') {
+          const newPhotos = response.data.uploadedPhotos.map((photo, index) => ({
+            _id: `photo_${Date.now()}_${index}`,
+            url: photo.url,
+            caption: photo.caption,
+            date: photo.date
+          }));
           return {
             ...prevPerson,
-            photos: [...(prevPerson.photos || []), ...response.data.uploadedPhotos]
+            photos: [...(prevPerson.photos || []), ...newPhotos]
           };
         } else if (uploadType === 'documents') {
+          const newDocuments = response.data.uploadedDocuments.map((doc, index) => ({
+            _id: `doc_${Date.now()}_${index}`,
+            url: doc.url,
+            title: doc.title,
+            type: doc.type,
+            date: doc.date
+          }));
           return {
             ...prevPerson,
-            documents: [...(prevPerson.documents || []), ...response.data.uploadedDocuments]
+            documents: [...(prevPerson.documents || []), ...newDocuments]
           };
         }
         return prevPerson;
