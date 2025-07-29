@@ -31,14 +31,14 @@ const MediaManagement = () => {
               .select('*')
               .eq('person_id', personId);
             
-            const photos = mediaData?.filter(m => m.type === 'photo').map(m => ({
+            const photos = mediaData?.filter(m => m.media_type === 'photo').map(m => ({
               _id: m.id,
               url: m.url,
               caption: m.caption,
               date: m.created_at
             })) || [];
             
-            const documents = mediaData?.filter(m => m.type === 'document').map(m => ({
+            const documents = mediaData?.filter(m => m.media_type === 'document').map(m => ({
               _id: m.id,
               url: m.url,
               title: m.title,

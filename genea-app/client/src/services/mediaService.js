@@ -58,7 +58,7 @@ const mediaService = {
           .insert({
             person_id: personId,
             url: uploadResult.url,
-            type: 'photo',
+            media_type: 'photo',
             caption: caption
           })
           .select()
