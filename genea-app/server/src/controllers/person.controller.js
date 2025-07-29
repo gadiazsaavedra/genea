@@ -333,6 +333,11 @@ exports.updatePerson = async (req, res) => {
       updateData.is_founder = is_founder;
     }
     
+    // Actualizar person_type si se proporciona
+    if (req.body.person_type !== undefined) {
+      updateData.person_type = req.body.person_type;
+    }
+    
     const { data: updatedPerson, error: updateError } = await supabaseClient
       .from('people')
       .update(updateData)
