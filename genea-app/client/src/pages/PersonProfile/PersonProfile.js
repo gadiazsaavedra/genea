@@ -102,6 +102,12 @@ const PersonProfile = () => {
             </div>
           )}
           
+          {person.occupation && (
+            <div>
+              <strong>Ocupación:</strong> {person.occupation}
+            </div>
+          )}
+          
           <div>
             <strong>Tipo:</strong> 
             {person.is_founder && ' 👑 Fundador'}
