@@ -124,6 +124,14 @@ function App() {
                     } 
                   />
                   <Route 
+                    path="/persons/:personId/profile" 
+                    element={
+                      <PrivateRoute>
+                        <Profile />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
                     path="/profile" 
                     element={
                       <PrivateRoute>
