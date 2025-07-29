@@ -28,9 +28,9 @@ const MediaManagement = () => {
             const personData = {
               ...response.data,
               fullName: response.data.fullName || `${response.data.first_name || ''} ${response.data.last_name || ''}`.trim() || 'Sin nombre',
-              // Preservar fotos y documentos existentes si ya están en el estado
-              photos: person?.photos || response.data.photos || [],
-              documents: person?.documents || response.data.documents || []
+              // Inicializar con datos de ejemplo si no hay datos reales
+              photos: response.data.photos || [],
+              documents: response.data.documents || []
             };
             setPerson(personData);
             setLoading(false);
@@ -98,11 +98,8 @@ const MediaManagement = () => {
       }
     };
 
-    // Solo recargar si no hay persona o si cambia el personId
-    if (!person || person.id !== personId) {
-      fetchPerson();
-    }
-  }, [personId]); // Remover person de dependencias para evitar recargas
+    fetchPerson();
+  }, []); // Solo ejecutar una vez al montar el componente
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
