@@ -118,7 +118,7 @@ const MediaManagement = () => {
         if (uploadType === 'profilePhoto') {
           return {
             ...prevPerson,
-            profilePhoto: response.data.fileUrl
+            photo_url: response.data.fileUrl
           };
         } else if (uploadType === 'photos') {
           return {
@@ -169,8 +169,8 @@ const MediaManagement = () => {
       <div className="media-header">
         <div className="person-info">
           <div className="person-photo">
-            {person.profilePhoto ? (
-              <img src={person.profilePhoto} alt={person.fullName} />
+            {person.photo_url ? (
+              <img src={person.photo_url} alt={person.fullName} />
             ) : (
               <div className="no-photo">
                 {person.fullName ? person.fullName.charAt(0) : '?'}

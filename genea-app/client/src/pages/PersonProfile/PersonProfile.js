@@ -54,9 +54,12 @@ const PersonProfile = () => {
             justifyContent: 'center',
             color: 'white',
             fontSize: '40px',
-            marginRight: '30px'
+            marginRight: '30px',
+            backgroundImage: person.photo_url ? `url(${person.photo_url})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
           }}>
-            {person.first_name?.charAt(0) || '?'}
+            {!person.photo_url && (person.first_name?.charAt(0) || '?')}
           </div>
           
           <div>
