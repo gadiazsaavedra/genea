@@ -322,7 +322,10 @@ const PersonManagement = () => {
         
         if (!response.ok) {
           console.error('Update person error:', result);
-          throw new Error(result.message || 'Error al actualizar persona');
+          console.error('Response status:', response.status);
+          console.error('Response statusText:', response.statusText);
+          console.error('Full response:', response);
+          throw new Error(result.message || result.error || `HTTP ${response.status}: ${response.statusText}`);
         }
         
         const updatedPersons = persons.map(p => 
@@ -436,7 +439,8 @@ const PersonManagement = () => {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         alert('Error de conexión: No se puede conectar al servidor');
       } else {
-        alert(`Error al agregar persona: ${error.message}`);
+        const action = editingPerson ? 'actualizar' : 'agregar';
+        alert(`Error al ${action} persona: ${error.message}`);
       }
     }
   };
