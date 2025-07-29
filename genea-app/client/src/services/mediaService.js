@@ -52,7 +52,24 @@ const mediaService = {
         // Subir archivo a Supabase Storage
         const uploadResult = await mediaService.uploadToStorage(file, 'photos', `photo_${personId}_${Date.now()}_${i}`);
         
+        // Guardar en tabla media
+        const { data: mediaRecord, error } = await supabase
+          .from('media')
+          .insert({
+            person_id: personId,
+            url: uploadResult.url,
+            type: 'photo',
+            caption: caption
+          })
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Error saving photo to database:', error);
+        }
+        
         uploadedPhotos.push({
+          _id: mediaRecord?.id || `temp_${Date.now()}_${i}`,
           url: uploadResult.url,
           caption: caption,
           date: new Date().toISOString()

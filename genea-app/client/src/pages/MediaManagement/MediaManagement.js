@@ -25,12 +25,32 @@ const MediaManagement = () => {
           const response = await personService.getPersonById(personId);
           
           if (response.success && response.data) {
+            // Cargar fotos y documentos desde tabla media
+            const { data: mediaData } = await supabase
+              .from('media')
+              .select('*')
+              .eq('person_id', personId);
+            
+            const photos = mediaData?.filter(m => m.type === 'photo').map(m => ({
+              _id: m.id,
+              url: m.url,
+              caption: m.caption,
+              date: m.created_at
+            })) || [];
+            
+            const documents = mediaData?.filter(m => m.type === 'document').map(m => ({
+              _id: m.id,
+              url: m.url,
+              title: m.title,
+              type: m.file_type,
+              date: m.created_at
+            })) || [];
+            
             const personData = {
               ...response.data,
               fullName: response.data.fullName || `${response.data.first_name || ''} ${response.data.last_name || ''}`.trim() || 'Sin nombre',
-              // Inicializar con datos de ejemplo si no hay datos reales
-              photos: response.data.photos || [],
-              documents: response.data.documents || []
+              photos: photos,
+              documents: documents
             };
             setPerson(personData);
             setLoading(false);
