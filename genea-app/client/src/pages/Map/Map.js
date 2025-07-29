@@ -130,7 +130,9 @@ const Map = () => {
           <div style={{
             width: '100%',
             height: '600px',
-            backgroundColor: '#e8f4f8',
+            backgroundImage: 'url("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/1/0/0")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
             position: 'relative',
             borderRadius: '8px',
             border: '2px solid #ddd',
