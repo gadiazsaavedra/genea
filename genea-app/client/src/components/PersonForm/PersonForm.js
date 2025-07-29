@@ -13,6 +13,7 @@ const PersonForm = ({ person, onSubmit, onCancel }) => {
     deathDate: person?.death_date ? new Date(person.death_date).toISOString().split('T')[0] : '',
     deathPlace: person?.death_place || '',
     gender: person?.gender || '',
+    occupation: person?.occupation || '',
     biography: person?.biography || '',
     photoUrl: person?.photo_url || ''
   });

@@ -351,6 +351,7 @@ const PersonManagement = () => {
           deathDate: formData.deathDate || null,
           birthPlace: formData.birthPlace || null,
           deathPlace: formData.deathPlace || null,
+          occupation: formData.occupation || null,
           biography: formData.biography || null,
           photoUrl: formData.photoUrl || null,
           isAlive: formData.isAlive

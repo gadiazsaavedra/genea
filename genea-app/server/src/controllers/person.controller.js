@@ -278,6 +278,7 @@ exports.updatePerson = async (req, res) => {
       birthPlace,
       deathPlace,
       gender,
+      occupation,
       biography,
       photoUrl,
       is_founder
@@ -323,6 +324,7 @@ exports.updatePerson = async (req, res) => {
       birth_place: birthPlace,
       death_place: deathPlace,
       gender,
+      occupation,
       biography,
       photo_url: photoUrl,
       updated_at: new Date().toISOString()
