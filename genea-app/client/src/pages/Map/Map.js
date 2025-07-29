@@ -165,9 +165,9 @@ const Map = () => {
               const x = ((location.coordinates.lng + 180) / 360) * 100;
               const y = ((90 - location.coordinates.lat) / 180) * 100;
               
-              // Ajustes manuales para alineación
-              const adjustedX = x;
-              const adjustedY = y * 0.7 + 15; // Comprimir Y y desplazar hacia arriba
+              // Ajustes agresivos para alineación correcta
+              const adjustedX = x * 0.8 + 10; // Comprimir X y centrar
+              const adjustedY = y * 0.5 + 25; // Comprimir Y fuertemente y subir más
               
               console.log(`${location.name}: original x=${x.toFixed(1)}%, y=${y.toFixed(1)}% → adjusted x=${adjustedX.toFixed(1)}%, y=${adjustedY.toFixed(1)}%`);
               
