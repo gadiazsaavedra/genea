@@ -157,7 +157,7 @@ const MediaManagement = () => {
           };
         } else if (uploadType === 'documents') {
           const newDocuments = response.data.uploadedDocuments.map((doc, index) => ({
-            _id: `doc_${Date.now()}_${index}`,
+            _id: doc._id || `doc_${Date.now()}_${index}`,
             url: doc.url,
             title: doc.title,
             type: doc.type,
