@@ -104,7 +104,9 @@ const MediaUpload = ({ personId, type = 'photos', onUploadComplete }) => {
       }, 1000);
     } catch (err) {
       console.error('Error uploading files:', err);
-      setError('Error al subir los archivos. Por favor, inténtalo de nuevo.');
+      console.error('Error details:', err.message);
+      console.error('Error stack:', err.stack);
+      setError(`Error al subir los archivos: ${err.message}`);
       setUploading(false);
     }
   };
