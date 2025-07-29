@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '../../config/supabase.config';
 import MediaUpload from '../../components/MediaUpload/MediaUpload';
 import MediaGallery from '../../components/MediaGallery/MediaGallery';
 import personService from '../../services/personService';
