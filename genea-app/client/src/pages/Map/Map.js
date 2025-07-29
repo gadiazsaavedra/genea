@@ -83,6 +83,9 @@ const Map = () => {
 
     const locationsArray = Array.from(locationMap.values());
     console.log('Processed locations:', locationsArray);
+    locationsArray.forEach(loc => {
+      console.log(`${loc.name}: lat=${loc.coordinates.lat}, lng=${loc.coordinates.lng}`);
+    });
     setLocations(locationsArray);
   };
 
@@ -158,16 +161,21 @@ const Map = () => {
               if (location.coordinates.lat === 0 && location.coordinates.lng === 0) return null;
               
               const size = getMarkerSize(location);
+              // Proyección Web Mercator simplificada
               const x = ((location.coordinates.lng + 180) / 360) * 100;
               const y = ((90 - location.coordinates.lat) / 180) * 100;
+              
+              // Ajuste para proyección más precisa
+              const adjustedX = Math.max(0, Math.min(100, x));
+              const adjustedY = Math.max(0, Math.min(100, y));
               
               return (
                 <div
                   key={index}
                   style={{
                     position: 'absolute',
-                    left: `${x}%`,
-                    top: `${y}%`,
+                    left: `${adjustedX}%`,
+                    top: `${adjustedY}%`,
                     transform: 'translate(-50%, -50%)',
                     cursor: 'pointer',
                     zIndex: 100
