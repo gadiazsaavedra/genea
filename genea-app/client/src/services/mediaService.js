@@ -18,12 +18,14 @@ const mediaService = {
           'Authorization': `Bearer ${session?.access_token}`
         },
         body: JSON.stringify({
-          photoUrl: uploadResult.url
+          photo_url: uploadResult.url
         })
       });
       
       if (!response.ok) {
-        throw new Error('Error al actualizar foto de perfil');
+        const errorData = await response.json();
+        console.error('Error updating person:', errorData);
+        throw new Error(errorData.message || 'Error al actualizar foto de perfil');
       }
       
       return {
@@ -132,7 +134,7 @@ const mediaService = {
         .from('genea-media')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true
         });
       
       if (error) throw error;
