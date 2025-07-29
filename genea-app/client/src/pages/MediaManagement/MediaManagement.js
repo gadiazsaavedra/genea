@@ -27,7 +27,10 @@ const MediaManagement = () => {
           if (response.success && response.data) {
             const personData = {
               ...response.data,
-              fullName: response.data.fullName || `${response.data.first_name || ''} ${response.data.last_name || ''}`.trim() || 'Sin nombre'
+              fullName: response.data.fullName || `${response.data.first_name || ''} ${response.data.last_name || ''}`.trim() || 'Sin nombre',
+              // Preservar fotos y documentos existentes si ya están en el estado
+              photos: person?.photos || response.data.photos || [],
+              documents: person?.documents || response.data.documents || []
             };
             setPerson(personData);
             setLoading(false);
@@ -95,8 +98,11 @@ const MediaManagement = () => {
       }
     };
 
-    fetchPerson();
-  }, [personId]);
+    // Solo recargar si no hay persona o si cambia el personId
+    if (!person || person.id !== personId) {
+      fetchPerson();
+    }
+  }, [personId]); // Remover person de dependencias para evitar recargas
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
