@@ -38,9 +38,11 @@ class AIService {
       
       // Buscar en todos los campos de texto
       const searchableText = Object.values(personData)
-        .filter(value => typeof value === 'string')
+        .filter(value => typeof value === 'string' && value !== null)
         .join(' ')
         .toLowerCase();
+      
+      console.log(`Searching in: ${personData.name} - Text: ${searchableText}`);
       
       // Verificar si algún término de búsqueda coincide
       const matches = searchTerms.filter(term => 
