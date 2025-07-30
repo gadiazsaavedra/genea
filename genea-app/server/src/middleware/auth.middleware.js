@@ -19,17 +19,21 @@ const authMiddleware = async (req, res, next) => {
     // Verificar el token con Supabase directamente
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     
-    console.log('User data:', userData);
+    console.log('=== AUTH MIDDLEWARE ===');
+    console.log('Token received:', token.substring(0, 50) + '...');
+    console.log('User data:', userData?.user?.id);
     console.log('User error:', userError);
     
     if (userError || !userData.user) {
-      console.error('Auth error:', userError);
+      console.error('Auth error details:', userError);
       return res.status(401).json({
         success: false,
         message: 'No autorizado, token inválido',
         error: userError?.message
       });
     }
+    
+    console.log('Auth successful for user:', userData.user.id);
 
     // Agregar el usuario al objeto de solicitud
     req.user = {

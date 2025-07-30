@@ -1,0 +1,4 @@
+-- Deshabilitar RLS completamente para desarrollo
+ALTER TABLE families DISABLE ROW LEVEL SECURITY;
+ALTER TABLE family_members DISABLE ROW LEVEL SECURITY;
+ALTER TABLE people DISABLE ROW LEVEL SECURITY;

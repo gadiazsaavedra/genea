@@ -15,13 +15,17 @@ i18n
       pt: { translation: pt }
     },
     fallbackLng: 'es',
-    debug: false,
+    lng: 'es', // Idioma por defecto
+    debug: true, // Activar debug temporalmente
     interpolation: {
       escapeValue: false
     },
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      order: ['localStorage', 'navigator'],
       caches: ['localStorage']
+    },
+    react: {
+      useSuspense: false // Desactivar suspense
     }
   });
 

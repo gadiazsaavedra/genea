@@ -40,12 +40,15 @@ const RelationshipManager = ({ personId, onClose }) => {
       }
 
       // Obtener todas las personas para el selector
-      const peopleResponse = await fetch(`${process.env.REACT_APP_API_URL}/people`, {
+      const familyId = 'f01051a3-128e-499a-a715-8c8c22e11e01';
+      const peopleResponse = await fetch(`${process.env.REACT_APP_API_URL}/persons?familyId=${familyId}`, {
         headers: { 'Authorization': `Bearer ${session?.access_token}` }
       });
       if (peopleResponse.ok) {
         const peopleResult = await peopleResponse.json();
         setPeople(peopleResult.data.filter(p => p.id !== personId));
+      } else {
+        console.error('Error loading people:', peopleResponse.status);
       }
 
     } catch (error) {

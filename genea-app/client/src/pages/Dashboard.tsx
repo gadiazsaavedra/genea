@@ -26,8 +26,10 @@ import {
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import DeveloperInfo from '../components/DeveloperInfo';
+import TranslationTest from '../components/TranslationTest';
 
 // Interfaces
 interface Family {
@@ -53,9 +55,13 @@ interface Person {
 
 // Componente principal
 const Dashboard: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  console.log('Dashboard render - current language:', i18n.language);
+  console.log('Dashboard render - t(dashboard.welcome):', t('dashboard.welcome'));
   
   // Estado para las pestañas
   const [tabValue, setTabValue] = useState(searchParams.get('tab') === 'persons' ? 1 : 0);
@@ -179,10 +185,11 @@ const Dashboard: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
+      <TranslationTest />
       {/* Encabezado */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Bienvenido, {currentUser?.user_metadata?.displayName || currentUser?.email?.split('@')[0] || 'Usuario'}
+          {t('dashboard.welcome')}, {currentUser?.user_metadata?.displayName || currentUser?.email?.split('@')[0] || 'Usuario'}
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Gestiona tus árboles genealógicos y familiares desde este panel.
@@ -200,12 +207,12 @@ const Dashboard: React.FC = () => {
         >
           <Tab 
             icon={<FamilyRestroom />} 
-            label="Mis Familias" 
+            label={t('dashboard.myFamilies')} 
             iconPosition="start"
           />
           <Tab 
             icon={<Person />} 
-            label="Personas" 
+            label={t('nav.people')} 
             iconPosition="start"
           />
         </Tabs>
@@ -215,14 +222,14 @@ const Dashboard: React.FC = () => {
       <Box sx={{ display: tabValue === 0 ? 'block' : 'none' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h5" component="h2">
-            Mis Familias
+            {t('dashboard.myFamilies')}
           </Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleCreateFamily}
           >
-            Nueva Familia
+            {t('dashboard.newFamily')}
           </Button>
         </Box>
 
@@ -239,17 +246,17 @@ const Dashboard: React.FC = () => {
         ) : families.length === 0 ? (
           <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'background.default' }}>
             <Typography variant="h6" gutterBottom>
-              No tienes familias creadas
+              {t('dashboard.noFamilies')}
             </Typography>
             <Typography variant="body1" color="text.secondary" paragraph>
-              Crea tu primera familia para comenzar a construir tu árbol genealógico.
+              {t('dashboard.createFirstFamily')}
             </Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={handleCreateFamily}
             >
-              Crear Familia
+              {t('dashboard.createFamily')}
             </Button>
           </Paper>
         ) : (
@@ -287,7 +294,7 @@ const Dashboard: React.FC = () => {
                       <Typography gutterBottom variant="h6" component="h3">
                         {family.name}
                       </Typography>
-                      <Tooltip title="Editar familia">
+                      <Tooltip title={t('family.editFamily')}>
                         <IconButton 
                           size="small" 
                           onClick={(e) => handleEditFamily(family._id, e)}
@@ -297,13 +304,13 @@ const Dashboard: React.FC = () => {
                       </Tooltip>
                     </Box>
                     <Typography variant="body2" color="text.secondary" paragraph>
-                      {family.description || 'Sin descripción'}
+                      {family.description || t('family.noDescription')}
                     </Typography>
                     <Divider sx={{ my: 1 }} />
                     <Typography variant="body2" color="text.secondary">
-                      Fundadores: {family.founders.length > 0 
+                      {t('family.founders')}: {family.founders.length > 0 
                         ? family.founders.map(f => f.fullName).join(', ') 
-                        : 'No definidos'}
+                        : t('family.notDefined')}
                     </Typography>
                   </CardContent>
                   <Box sx={{ p: 2, pt: 0 }}>
@@ -316,7 +323,7 @@ const Dashboard: React.FC = () => {
                         handleViewFamilyTree(family._id);
                       }}
                     >
-                      Ver árbol genealógico
+                      {t('dashboard.viewTree')}
                     </Button>
                   </Box>
                 </Card>

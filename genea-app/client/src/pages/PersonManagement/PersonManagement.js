@@ -54,7 +54,9 @@ const PersonManagement = () => {
               return;
             }
             
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/persons`, {
+            // Usar familyId fijo por ahora
+            const familyId = 'f01051a3-128e-499a-a715-8c8c22e11e01';
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/persons?familyId=${familyId}`, {
               headers: {
                 'Authorization': `Bearer ${token}`
               }
@@ -361,7 +363,7 @@ const PersonManagement = () => {
         
         // Mapear datos del formulario al formato de la API
         const apiData = {
-          familyId: '638a55dc-0a73-417c-9c80-556ac0028325', // TODO: obtener de contexto
+          familyId: 'f01051a3-128e-499a-a715-8c8c22e11e01', // ID de familia correcto
           firstName: formData.firstName,
           lastName: formData.lastName || null,
           maidenName: formData.maidenName || null,

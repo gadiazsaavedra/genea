@@ -6,6 +6,8 @@ exports.getAllPersons = async (req, res) => {
     const { familyId, query, limit = 20, page = 1 } = req.query;
     const userId = req.user.uid;
     
+    console.log('getAllPersons - userId:', userId, 'familyId:', familyId);
+    
     // Verificar acceso a la familia
     if (familyId) {
       const { data: memberCheck, error: memberError } = await supabaseClient
@@ -13,6 +15,8 @@ exports.getAllPersons = async (req, res) => {
         .select('id')
         .eq('family_id', familyId)
         .eq('user_id', userId);
+      
+      console.log('Member check:', memberCheck, 'Error:', memberError);
       
       if (memberError || !memberCheck || memberCheck.length === 0) {
         return res.status(403).json({
@@ -22,7 +26,7 @@ exports.getAllPersons = async (req, res) => {
       }
     }
     
-    // Construir la consulta
+    // Construir la consulta básica
     let peopleQuery = supabaseClient
       .from('people')
       .select('*', { count: 'exact' });
@@ -68,11 +72,17 @@ exports.getAllPersons = async (req, res) => {
     
     if (peopleError) throw new Error(peopleError.message);
     
+    // Agregar is_alive calculado a cada persona
+    const peopleWithStatus = people.map(person => ({
+      ...person,
+      is_alive: !person.death_date
+    }));
+    
     res.status(200).json({
       success: true,
-      count: people.length,
+      count: peopleWithStatus.length,
       total: count,
-      data: people
+      data: peopleWithStatus
     });
   } catch (error) {
     res.status(500).json({
@@ -285,7 +295,12 @@ exports.updatePerson = async (req, res) => {
       is_founder
     } = req.body;
     
+    console.log('=== UPDATE PERSON ===');
+    console.log('Person ID:', personId);
+    console.log('Request body:', req.body);
+    
     const userId = req.user.uid;
+    console.log('User ID:', userId);
     
     // Obtener la persona para verificar acceso
     const { data: person, error: personError } = await supabaseClient
@@ -332,6 +347,8 @@ exports.updatePerson = async (req, res) => {
       updated_at: new Date().toISOString()
     };
     
+    // No incluir is_alive ya que no existe en la tabla
+    
     // Solo actualizar is_founder si se proporciona
     if (is_founder !== undefined) {
       updateData.is_founder = is_founder;
@@ -342,6 +359,8 @@ exports.updatePerson = async (req, res) => {
       updateData.person_type = req.body.person_type;
     }
     
+    console.log('Update data:', updateData);
+    
     const { data: updatedPerson, error: updateError } = await supabaseClient
       .from('people')
       .update(updateData)
@@ -349,13 +368,23 @@ exports.updatePerson = async (req, res) => {
       .select()
       .single();
     
-    if (updateError) throw new Error(updateError.message);
+    console.log('Update result:', { updatedPerson, updateError });
+    
+    if (updateError) {
+      console.error('Update error details:', updateError);
+      throw new Error(updateError.message);
+    }
     
     res.status(200).json({
       success: true,
       data: updatedPerson
     });
   } catch (error) {
+    console.error('=== UPDATE PERSON ERROR ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
     res.status(400).json({
       success: false,
       message: 'Error al actualizar la persona',
